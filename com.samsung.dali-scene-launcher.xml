@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns="http://tizen.org/ns/packages" package="com.samsung.dali-scene-launcher" version="0.0.1" api-version="2.4" install-location="internal-only">
+<!-- NOTE THAT ALL LEADING WHITESPACE IN THIS FILE MUST BE TABS, NOT SPACES. APPS WITH LEADING SPACES WILL SILENTLY FAIL TO RUN ON A TARGET DEVICE. -->
+	<label>Dali Scene Launcher</label>
+	<author email="jonghyun.ho@samsung.com" href="www.samsung.com">Jonghyun Ho</author>
+	<description>DALi Scene Launcher Application</description>
+
+	<ui-application appid="com.samsung.dali-scene-launcher" exec="/usr/apps/com.samsung.dali-scene-launcher/bin/dali-scene-launcher" nodisplay="false" multiple="false" type="c++app" taskmanage="true">
+		<icon>/usr/share/icons/com.samsung.dali-scene-launcher.png</icon>
+		<label>DALi Scene Launcher</label>
+	</ui-application>
+	<privileges>
+		<privilege>http://tizen.org/privilege/mediastorage</privilege>
+		<privilege>http://tizen.org/privilege/externalstorage</privilege>
+		<privilege>http://tizen.org/privilege/externalstorage.appdata</privilege>
+		<privilege>http://tizen.org/privilege/unlimitedstorage</privilege>
+		<privilege>http://tizen.org/privilege/filesystem.write</privilege>
+		<privilege>http://tizen.org/privilege/filesystem.read</privilege>
+		<privilege>http://tizen.org/privilege/download</privilege>
+		<privilege>http://tizen.org/privilege/internet</privilege>
+		<privilege>http://tizen.org/privilege/network.get</privilege>
+		<privilege>http://tizen.org/privilege/network.profile</privilege>
+		<privilege>http://tizen.org/privilege/network.set</privilege>
+	</privileges>
+</manifest>
