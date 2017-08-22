@@ -34,6 +34,13 @@
 using namespace Dali;
 using namespace Toolkit;
 
+
+#include <iostream>
+#include <fstream>
+using namespace std;
+
+
+
 namespace
 {
 
@@ -104,6 +111,10 @@ public:
    */
   void Create( Application& application )
   {
+    ofstream fd;
+    fd.open ("/tmp/log.txt", ios::out | ios::app ); 
+    fd << "-->Create" << std::endl;
+	
     // Disable indicator
     Dali::Window winHandle = application.GetWindow();
     winHandle.ShowIndicator( Dali::Window::INVISIBLE );
@@ -139,6 +150,8 @@ public:
 
     mDoubleTapTime = Timer::New(150);
     mDoubleTapTime.TickSignal().Connect( this, &SceneLauncher::OnDoubleTapTime );
+    fd << "<--Create" << std::endl;
+    fd.close();
   }
 
   /*
@@ -547,8 +560,8 @@ public:
     mErrorMessage.SetProperty( TextLabel::Property::ENABLE_AUTO_SCROLL, true );
 
     Property::Map colorMap;
-    colorMap.Add( Visual::Property::TYPE, Visual::COLOR).
-      Add( ColorVisual::Property::MIX_COLOR, Color::BLACK );
+    colorMap[Visual::Property::TYPE] = Visual::COLOR;
+    colorMap[ColorVisual::Property::MIX_COLOR] = Color::BLACK;
     mErrorMessage.SetProperty( Control::Property::BACKGROUND, colorMap );
 
     mErrorMessage.SetResizePolicy( ResizePolicy::FILL_TO_PARENT, Dimension::WIDTH );
