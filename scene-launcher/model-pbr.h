@@ -31,6 +31,25 @@ namespace PbrDemo
 class ModelPbr
 {
 public:
+
+  struct Textures
+  {
+    enum Type
+    {
+      ALBEDO_AND_METALNESS_AS_ALPHA_NORMAL_AND_ROUGHNESS_AS_ALPHA, ///< The metalness is stored in the alpha channel of the albedo and the roughness is stored in the alpha channel of the normal.
+      ALBEDO_METALNESS_NORMAL_AND_ROUGHNESS_AS_ALPHA,              ///< The albedo and metalness are two different textures and the roughness is stored in the alpha channel of the normal.
+      ALBEDO_AND_METALNESS_AS_ALPHA_NORMAL_ROUGHNESS,              ///< The metalness is stored in the alpha channel of the albedo and the normal and roughness are two different textures.
+      ALBEDO_METALNESS_NORMAL_ROUGHNESS,                           ///< The albedo, metalness, normal and roughness are four different textures.
+    };
+
+    Texture texture1; ///< Could be ALBEDO_AND_METALNESS_AS_ALPHA or ALBEDO.
+    Texture texture2; ///< Could be NORMAL_AND_ROUGHNESS_AS_ALPHA, METALNESS or NORMAL.
+    Texture texture3; ///< Could be NORMAL_AND_ROUGHNESS_AS_ALPHA, ROUGHNESS or NORMAL.
+    Texture texture4; ///< Could be ROUGHNESS only.
+    Type type;        ///< The type of PBR textures.
+  };
+
+public:
   /**
    * @brief Constructor.
    * Does nothing.
@@ -64,12 +83,11 @@ public:
   /**
    * @brief Initializes the @p mTextureSet member with the needed textures for Physically Based Rendering.
    *
-   * @param[in] albedoMetalTexture The albedo metal texture.
-   * @param[in] normalRoughTexture The normal rough texture.
+   * @param[in] textures The textures needed for the Physically Based Rendering.
    * @param[in] diffuseTexture The diffuse cubemap texture.
    * @param[in] specularTexture The specular cubemap texture.
    */
-  void InitPbrTexture( Texture albedoMetalTexture, Texture normalRoughTexture, Texture diffuseTexture, Texture specularTexture );
+  void InitPbrTexture( const Textures& textures, Texture texDiffuse, Texture texSpecular );
 
   /**
    * @brief Clears the previously allocated PBR model resources.
