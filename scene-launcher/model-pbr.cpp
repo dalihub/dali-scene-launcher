@@ -20,6 +20,7 @@
 
 // EXTERNAL INCLUDES
 #include <dali/devel-api/adaptor-framework/file-loader.h>
+#include <dali/integration-api/debug.h>
 #include <cstdio>
 #include <string.h>
 
@@ -36,6 +37,10 @@ struct Vertices
   Vector<Vector3> tangents;
   Vector<Vector2> texCoords;
 };
+
+#if defined(DEBUG_ENABLED)
+Dali::Integration::Log::Filter* gLogFilter = Dali::Integration::Log::Filter::New(Debug::NoLogging, false, "LOG_MODEL_PBR");
+#endif
 
 } // namespace
 
@@ -93,24 +98,94 @@ void ModelPbr::Init( Shader shader, const std::string& modelUrl, const Vector3& 
   }
 }
 
-void ModelPbr::InitPbrTexture(Texture albedoM, Texture normalR, Texture texDiffuse, Texture texSpecular)
+void ModelPbr::InitPbrTexture( const ModelPbr::Textures& textures, Texture texDiffuse, Texture texSpecular )
 {
+  DALI_LOG_INFO( gLogFilter, Debug::General, "-->InitPbrTexture\n" );
+
   mTextureSet = TextureSet::New();
-  mTextureSet.SetTexture( 0u, albedoM );
-  mTextureSet.SetTexture( 1u, normalR );
-  mTextureSet.SetTexture( 2u, texDiffuse );
-  mTextureSet.SetTexture( 3u, texSpecular );
 
   Sampler samplerA = Sampler::New();
   samplerA.SetWrapMode(WrapMode::REPEAT,WrapMode::REPEAT);
   samplerA.SetFilterMode(FilterMode::LINEAR_MIPMAP_LINEAR,FilterMode::LINEAR);
-  mTextureSet.SetSampler(0,samplerA);
-  mTextureSet.SetSampler(1,samplerA);
 
   Sampler sampler = Sampler::New();
   sampler.SetWrapMode(WrapMode::CLAMP_TO_EDGE,WrapMode::CLAMP_TO_EDGE,WrapMode::CLAMP_TO_EDGE);
   sampler.SetFilterMode(FilterMode::LINEAR_MIPMAP_LINEAR,FilterMode::LINEAR);
-  mTextureSet.SetSampler(3,sampler);
+
+  switch( textures.type )
+  {
+    case ModelPbr::Textures::ALBEDO_AND_METALNESS_AS_ALPHA_NORMAL_AND_ROUGHNESS_AS_ALPHA:
+    {
+      mTextureSet.SetTexture( 0u, textures.texture1 );
+      mTextureSet.SetTexture( 1u, textures.texture2 );
+      mTextureSet.SetTexture( 2u, texDiffuse );
+      mTextureSet.SetTexture( 3u, texSpecular );
+
+      mTextureSet.SetSampler(0,samplerA);
+      mTextureSet.SetSampler(1,samplerA);
+      mTextureSet.SetSampler(3,sampler);
+      break;
+    }
+    case ModelPbr::Textures::ALBEDO_METALNESS_NORMAL_AND_ROUGHNESS_AS_ALPHA:
+    case ModelPbr::Textures::ALBEDO_AND_METALNESS_AS_ALPHA_NORMAL_ROUGHNESS: // FALLTHROUGH
+    {
+      mTextureSet.SetTexture( 0u, textures.texture1 );
+      mTextureSet.SetTexture( 1u, textures.texture2 );
+      mTextureSet.SetTexture( 2u, textures.texture3 );
+      mTextureSet.SetTexture( 3u, texDiffuse );
+      mTextureSet.SetTexture( 4u, texSpecular );
+
+      mTextureSet.SetSampler(0,samplerA);
+      mTextureSet.SetSampler(1,samplerA);
+      mTextureSet.SetSampler(2,samplerA);
+      mTextureSet.SetSampler(4,sampler);
+      break;
+    }
+    case ModelPbr::Textures::ALBEDO_METALNESS_NORMAL_ROUGHNESS:
+    {
+      mTextureSet.SetTexture( 0u, textures.texture1 );
+      mTextureSet.SetTexture( 1u, textures.texture2 );
+      mTextureSet.SetTexture( 2u, textures.texture3 );
+      mTextureSet.SetTexture( 3u, textures.texture4 );
+      mTextureSet.SetTexture( 4u, texDiffuse );
+      mTextureSet.SetTexture( 5u, texSpecular );
+
+      mTextureSet.SetSampler(0,samplerA);
+      mTextureSet.SetSampler(1,samplerA);
+      mTextureSet.SetSampler(2,samplerA);
+      mTextureSet.SetSampler(3,samplerA);
+      mTextureSet.SetSampler(5,sampler);
+      break;
+    }
+  }
+
+#if defined(DEBUG_ENABLED)
+  switch( textures.type )
+  {
+    case ModelPbr::Textures::ALBEDO_AND_METALNESS_AS_ALPHA_NORMAL_AND_ROUGHNESS_AS_ALPHA:
+    {
+      DALI_LOG_INFO( gLogFilter, Debug::General, "Texture type: albedo-metalness and normal-roughness\n" );
+      break;
+    }
+    case ModelPbr::Textures::ALBEDO_METALNESS_NORMAL_AND_ROUGHNESS_AS_ALPHA:
+    {
+      DALI_LOG_INFO( gLogFilter, Debug::General, "Texture type: albedo, metalness and normal-roughness\n" );
+      break;
+    }
+    case ModelPbr::Textures::ALBEDO_AND_METALNESS_AS_ALPHA_NORMAL_ROUGHNESS:
+    {
+      DALI_LOG_INFO( gLogFilter, Debug::General, "Texture type: albedo-metalness, normal and roughness\n" );
+      break;
+    }
+    case ModelPbr::Textures::ALBEDO_METALNESS_NORMAL_ROUGHNESS:
+    {
+      DALI_LOG_INFO( gLogFilter, Debug::General, "Texture type: albedo, metalness, normal and roughness\n" );
+      break;
+    }
+  }
+#endif
+
+  DALI_LOG_INFO( gLogFilter, Debug::General, "<--InitPbrTexture\n" );
 }
 
 void ModelPbr::Clear()

@@ -37,7 +37,11 @@ struct Asset
     secActors(),
     name(),
     model(),
+    albedo(),
+    metalness(),
     albedoMetalness(),
+    normal(),
+    roughness(),
     normalRoughness(),
     vertexShader(),
     fragmentShader(),
@@ -58,7 +62,11 @@ struct Asset
   std::vector<std::string> secActors;
   std::string name;
   std::string model;
+  std::string albedo;
+  std::string metalness;
   std::string albedoMetalness;
+  std::string normal;
+  std::string roughness;
   std::string normalRoughness;
   std::string vertexShader;
   std::string fragmentShader;

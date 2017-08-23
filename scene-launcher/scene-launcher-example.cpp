@@ -34,13 +34,6 @@
 using namespace Dali;
 using namespace Toolkit;
 
-
-#include <iostream>
-#include <fstream>
-using namespace std;
-
-
-
 namespace
 {
 
@@ -69,6 +62,10 @@ const float CAMERA_DEFAULT_FAR(  1000.0f );
 const Vector3 CAMERA_DEFAULT_POSITION( 0.0f, 0.0f, 3.5f );
 
 const float TEXT_AUTO_SCROLL_SPEED = 200.f;
+
+#if defined(DEBUG_ENABLED)
+Dali::Integration::Log::Filter* gLogFilter = Dali::Integration::Log::Filter::New(Debug::NoLogging, false, "LOG_SCENE_LAUNCHER");
+#endif
 
 } // namespace
 
@@ -111,10 +108,6 @@ public:
    */
   void Create( Application& application )
   {
-    ofstream fd;
-    fd.open ("/tmp/log.txt", ios::out | ios::app ); 
-    fd << "-->Create" << std::endl;
-	
     // Disable indicator
     Dali::Window winHandle = application.GetWindow();
     winHandle.ShowIndicator( Dali::Window::INVISIBLE );
@@ -150,8 +143,6 @@ public:
 
     mDoubleTapTime = Timer::New(150);
     mDoubleTapTime.TickSignal().Connect( this, &SceneLauncher::OnDoubleTapTime );
-    fd << "<--Create" << std::endl;
-    fd.close();
   }
 
   /*
@@ -369,7 +360,11 @@ public:
    */
   void CreateModelShader()
   {
+    DALI_LOG_INFO( gLogFilter, Debug::General, "-->CreateModelShader\n" );
+
     const PbrDemo::Asset& asset = mSceneParser.GetAsset();
+
+    DALI_LOG_INFO( gLogFilter, Debug::General, "  fs : %s\n              vs : %s\n", asset.vertexShader.c_str(), asset.fragmentShader.c_str() );
 
     mShader = LoadShaders( asset.vertexShader, asset.fragmentShader );
 
@@ -385,6 +380,7 @@ public:
     matCube.Transpose();
     mShader.RegisterProperty( "uMaxLOD", 8.0f );
     mShader.RegisterProperty( "uCubeMatrix" , matCube );
+    DALI_LOG_INFO( gLogFilter, Debug::General, "<--CreateModelShader\n" );
   }
 
   /**
@@ -436,35 +432,152 @@ public:
    */
   void CreateModelTexture()
   {
+    DALI_LOG_INFO( gLogFilter, Debug::General, "-->CreateModelTexture\n" );
+
     const PbrDemo::Asset& asset = mSceneParser.GetAsset();
 
+    DALI_LOG_INFO( gLogFilter, Debug::General, " albedo-metalness : [%s]\n", asset.albedoMetalness.c_str() );
+    DALI_LOG_INFO( gLogFilter, Debug::General, " normal-roughness : [%s]\n", asset.normalRoughness.c_str() );
+    DALI_LOG_INFO( gLogFilter, Debug::General, "           albedo : [%s]\n", asset.albedo.c_str() );
+    DALI_LOG_INFO( gLogFilter, Debug::General, "        metalness : [%s]\n", asset.metalness.c_str() );
+    DALI_LOG_INFO( gLogFilter, Debug::General, "           normal : [%s]\n", asset.normal.c_str() );
+    DALI_LOG_INFO( gLogFilter, Debug::General, "        roughness : [%s]\n", asset.roughness.c_str() );
+
     PixelData modelPixelData;
+    Texture textureAlbedo;
+    Texture textureMetal;
     Texture textureAlbedoMetal;
+    Texture textureNormal;
+    Texture textureRough;
     Texture textureNormalRough;
 
-    modelPixelData = SyncImageLoader::Load( ASSET_TEXTURE_DIR + asset.albedoMetalness );
-
-    if( !modelPixelData )
+    if( !asset.albedo.empty() && !asset.metalness.empty() )
     {
-      throw Dali::DaliException( ASSERT_LOCATION, "Failed to load albedo-metalness texture." );
+      modelPixelData = SyncImageLoader::Load( ASSET_TEXTURE_DIR + asset.albedo );
+
+      if( !modelPixelData )
+      {
+        throw Dali::DaliException( ASSERT_LOCATION, "Failed to load albedo texture." );
+      }
+
+      textureAlbedo = Texture::New( TextureType::TEXTURE_2D, modelPixelData.GetPixelFormat(), modelPixelData.GetWidth(), modelPixelData.GetHeight() );
+      textureAlbedo.Upload( modelPixelData, 0, 0, 0, 0, modelPixelData.GetWidth(), modelPixelData.GetHeight() );
+      textureAlbedo.GenerateMipmaps();
+
+      modelPixelData = SyncImageLoader::Load( ASSET_TEXTURE_DIR + asset.metalness );
+
+      if( !modelPixelData )
+      {
+        throw Dali::DaliException( ASSERT_LOCATION, "Failed to load metalness texture." );
+      }
+
+      textureMetal = Texture::New( TextureType::TEXTURE_2D, modelPixelData.GetPixelFormat(), modelPixelData.GetWidth(), modelPixelData.GetHeight() );
+      textureMetal.Upload( modelPixelData, 0, 0, 0, 0, modelPixelData.GetWidth(), modelPixelData.GetHeight() );
+      textureMetal.GenerateMipmaps();
+
+      DALI_LOG_INFO( gLogFilter, Debug::General, " Created textureAlbedo and textureMetal\n" );
     }
 
-    textureAlbedoMetal = Texture::New( TextureType::TEXTURE_2D, modelPixelData.GetPixelFormat(), modelPixelData.GetWidth(), modelPixelData.GetHeight() );
-    textureAlbedoMetal.Upload( modelPixelData, 0, 0, 0, 0, modelPixelData.GetWidth(), modelPixelData.GetHeight() );
-    textureAlbedoMetal.GenerateMipmaps();
-
-    modelPixelData = SyncImageLoader::Load( ASSET_TEXTURE_DIR + asset.normalRoughness );
-
-    if( !modelPixelData )
+    if( !asset.albedoMetalness.empty() )
     {
-      throw Dali::DaliException( ASSERT_LOCATION, "Failed to load normal-roughness texture." );
+      modelPixelData = SyncImageLoader::Load( ASSET_TEXTURE_DIR + asset.albedoMetalness );
+
+      if( !modelPixelData )
+      {
+        throw Dali::DaliException( ASSERT_LOCATION, "Failed to load albedo-metalness texture." );
+      }
+
+      textureAlbedoMetal = Texture::New( TextureType::TEXTURE_2D, modelPixelData.GetPixelFormat(), modelPixelData.GetWidth(), modelPixelData.GetHeight() );
+      textureAlbedoMetal.Upload( modelPixelData, 0, 0, 0, 0, modelPixelData.GetWidth(), modelPixelData.GetHeight() );
+      textureAlbedoMetal.GenerateMipmaps();
+
+      DALI_LOG_INFO( gLogFilter, Debug::General, " Created textureAlbedoMetal\n" );
     }
 
-    textureNormalRough = Texture::New( TextureType::TEXTURE_2D, modelPixelData.GetPixelFormat(), modelPixelData.GetWidth(), modelPixelData.GetHeight() );
-    textureNormalRough.Upload( modelPixelData, 0, 0, 0, 0, modelPixelData.GetWidth(), modelPixelData.GetHeight() );
-    textureNormalRough.GenerateMipmaps();
+    if( !asset.normal.empty() && !asset.roughness.empty() )
+    {
+      modelPixelData = SyncImageLoader::Load( ASSET_TEXTURE_DIR + asset.normal );
 
-    mModel.InitPbrTexture( textureAlbedoMetal, textureNormalRough, mDiffuseTexture, mSpecularTexture );
+      if( !modelPixelData )
+      {
+        throw Dali::DaliException( ASSERT_LOCATION, "Failed to load normal texture." );
+      }
+
+      textureNormal = Texture::New( TextureType::TEXTURE_2D, modelPixelData.GetPixelFormat(), modelPixelData.GetWidth(), modelPixelData.GetHeight() );
+      textureNormal.Upload( modelPixelData, 0, 0, 0, 0, modelPixelData.GetWidth(), modelPixelData.GetHeight() );
+      textureNormal.GenerateMipmaps();
+
+      modelPixelData = SyncImageLoader::Load( ASSET_TEXTURE_DIR + asset.roughness );
+
+      if( !modelPixelData )
+      {
+        throw Dali::DaliException( ASSERT_LOCATION, "Failed to load roughness texture." );
+      }
+
+      textureRough = Texture::New( TextureType::TEXTURE_2D, modelPixelData.GetPixelFormat(), modelPixelData.GetWidth(), modelPixelData.GetHeight() );
+      textureRough.Upload( modelPixelData, 0, 0, 0, 0, modelPixelData.GetWidth(), modelPixelData.GetHeight() );
+      textureRough.GenerateMipmaps();
+
+      DALI_LOG_INFO( gLogFilter, Debug::General, " Created textureNormal and textureRough\n" );
+    }
+
+    if( !asset.normalRoughness.empty() )
+    {
+      modelPixelData = SyncImageLoader::Load( ASSET_TEXTURE_DIR + asset.normalRoughness );
+
+      if( !modelPixelData )
+      {
+        throw Dali::DaliException( ASSERT_LOCATION, "Failed to load normal-roughness texture." );
+      }
+
+      textureNormalRough = Texture::New( TextureType::TEXTURE_2D, modelPixelData.GetPixelFormat(), modelPixelData.GetWidth(), modelPixelData.GetHeight() );
+      textureNormalRough.Upload( modelPixelData, 0, 0, 0, 0, modelPixelData.GetWidth(), modelPixelData.GetHeight() );
+      textureNormalRough.GenerateMipmaps();
+
+      DALI_LOG_INFO( gLogFilter, Debug::General, " Created textureNormalRough\n" );
+    }
+
+    if( textureAlbedo && textureMetal && textureNormal && textureRough )
+    {
+      PbrDemo::ModelPbr::Textures textures;
+      textures.texture1 = textureAlbedo;
+      textures.texture2 = textureMetal;
+      textures.texture3 = textureNormal;
+      textures.texture4 = textureRough;
+      textures.type = PbrDemo::ModelPbr::Textures::ALBEDO_METALNESS_NORMAL_ROUGHNESS;
+
+      mModel.InitPbrTexture( textures, mDiffuseTexture, mSpecularTexture );
+    }
+    else if( textureAlbedo && textureMetal && textureNormalRough )
+    {
+      PbrDemo::ModelPbr::Textures textures;
+      textures.texture1 = textureAlbedo;
+      textures.texture2 = textureMetal;
+      textures.texture3 = textureNormalRough;
+      textures.type = PbrDemo::ModelPbr::Textures::ALBEDO_METALNESS_NORMAL_AND_ROUGHNESS_AS_ALPHA;
+
+      mModel.InitPbrTexture( textures, mDiffuseTexture, mSpecularTexture );
+    }
+    else if( textureAlbedoMetal && textureNormal && textureRough )
+    {
+      PbrDemo::ModelPbr::Textures textures;
+      textures.texture1 = textureAlbedoMetal;
+      textures.texture2 = textureNormal;
+      textures.texture3 = textureRough;
+      textures.type = PbrDemo::ModelPbr::Textures::ALBEDO_AND_METALNESS_AS_ALPHA_NORMAL_ROUGHNESS;
+
+      mModel.InitPbrTexture( textures, mDiffuseTexture, mSpecularTexture );
+    }
+    else if( textureAlbedoMetal && textureNormalRough )
+    {
+      PbrDemo::ModelPbr::Textures textures;
+      textures.texture1 = textureAlbedoMetal;
+      textures.texture2 = textureNormalRough;
+      textures.type = PbrDemo::ModelPbr::Textures::ALBEDO_AND_METALNESS_AS_ALPHA_NORMAL_AND_ROUGHNESS_AS_ALPHA;
+
+      mModel.InitPbrTexture( textures, mDiffuseTexture, mSpecularTexture );
+    }
+    DALI_LOG_INFO( gLogFilter, Debug::General, "<--CreateModelTexture\n" );
   }
 
   /*
@@ -484,6 +597,15 @@ public:
    */
   void CreateModel()
   {
+    DALI_LOG_INFO( gLogFilter, Debug::General, "-->CreateModel\n" );
+
+#if defined(DEBUG_ENABLED)
+    const PbrDemo::Asset& asset = mSceneParser.GetAsset();
+
+    DALI_LOG_INFO( gLogFilter, Debug::General, "  model %s\n", asset.name.c_str() );
+
+#endif
+
     UnparentAndReset( mErrorMessage );
 
     // Create shader
@@ -500,6 +622,8 @@ public:
 
     // Init Pbr actor
     InitPbrActor();
+
+    DALI_LOG_INFO( gLogFilter, Debug::General, "<--CreateModel\n" );
   }
 
   /**

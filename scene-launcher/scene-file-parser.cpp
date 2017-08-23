@@ -44,7 +44,11 @@ const Vector3 CAMERA_DEFAULT_POSITION( 0.0f, 0.0f, 3.5f );
 const std::string NAME_TOKEN( "name" );
 const std::string MODEL_TOKEN( "model" );
 const std::string MODEL_SCALE_FACTOR_TOKEN( "model-scale-factor" );
+const std::string ALBEDO_TOKEN( "albedo" );
+const std::string METALNESS_TOKEN( "metalness" );
 const std::string ALBEDO_METALNESS_TOKEN( "albedo-metalness" );
+const std::string NORMAL_TOKEN( "normal" );
+const std::string ROUGHNESS_TOKEN( "roughness" );
 const std::string NORMAL_ROUGHNESS_TOKEN( "normal-roughness" );
 const std::string VERTEX_SHADER_TOKEN( "vertex-shader" );
 const std::string FRAGMENT_SHADER_TOKEN( "fragment-shader" );
@@ -207,9 +211,25 @@ void SceneFileParser::ParseModelFile( unsigned int fileIndex )
       {
         ParseVector3( node, asset.modelScaleFactor );
       }
+      else if( CaseInsensitiveStringCompare( name, ALBEDO_TOKEN ) )
+      {
+        asset.albedo = node.GetString();
+      }
+      else if( CaseInsensitiveStringCompare( name, METALNESS_TOKEN ) )
+      {
+        asset.metalness = node.GetString();
+      }
       else if( CaseInsensitiveStringCompare( name, ALBEDO_METALNESS_TOKEN ) )
       {
         asset.albedoMetalness = node.GetString();
+      }
+      else if( CaseInsensitiveStringCompare( name, NORMAL_TOKEN ) )
+      {
+        asset.normal = node.GetString();
+      }
+      else if( CaseInsensitiveStringCompare( name, ROUGHNESS_TOKEN ) )
+      {
+        asset.roughness = node.GetString();
       }
       else if( CaseInsensitiveStringCompare( name, NORMAL_ROUGHNESS_TOKEN ) )
       {
