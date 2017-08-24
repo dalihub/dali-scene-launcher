@@ -1,5 +1,5 @@
-#ifndef DALI_DEMO_MODELPBR_H
-#define DALI_DEMO_MODELPBR_H
+#ifndef DALI_SCENE_LAUNCHER_MODELPBR_H
+#define DALI_SCENE_LAUNCHER_MODELPBR_H
 
 /*
  * Copyright (c) 2017 Samsung Electronics Co., Ltd.
@@ -22,10 +22,11 @@
 #include <dali/public-api/actors/actor.h>
 #include <dali/public-api/common/vector-wrapper.h>
 #include <dali/public-api/rendering/renderer.h>
+#include <dali-toolkit/dali-toolkit.h>
 
 using namespace Dali;
 
-namespace PbrDemo
+namespace SceneLauncher
 {
 
 class ModelPbr
@@ -59,7 +60,7 @@ public:
    * @param[in] position The position of the actor.
    * @param[in] size The size of the actor.
    */
-  void Init( Shader shader, const std::string& modelUrl, const Vector3& position, const Vector3& size );
+  void Init( const std::string& modelUrl, const Vector3& position, const Vector3& size, std::vector<Animation> *loadAnimation );
 
   /**
    * @brief Initializes the @p mTextureSet member with the needed textures for Physically Based Rendering.
@@ -83,6 +84,11 @@ public:
    */
   Actor &GetActor();
 
+  void SetShaderUniform(std::string property, const Property::Value& value);
+  Texture GetCubeSpecularTexture();
+
+  static Actor CreateNode( Shader shader, int blend, TextureSet textureSet, Geometry geometry, std::string name );
+
 private:
 
   /**
@@ -97,10 +103,12 @@ private:
                        std::vector<std::string>& names );
 
   Actor mActor;
+  std::vector<Shader> mShaderArray;
+  Texture mCubeSpecularTexture;
   TextureSet mTextureSet;
 };
 
-} // namespace PbrDemo
+} // namespace SceneLauncher
 
-#endif // DALI_DEMO_MODELPBR_H
+#endif // DALI_SCENE_LAUNCHER_MODELPBR_H
 
