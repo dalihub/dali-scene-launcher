@@ -19,6 +19,7 @@
 #include <dali/integration-api/debug.h>
 #include <dali/public-api/common/vector-wrapper.h>
 #include <dali-toolkit/dali-toolkit.h>
+#include <dali/devel-api/actors/actor-devel.h>
 
 #include <fstream>
 #include <sstream>
@@ -26,20 +27,12 @@
 #include <sys/stat.h>
 
 // INTERNAL INCLUDES
-#include "ktx-loader.h"
 #include "model-pbr.h"
-#include "model-skybox.h"
 #include "scene-file-parser.h"
+#include "model-skybox.h"
 
 using namespace Dali;
 using namespace Toolkit;
-
-
-#include <iostream>
-#include <fstream>
-using namespace std;
-
-
 
 namespace
 {
@@ -60,6 +53,7 @@ struct MaterialTextures
 
 const char* MODEL_DIR_URL = SCENE_LAUNCHER_MODEL_DIR "scenes";
 
+const std::string ASSET_SHADER_DIR = SCENE_LAUNCHER_SHADER_DIR;
 const std::string ASSET_MODEL_DIR = SCENE_LAUNCHER_MODEL_DIR;
 const std::string ASSET_TEXTURE_DIR = SCENE_LAUNCHER_IMAGE_DIR;
 
@@ -82,14 +76,15 @@ const float TEXT_AUTO_SCROLL_SPEED = 200.f;
  *
 */
 
-class SceneLauncher : public ConnectionTracker
+class Scene3dLauncher : public ConnectionTracker
 {
 public:
 
-  SceneLauncher( Application& application )
+  Scene3dLauncher( Application& application )
   : mApplication( application ),
     mSceneParser(),
     mDoubleTapTime(),
+    mCameraPosition(CAMERA_DEFAULT_POSITION),
     mViewQuaternion(Dali::ANGLE_180, Vector3::YAXIS),
     mModelOrientation(),
     mCubeOrientation(),
@@ -98,10 +93,10 @@ public:
     mRotateEnvironment(false)
   {
     // Connect to the Application's Init signal
-    mApplication.InitSignal().Connect( this, &SceneLauncher::Create );
+    mApplication.InitSignal().Connect( this, &Scene3dLauncher::Create );
   }
 
-  ~SceneLauncher()
+  ~Scene3dLauncher()
   {
     // Nothing to do here;
   }
@@ -111,10 +106,6 @@ public:
    */
   void Create( Application& application )
   {
-    ofstream fd;
-    fd.open ("/tmp/log.txt", ios::out | ios::app ); 
-    fd << "-->Create" << std::endl;
-	
     // Disable indicator
     Dali::Window winHandle = application.GetWindow();
     winHandle.ShowIndicator( Dali::Window::INVISIBLE );
@@ -143,15 +134,13 @@ public:
     }
 
     // Respond to a click anywhere on the stage
-    stage.GetRootLayer().TouchSignal().Connect( this, &SceneLauncher::OnTouch );
+    stage.GetRootLayer().TouchSignal().Connect( this, &Scene3dLauncher::OnTouch );
 
     // Respond to key events
-    stage.KeyEventSignal().Connect( this, &SceneLauncher::OnKeyEvent );
+    stage.KeyEventSignal().Connect( this, &Scene3dLauncher::OnKeyEvent );
 
     mDoubleTapTime = Timer::New(150);
-    mDoubleTapTime.TickSignal().Connect( this, &SceneLauncher::OnDoubleTapTime );
-    fd << "<--Create" << std::endl;
-    fd.close();
+    mDoubleTapTime.TickSignal().Connect( this, &Scene3dLauncher::OnDoubleTapTime );
   }
 
   /*
@@ -230,13 +219,13 @@ public:
           CameraActor cam = stage.GetRenderTaskList().GetTask(0).GetCameraActor();
           if( cam )
           {
-            cam.SetPosition( CAMERA_DEFAULT_POSITION * ( mZoomLevel + 0.1f ) );
+            cam.SetPosition( mCameraPosition * ( mZoomLevel + 0.1f ) );
           }
 
           Actor skyboxActor = mSkybox.GetActor();
           if( skyboxActor )
           {
-            skyboxActor.SetPosition( CAMERA_DEFAULT_POSITION * ( mZoomLevel + 0.1f ) );
+            skyboxActor.SetPosition( mCameraPosition * ( mZoomLevel + 0.1f ) );
           }
 
           mStartTouch = point;
@@ -265,10 +254,7 @@ public:
 
             Matrix matCube(mCubeOrientation);
             matCube.Transpose();
-            if( mShader )
-            {
-              mShader.SetProperty( mShader.GetPropertyIndex( "uCubeMatrix" ), matCube );
-            }
+            mModel.SetShaderUniform("uCubeMatrix" , matCube );
           }
           else
           {
@@ -325,12 +311,14 @@ public:
    */
   void InitPbrActor()
   {
-    const PbrDemo::Asset& asset = mSceneParser.GetAsset();
+    const SceneLauncher::Asset& asset = mSceneParser.GetAsset();
 
-    mModel.Init( mShader, ASSET_MODEL_DIR + asset.model, Vector3::ZERO, asset.modelScaleFactor );
+    mModel.Init( ASSET_MODEL_DIR + asset.model, Vector3::ZERO, asset.modelScaleFactor );
+
     mModel.GetActor().SetOrientation( mModelOrientation );
 
     Stage::GetCurrent().Add( mModel.GetActor() );
+    mModel.GetActor().SetProperty(DevelActor::Property::SIBLING_ORDER, 1 );
   }
 
   /**
@@ -339,17 +327,17 @@ public:
   void InitActors()
   {
     Stage stage = Stage::GetCurrent();
+    const SceneLauncher::Asset& asset = mSceneParser.GetAsset();
 
-    const PbrDemo::Asset& asset = mSceneParser.GetAsset();
-
-    mSkybox.InitTexture( mSpecularTexture );
+    mSkybox.InitTexture( mModel.GetCubeSpecularTexture() );
     mSkybox.Init();
     Quaternion ViewQuaternion(mViewQuaternion);
     ViewQuaternion.Conjugate();
     mSkybox.GetActor().SetOrientation( ViewQuaternion * mCubeOrientation );
 
     // Setting camera parameters for 3D Scene
-    mSkybox.GetActor().SetPosition( CAMERA_DEFAULT_POSITION );
+    mSkybox.GetActor().SetPosition( asset.cameraPosition );
+    mCameraPosition = asset.cameraPosition;
     CameraActor camera3d = stage.GetRenderTaskList().GetTask(0).GetCameraActor();
     camera3d.SetInvertYAxis( true );
     camera3d.SetPosition( asset.cameraPosition );
@@ -362,109 +350,7 @@ public:
     camera3d.SetOrientation(mViewQuaternion);
 
     stage.Add( mSkybox.GetActor() );
-  }
-
-  /**
-   * @brief Creates a shader using file path
-   */
-  void CreateModelShader()
-  {
-    const PbrDemo::Asset& asset = mSceneParser.GetAsset();
-
-    mShader = LoadShaders( asset.vertexShader, asset.fragmentShader );
-
-    if( !mShader )
-    {
-      throw DaliException( ASSERT_LOCATION, "Failed to load shader." );
-    }
-
-    // Initialise shader uniforms
-    // Level 8 because the environment texture has 6 levels plus 2 are missing (2x2 and 1x1)
-    mCubeOrientation = mViewQuaternion * mModelOrientation;
-    Matrix matCube( mCubeOrientation );
-    matCube.Transpose();
-    mShader.RegisterProperty( "uMaxLOD", 8.0f );
-    mShader.RegisterProperty( "uCubeMatrix" , matCube );
-  }
-
-  /**
-    * @brief Loads diffuse and specular textures
-    */
-  void CreateEnvironmentTextures()
-  {
-    const PbrDemo::Asset& asset = mSceneParser.GetAsset();
-
-    // This texture should have 6 faces and only one mipmap
-    PbrDemo::CubeData diffuse;
-    bool result = PbrDemo::LoadCubeMapFromKtxFile( ASSET_TEXTURE_DIR + asset.cubeDiffuse, diffuse );
-
-    if( !result )
-    {
-      throw Dali::DaliException( ASSERT_LOCATION, "Failed to load cubemap textures." );
-    }
-
-    mDiffuseTexture = Texture::New( TextureType::TEXTURE_CUBE, diffuse.img[0][0].GetPixelFormat(), diffuse.img[0][0].GetWidth(), diffuse.img[0][0].GetHeight() );
-    for( unsigned int midmapLevel = 0; midmapLevel < diffuse.img[0].size(); ++midmapLevel )
-    {
-      for( unsigned int i = 0; i < diffuse.img.size(); ++i )
-      {
-        mDiffuseTexture.Upload( diffuse.img[i][midmapLevel], CubeMapLayer::POSITIVE_X + i, midmapLevel, 0, 0, diffuse.img[i][midmapLevel].GetWidth(), diffuse.img[i][midmapLevel].GetHeight() );
-      }
-    }
-
-    // This texture should have 6 faces and 6 mipmaps
-    PbrDemo::CubeData specular;
-    result = PbrDemo::LoadCubeMapFromKtxFile( ASSET_TEXTURE_DIR + asset.cubeSpecular, specular);
-
-    if( !result )
-    {
-      throw Dali::DaliException( ASSERT_LOCATION, "Failed to load cubemap textures." );
-    }
-
-    mSpecularTexture = Texture::New( TextureType::TEXTURE_CUBE, specular.img[0][0].GetPixelFormat(), specular.img[0][0].GetWidth(), specular.img[0][0].GetHeight() );
-    for( unsigned int midmapLevel = 0; midmapLevel < specular.img[0].size(); ++midmapLevel )
-    {
-      for( unsigned int i = 0; i < specular.img.size(); ++i )
-      {
-        mSpecularTexture.Upload( specular.img[i][midmapLevel], CubeMapLayer::POSITIVE_X + i, midmapLevel, 0, 0, specular.img[i][midmapLevel].GetWidth(), specular.img[i][midmapLevel].GetHeight() );
-      }
-    }
-  }
-
-  /*
-   * @brief Create texture for the model
-   */
-  void CreateModelTexture()
-  {
-    const PbrDemo::Asset& asset = mSceneParser.GetAsset();
-
-    PixelData modelPixelData;
-    Texture textureAlbedoMetal;
-    Texture textureNormalRough;
-
-    modelPixelData = SyncImageLoader::Load( ASSET_TEXTURE_DIR + asset.albedoMetalness );
-
-    if( !modelPixelData )
-    {
-      throw Dali::DaliException( ASSERT_LOCATION, "Failed to load albedo-metalness texture." );
-    }
-
-    textureAlbedoMetal = Texture::New( TextureType::TEXTURE_2D, modelPixelData.GetPixelFormat(), modelPixelData.GetWidth(), modelPixelData.GetHeight() );
-    textureAlbedoMetal.Upload( modelPixelData, 0, 0, 0, 0, modelPixelData.GetWidth(), modelPixelData.GetHeight() );
-    textureAlbedoMetal.GenerateMipmaps();
-
-    modelPixelData = SyncImageLoader::Load( ASSET_TEXTURE_DIR + asset.normalRoughness );
-
-    if( !modelPixelData )
-    {
-      throw Dali::DaliException( ASSERT_LOCATION, "Failed to load normal-roughness texture." );
-    }
-
-    textureNormalRough = Texture::New( TextureType::TEXTURE_2D, modelPixelData.GetPixelFormat(), modelPixelData.GetWidth(), modelPixelData.GetHeight() );
-    textureNormalRough.Upload( modelPixelData, 0, 0, 0, 0, modelPixelData.GetWidth(), modelPixelData.GetHeight() );
-    textureNormalRough.GenerateMipmaps();
-
-    mModel.InitPbrTexture( textureAlbedoMetal, textureNormalRough, mDiffuseTexture, mSpecularTexture );
+    mSkybox.GetActor().SetProperty(DevelActor::Property::SIBLING_ORDER, 0 );
   }
 
   /*
@@ -472,9 +358,6 @@ public:
    */
   void ClearModel()
   {
-    mShader.Reset();
-    mDiffuseTexture.Reset();
-    mSpecularTexture.Reset();
     mSkybox.Clear();
     mModel.Clear();
   }
@@ -486,67 +369,14 @@ public:
   {
     UnparentAndReset( mErrorMessage );
 
-    // Create shader
-    CreateModelShader();
+    // Init Pbr actor
+    InitPbrActor();
 
-    // Creates the diffuse texture and the specular texture
-    CreateEnvironmentTextures();
 
     // Initialise Main Actors
     InitActors();
-
-    // Create texture for the pbr model
-    CreateModelTexture();
-
-    // Init Pbr actor
-    InitPbrActor();
   }
 
-  /**
-  * @brief Load a shader source file
-  * @param[in] The path of the source file
-  * @param[out] The contents of file
-  * @return True if the source was read successfully
-  */
-  bool LoadShaderCode( const std::string& fullpath, std::vector<char>& output )
-  {
-    FILE* f = fopen( fullpath.c_str(), "rb" );
-
-    if( NULL == f )
-    {
-      return false;
-    }
-
-    fseek( f, 0, SEEK_END );
-    size_t size = ftell( f );
-    fseek( f, 0, SEEK_SET );
-    output.resize( size + 1 );
-    std::fill( output.begin(), output.end(), 0 );
-    ssize_t result = fread( output.data(), size, 1, f );
-    fclose( f );
-    return ( result >= 0 );
-  }
-
-  /**
-  * @brief Load vertex and fragment shader source
-  * @param[in] shaderVertexFileName is the filepath of Vertex shader
-  * @param[in] shaderFragFileName is the filepath of Fragment shader
-  * @return the Dali::Shader object
-  */
-  Shader LoadShaders( const std::string& shaderVertexFileName, const std::string& shaderFragFileName )
-  {
-    Shader shader;
-    std::vector<char> bufV, bufF;
-
-    if( LoadShaderCode( shaderVertexFileName.c_str(), bufV ) )
-    {
-      if( LoadShaderCode( shaderFragFileName.c_str(), bufF ) )
-      {
-        shader = Shader::New( bufV.data() , bufF.data() );
-      }
-    }
-    return shader;
-  }
 
   void DisplayError( const std::string& errorMessage )
   {
@@ -560,8 +390,8 @@ public:
     mErrorMessage.SetProperty( TextLabel::Property::ENABLE_AUTO_SCROLL, true );
 
     Property::Map colorMap;
-    colorMap[Visual::Property::TYPE] = Visual::COLOR;
-    colorMap[ColorVisual::Property::MIX_COLOR] = Color::BLACK;
+    colorMap.Add( Visual::Property::TYPE, Visual::COLOR).
+      Add( ColorVisual::Property::MIX_COLOR, Color::BLACK );
     mErrorMessage.SetProperty( Control::Property::BACKGROUND, colorMap );
 
     mErrorMessage.SetResizePolicy( ResizePolicy::FILL_TO_PARENT, Dimension::WIDTH );
@@ -574,17 +404,15 @@ public:
 private:
   Application& mApplication;
 
-  PbrDemo::SceneFileParser mSceneParser;
+  SceneLauncher::SceneFileParser mSceneParser;
 
   TextLabel mErrorMessage;
-  Shader mShader;
   Timer mDoubleTapTime;
 
-  Texture mDiffuseTexture;
-  Texture mSpecularTexture;
   ModelSkybox mSkybox;
-  PbrDemo::ModelPbr mModel;
+  SceneLauncher::ModelPbr mModel;
 
+  Vector3 mCameraPosition;
   Vector2 mPointZ;
   Vector2 mStartTouch;
 
@@ -604,7 +432,7 @@ int DALI_EXPORT_API main( int argc, char **argv )
 {
   Application application = Application::New( &argc, &argv);
 
-  SceneLauncher test( application );
+  Scene3dLauncher test( application );
 
   application.MainLoop();
 
