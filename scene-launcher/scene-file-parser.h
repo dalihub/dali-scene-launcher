@@ -24,7 +24,7 @@ using namespace Dali;
 using namespace Dali::Toolkit;
 
 
-namespace PbrDemo
+namespace SceneLauncher
 {
 
 class ModelPbr;
@@ -44,10 +44,12 @@ struct Asset
     cubeSpecular(),
     cubeDiffuse(),
     modelScaleFactor( Vector3::ONE ),
-    cameraPosition( Vector3( 0.f, 0.f, 1.5f ) ),
+    cameraMatrix( Matrix::IDENTITY ),
     cameraFov( 60.f ),
     cameraNear( 0.1f ),
-    cameraFar( 1000.f )
+    cameraFar( 1000.f ),
+    MaxLOD( 8.f ),
+    objModel(true)
   {}
 
   ~Asset()
@@ -65,10 +67,12 @@ struct Asset
   std::string cubeSpecular;
   std::string cubeDiffuse;
   Vector3 modelScaleFactor;
-  Vector3 cameraPosition;
+  Matrix cameraMatrix;
   float cameraFov;
   float cameraNear;
   float cameraFar;
+  float MaxLOD;
+  bool objModel;
 };
 
 class SceneFileParser
@@ -156,6 +160,6 @@ private:
   std::vector<Asset> mAssets;
 };
 
-} // namespace PbrDemo
+} // namespace SceneLauncher
 
 #endif /* DALI_DEMO_EXAMPLES_SCENE_LAUNCHER_SCENE_FILE_PARSER_H_ */

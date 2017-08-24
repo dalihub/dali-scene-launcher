@@ -25,7 +25,7 @@
 #include <stdio.h>
 #include <stdint.h>
 
-namespace PbrDemo
+namespace SceneLauncher
 {
 
 struct KtxFileHeader
@@ -261,4 +261,4 @@ bool LoadCubeMapFromKtxFile( const std::string& path, CubeData& cubedata )
   return true;
 }
 
-} // namespace PbrDemo
+} // namespace SceneLauncher

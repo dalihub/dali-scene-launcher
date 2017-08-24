@@ -37,7 +37,7 @@ void main()\n
 {\n
   vTexCoord =  aPosition;\n
 
-  mediump vec4 vertexPosition = vec4(aPosition, 1.0);\n
+  mediump vec4 vertexPosition = vec4(aPosition, 0.0);\n
   vec4 clipSpacePosition = uMvpMatrix * vertexPosition;\n
   gl_Position = clipSpacePosition.xyww;\n // Writes 1.0, the maximum depth value, into the depth buffer.
                                           // This is an optimization to avoid running the fragment shader
