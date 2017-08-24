@@ -47,7 +47,9 @@ struct Asset
     cameraPosition( Vector3( 0.f, 0.f, 1.5f ) ),
     cameraFov( 60.f ),
     cameraNear( 0.1f ),
-    cameraFar( 1000.f )
+    cameraFar( 1000.f ),
+    MaxLOD( 8 ),
+    objModel(true)
   {}
 
   ~Asset()
@@ -69,6 +71,8 @@ struct Asset
   float cameraFov;
   float cameraNear;
   float cameraFar;
+  float MaxLOD;
+  bool objModel;
 };
 
 class SceneFileParser

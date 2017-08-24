@@ -26,6 +26,7 @@
 
 #include "scene-file-parser.h"
 #include "model-pbr.h"
+#include "dli-loader.h"
 
 using namespace Dali;
 using namespace Dali::Toolkit;
@@ -54,8 +55,6 @@ const std::string CAMERA_DEFAULT_FOV_TOKEN( "camera-default-fov" );
 const std::string CAMERA_DEFAULT_NEAR_TOKEN( "camera-default-near" );
 const std::string CAMERA_DEFAULT_FAR_TOKEN( "camera-default-far" );
 const std::string CAMERA_DEFAULT_POSITION_TOKEN( "camera-default-position" );
-
-const std::string ASSET_SHADER_DIR = SCENE_LAUNCHER_SHADER_DIR;
 
 }  // namespace
 
@@ -217,11 +216,11 @@ void SceneFileParser::ParseModelFile( unsigned int fileIndex )
       }
       else if( CaseInsensitiveStringCompare( name, VERTEX_SHADER_TOKEN ) )
       {
-        asset.vertexShader = ASSET_SHADER_DIR + node.GetString();
+        asset.vertexShader = node.GetString();
       }
       else if( CaseInsensitiveStringCompare( name, FRAGMENT_SHADER_TOKEN ) )
       {
-        asset.fragmentShader = ASSET_SHADER_DIR + node.GetString();
+        asset.fragmentShader = node.GetString();
       }
       else if( CaseInsensitiveStringCompare( name, CUBEMAP_SPECULAR_TOKEN ) )
       {
@@ -247,6 +246,37 @@ void SceneFileParser::ParseModelFile( unsigned int fileIndex )
       {
         ParseVector3( node, asset.cameraPosition );
       }
+    }
+    if( ( asset.model.rfind(".dli") + 4) == asset.model.length())
+    {
+      std::ifstream dalifs( std::string( SCENE_LAUNCHER_MODEL_DIR ) + asset.model.c_str() );
+      std::string daliBuffer( ( std::istreambuf_iterator<char>( dalifs ) ),
+                          ( std::istreambuf_iterator<char>() ) );
+
+      JsonParser daliParser = JsonParser::New();
+      const bool result_format = daliParser.Parse( daliBuffer );
+      if( !result_format )
+      {
+        std::stringstream stream;
+
+        if( daliParser.ParseError() )
+        {
+          stream << "position: " << daliParser.GetErrorPosition() << ", line: " << daliParser.GetErrorLineNumber() << ", column: " << daliParser.GetErrorColumn() << ", description: " << daliParser.GetErrorDescription() << ".";
+        }
+
+        throw DaliException( ASSERT_LOCATION, stream.str().c_str() );
+      }
+      const TreeNode *root = daliParser.GetRoot();
+      //DliLoader::getShaders( root, 0, asset.vertexShader, asset.fragmentShader );
+      //DliLoader::getMaterial( root, 0, asset.albedoMetalness, asset.normalRoughness );
+      //DliLoader::getEnvironment( root, asset.cubeDiffuse, asset.cubeSpecular, asset.MaxLOD );
+      DliCameraParameters camera;
+      DliLoader::getCameraParameters( root, 0, camera );
+      asset.cameraFar = camera.cameraFar;
+      asset.cameraNear = camera.cameraNear;
+      asset.cameraFov = camera.cameraFov;
+      asset.cameraPosition = camera.cameraPosition;
+      asset.objModel = false;
     }
   }
 }

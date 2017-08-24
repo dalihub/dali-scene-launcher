@@ -59,7 +59,7 @@ public:
    * @param[in] position The position of the actor.
    * @param[in] size The size of the actor.
    */
-  void Init( Shader shader, const std::string& modelUrl, const Vector3& position, const Vector3& size );
+  void Init( const std::string& modelUrl, const Vector3& position, const Vector3& size );
 
   /**
    * @brief Initializes the @p mTextureSet member with the needed textures for Physically Based Rendering.
@@ -83,6 +83,11 @@ public:
    */
   Actor &GetActor();
 
+  void SetShaderUniform(std::string property, const Property::Value& value);
+  Texture GetCubeSpecularTexture();
+
+  static Actor CreateNode( Shader shader, bool blend, TextureSet textureSet, Geometry geometry, std::string name );
+
 private:
 
   /**
@@ -97,6 +102,8 @@ private:
                        std::vector<std::string>& names );
 
   Actor mActor;
+  std::vector<Shader> mShaderArray;
+  Texture mCubeSpecularTexture;
   TextureSet mTextureSet;
 };
 
