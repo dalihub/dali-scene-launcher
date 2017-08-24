@@ -24,7 +24,7 @@
 
 using namespace Dali;
 
-namespace PbrDemo
+namespace SceneLauncher
 {
 
 /**
@@ -43,6 +43,6 @@ struct CubeData
  */
 bool LoadCubeMapFromKtxFile( const std::string& path, CubeData& cubedata );
 
-} // namespace PbrDemo
+} // namespace SceneLauncher
 
 #endif //KTX_LOADER_H

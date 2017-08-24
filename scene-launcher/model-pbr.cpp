@@ -22,9 +22,11 @@
 #include <dali/devel-api/adaptor-framework/file-loader.h>
 #include <cstdio>
 #include <string.h>
+#include <dali/devel-api/actors/actor-devel.h>
 
 // INTERNAL INCLUDES
 #include "obj-loader.h"
+#include "dli-loader.h"
 
 namespace
 {
@@ -39,7 +41,7 @@ struct Vertices
 
 } // namespace
 
-namespace PbrDemo
+namespace SceneLauncher
 {
 
 ModelPbr::ModelPbr()
@@ -50,46 +52,62 @@ ModelPbr::~ModelPbr()
 {
 }
 
-void ModelPbr::Init( Shader shader, const std::string& modelUrl, const Vector3& position, const Vector3& size )
+void ModelPbr::Init( const std::string& modelUrl, const Vector3& position, const Vector3& size )
 {
-  std::vector<Geometry> geometry;
-  std::vector<std::string> names;
-  CreateGeometry( modelUrl, geometry, names );
-
   mActor = Actor::New();
   mActor.SetAnchorPoint( AnchorPoint::CENTER );
   mActor.SetParentOrigin( ParentOrigin::CENTER );
   mActor.SetPosition( position );
   mActor.SetSize( size );
 
-  std::vector<Geometry>::iterator gIt = geometry.begin(), gEndIt = geometry.end();
-  std::vector<std::string>::iterator nIt = names.begin(), nEndIt = names.end();
-  for( ; ( gIt != gEndIt ) && ( nIt != nEndIt ); ++gIt, ++ nIt )
+  if( modelUrl.rfind( ".dli" ) + 4 == modelUrl.length() )
   {
-    Renderer renderer = Renderer::New( *gIt, shader );
-    const std::string& name = *nIt;
-
-    if( mTextureSet )
+    //If it is a DLI file, ignore "shader" parameter
+    DliLoader dliLoader;
+    if(dliLoader.LoadObject( modelUrl ) )
     {
-      renderer.SetTextures( mTextureSet );
+      dliLoader.CreateScene(mShaderArray, mActor, mCubeSpecularTexture);
     }
+    else
+    {
+      throw DaliException( ASSERT_LOCATION, dliLoader.getParseError().c_str() );
+    }
+  }
+  else
+  {
+    std::vector<Geometry> geometry;
+    std::vector<std::string> names;
+    CreateGeometry( modelUrl, geometry, names );
 
-    // Face culling is enabled to hide the backwards facing sides of the model
-    // This is sufficient to render a single object; for more complex scenes depth-testing might be required
-    renderer.SetProperty( Renderer::Property::DEPTH_TEST_MODE, DepthTestMode::ON );
-    renderer.SetProperty( Renderer::Property::DEPTH_WRITE_MODE, DepthWriteMode::ON );
-    renderer.SetProperty( Renderer::Property::DEPTH_FUNCTION, DepthFunction::LESS_EQUAL );
-    renderer.SetProperty( Renderer::Property::FACE_CULLING_MODE, FaceCullingMode::BACK );
+    std::vector<Geometry>::iterator gIt = geometry.begin(), gEndIt = geometry.end();
+    std::vector<std::string>::iterator nIt = names.begin(), nEndIt = names.end();
+    for( ; ( gIt != gEndIt ) && ( nIt != nEndIt ); ++gIt, ++ nIt )
+    {
+      Renderer renderer = Renderer::New( *gIt, mShaderArray[0] );
+      const std::string& name = *nIt;
 
-    Actor actor = Actor::New();
-    actor.SetName( name );
+      if( mTextureSet )
+      {
+        renderer.SetTextures( mTextureSet );
+      }
 
-    actor.SetAnchorPoint( AnchorPoint::CENTER );
-    actor.SetParentOrigin( ParentOrigin::CENTER );
-    actor.SetSize( size );
-    actor.AddRenderer( renderer );
+      // Face culling is enabled to hide the backwards facing sides of the model
+      // This is sufficient to render a single object; for more complex scenes depth-testing might be required
+      renderer.SetProperty( Renderer::Property::DEPTH_TEST_MODE, DepthTestMode::ON );
+      renderer.SetProperty( Renderer::Property::DEPTH_WRITE_MODE, DepthWriteMode::ON );
+      renderer.SetProperty( Renderer::Property::DEPTH_FUNCTION, DepthFunction::LESS_EQUAL );
+      renderer.SetProperty( Renderer::Property::FACE_CULLING_MODE, FaceCullingMode::BACK );
 
-    mActor.Add( actor );
+      Actor actor = Actor::New();
+      actor.SetName( name );
+
+      actor.SetAnchorPoint( AnchorPoint::CENTER );
+      actor.SetParentOrigin( ParentOrigin::CENTER );
+      actor.SetSize( size );
+      actor.AddRenderer( renderer );
+
+      mActor.Add( actor );
+    }
   }
 }
 
@@ -130,20 +148,77 @@ void ModelPbr::CreateGeometry( const std::string& url,
 {
   std::streampos fileSize;
   Dali::Vector<char> fileContent;
-
-  if( FileLoader::ReadFile( url, fileSize, fileContent, FileLoader::TEXT ) )
+  if( url.rfind( ".obj" ) + 4 == url.length() )
   {
-    PbrDemo::ObjLoader objLoader;
+    if( FileLoader::ReadFile( url, fileSize, fileContent, FileLoader::TEXT ) )
+    {
+      PbrDemo::ObjLoader objLoader;
 
-    objLoader.ClearArrays();
-    objLoader.LoadObject( fileContent.Begin(), fileSize );
+      objLoader.LoadObject( fileContent.Begin(), fileSize );
 
-    objLoader.CreateGeometry( PbrDemo::ObjLoader::TEXTURE_COORDINATES | PbrDemo::ObjLoader::TANGENTS, true, geometry, names );
+      objLoader.CreateGeometry( PbrDemo::ObjLoader::TEXTURE_COORDINATES | PbrDemo::ObjLoader::TANGENTS, true, geometry, names );
+    }
+    else
+    {
+      throw DaliException( ASSERT_LOCATION, "Failed to load obj model.");
+    }
   }
   else
   {
-    throw DaliException( ASSERT_LOCATION, "Failed to load obj model.");
+     throw DaliException( ASSERT_LOCATION, "Format not supported");
   }
+
 }
 
-} // namespace PbrDemo
+void ModelPbr::SetShaderUniform(std::string property, const Property::Value& value)
+{
+
+  for(std::vector<Shader>::iterator it = mShaderArray.begin(); it != mShaderArray.end(); ++it)
+  {
+    (*it).SetProperty( (*it).GetPropertyIndex( property ), value );
+  }
+
+}
+
+Texture ModelPbr::GetCubeSpecularTexture()
+{
+  return mCubeSpecularTexture;
+}
+
+Actor ModelPbr::CreateNode( Shader shader, bool blend, TextureSet textureSet, Geometry geometry, std::string name )
+{
+  Renderer renderer = Renderer::New( geometry, shader );
+  renderer.SetTextures( textureSet );
+  if( !blend )
+  {
+    // Face culling is enabled to hide the backwards facing sides of the model
+    // This is sufficient to render a single object; for more complex scenes depth-testing might be required
+    renderer.SetProperty( Renderer::Property::DEPTH_TEST_MODE, DepthTestMode::ON );
+    renderer.SetProperty( Renderer::Property::DEPTH_WRITE_MODE, DepthWriteMode::ON );
+    renderer.SetProperty( Renderer::Property::DEPTH_FUNCTION, DepthFunction::LESS_EQUAL );
+    renderer.SetProperty( Renderer::Property::FACE_CULLING_MODE, FaceCullingMode::BACK );
+  }
+  else
+  {
+    //renderer.SetProperty( Renderer::Property::DEPTH_WRITE_MODE, DepthWriteMode::ON );
+    renderer.SetProperty( Renderer::Property::DEPTH_TEST_MODE, DepthTestMode::ON );
+
+    renderer.SetProperty( Renderer::Property::FACE_CULLING_MODE, FaceCullingMode::NONE );
+    renderer.SetProperty( Renderer::Property::BLEND_MODE, BlendMode::ON );
+    renderer.SetProperty( Renderer::Property::BLEND_FACTOR_DEST_ALPHA, BlendFactor::ONE_MINUS_SRC_ALPHA );
+
+  }
+
+  Actor actor = Actor::New();
+  actor.SetAnchorPoint( AnchorPoint::CENTER );
+  actor.SetParentOrigin( ParentOrigin::CENTER );
+  actor.SetPosition( Vector3() );
+  actor.SetSize( Vector3::ONE );
+  actor.AddRenderer( renderer );
+  actor.SetName(name);
+
+  return actor;
+}
+
+
+} // namespace SceneLauncher
