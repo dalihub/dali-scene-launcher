@@ -17,7 +17,7 @@ ENDIF()
 IF(DEFINED DALI_APP_RES_DIR)
         SET(APP_DATA_RES_DIR ${DALI_APP_RES_DIR})
 ELSE()
-        SET(APP_DATA_RES_DIR ${PREFIX}/share/com.samsung.dali-scene-launcher/res)
+        SET(APP_DATA_RES_DIR ${PREFIX}/share/com.samsung.dali-scene-launcher/resources)
 ENDIF()
 
 MESSAGE( STATUS "CMAKE_BUILD_TYPE: " ${CMAKE_BUILD_TYPE} )
@@ -86,7 +86,7 @@ CONFIGURE_FILE( resources-location.in ${ROOT_SRC_DIR}/scene-launcher/resources-l
 
 ###########################################################################
 
-SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${REQUIRED_CFLAGS} ${DALI_SCENE_LAUNCHER_CFLAGS} -Werror -Wall -fPIE")
+SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${REQUIRED_CFLAGS} ${DALI_SCENE_LAUNCHER_CFLAGS} -Werror -Wall -fPIE -std=c++11")
 SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${CMAKE_C_FLAGS}")
 
 INCLUDE_DIRECTORIES(${ROOT_SRC_DIR})
