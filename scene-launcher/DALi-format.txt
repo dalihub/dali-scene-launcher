@@ -1,0 +1,117 @@
+It is based in the glTF format for future implementation
+
+This format has a JSON structure,
+
+"scene" has the index of the default scene.
+
+"scenes" has an array where points the starting node of scene graph
+
+"nodes"(Actors) is an array, each mode can have:
+
+    "name", name of node
+    "children", the child nodes of this node
+    "matrix", orientation and position of the node
+    "mesh": is the index of the model used
+
+ "meshes", an array of "bin" files:
+
+    "uri" "bin" filename
+    "material", index of material used, default index 0
+    "shader" index shader used, default index 0
+    "attributes" attributes used
+
+            // bit0, indices
+
+            // bit1, positions
+
+            // bit2, normals
+
+            // bit3, textures
+
+            // bit4, tangents
+
+            // bit5, bitangents
+            indices/positions/normals/textures/tangents/bitangents
+                byteOffset, offset position of the binary file
+                byteLength, length in bytes of attribute
+    "environment", environment textures used for file.
+
+"materials", an array which contains the texture files(albedo-metal, normal-rough)
+
+"cameras", array of camera parameters, the default camera used is in index 0
+
+
+EXAMPLE of DALi-format
+/////////////////////////////////////
+{
+    "asset" : { "version" : "1.0" },
+    "scene" : 0,
+    "scenes" : [ { "nodes" : [ 0 ] } ],
+    "nodes" : [
+        {
+            "name": "cubetest_DAE_001",
+            "matrix": [0.01, 0, 0, 0, 0, 0.01, 0, 0, 0, 0, 0.01, 0, 0, 0, 0, 1],
+            "children": [ 1 ]
+        },
+        {
+            "name": "pCube2",
+            "matrix": [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, -1.70099, 1],
+            "mesh": 0,
+            "children": [ 2 ]
+        },
+        {
+            "name": "pCube1",
+            "matrix": [1, 0, 0, 0, 0, 0.934389, 0.356254, 0, 0, -0.356254, 0.934389, 0, 0, 0, 1.70099, 1],
+            "mesh": 1
+        }
+    ],
+    "meshes" : [
+        {
+            "uri": "testdali.bin",
+            "attributes": 63,
+            "indices":    { "byteOffset": 0  ,  "byteLength": 72  },
+            "positions":  { "byteOffset": 72 ,  "byteLength": 432 },
+            "normals":    { "byteOffset": 504,  "byteLength": 432 },
+            "textures":   { "byteOffset": 936,  "byteLength": 432 },
+            "tangents":   { "byteOffset": 1368, "byteLength": 432 },
+            "bitangents": { "byteOffset": 1800, "byteLength": 432}
+        },
+        {
+            "uri": "testdali.bin",
+            "material": 0,
+            "shader": 0,
+            "attributes": 63,
+            "indices":    { "byteOffset": 2232, "byteLength": 72  },
+            "positions":  { "byteOffset": 2304, "byteLength": 432 },
+            "normals":    { "byteOffset": 2736, "byteLength": 432 },
+            "textures":   { "byteOffset": 3168, "byteLength": 432 },
+            "tangents":   { "byteOffset": 3600, "byteLength": 432 },
+            "bitangents": { "byteOffset": 4032, "byteLength": 432 }
+        }
+    ],
+    "cameras" : [
+        {
+            "fov": 60.0,
+            "near": 0.1,
+            "far": 1000.0,
+            "position": [0.0, 0.0, 3.5]
+        }
+    ],
+    "materials" : [
+        {
+            "albedo_metallic": "scenes/CityScape_Albedo_Metal.png",
+            "normal_rough": "scenes/CityScape_Normal_Rough.png"
+        }
+    ],
+    "environment" : {
+        "cubeSpecular": "scenes/EnviromentTest_Radiance.ktx",
+        "cubeDiffuse": "scenes/EnviromentTest_Irradiance.ktx",
+        "MaxLOD" : 8
+    },
+    "shaders" : [
+        {
+            "vertex": "scenes/default_pbr_shader.vsh",
+            "fragment": "scenes/default_pbr_shader.fsh"
+        }
+    ]
+}
