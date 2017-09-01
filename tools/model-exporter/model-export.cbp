@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+<CodeBlocks_project_file>
+	<FileVersion major="1" minor="6" />
+	<Project>
+		<Option title="model-export" />
+		<Option pch_mode="2" />
+		<Option compiler="gcc" />
+		<Build>
+			<Target title="Linux-Debug">
+				<Option output="bin/Debug/model-export" prefix_auto="1" extension_auto="1" />
+				<Option object_output="obj/Debug/" />
+				<Option type="1" />
+				<Option compiler="gcc" />
+				<Compiler>
+					<Add option="-g" />
+					<Add directory="include" />
+			                <Add option="-std=c++11" />
+			                <Add option="-Wall" />
+			                <Add option="-fexceptions" />
+			                <Add directory="../assimp-4.0.1/include" />
+			                <Add directory="../assimp-4.0.1/build/include" />
+				</Compiler>
+		        <Linker>
+			        <Add library="../assimp-4.0.1/build/code/libassimp.a" />
+			        <Add library="../assimp-4.0.1/build/contrib/irrXML/libIrrXML.a" />
+			        <Add library="../assimp-4.0.1/build/contrib/zlib/libzlibstatic.a" />
+		        </Linker>
+			</Target>
+			<Target title="Linux-Release">
+				<Option output="bin/Release/model-export" prefix_auto="1" extension_auto="1" />
+				<Option object_output="obj/Release/" />
+				<Option type="1" />
+				<Option compiler="gcc" />
+				<Compiler>
+					<Add option="-O2" />
+					<Add directory="include" />
+			                <Add option="-std=c++11" />
+			                <Add option="-Wall" />
+			                <Add option="-fexceptions" />
+			                <Add directory="../assimp-4.0.1/include" />
+			                <Add directory="../assimp-4.0.1/build/include" />
+				</Compiler>
+				<Linker>
+					<Add option="-s" />
+			                <Add library="../assimp-4.0.1/build/code/libassimp.a" />
+			                <Add library="../assimp-4.0.1/build/contrib/irrXML/libIrrXML.a" />
+			                <Add library="../assimp-4.0.1/build/contrib/zlib/libzlibstatic.a" />
+				</Linker>
+			</Target>
+			<Target title="Windows-Debug">
+				<Option output="bin/WinDebug/model-export" prefix_auto="1" extension_auto="1" />
+				<Option object_output="obj/WinDebug/" />
+				<Option type="1" />
+				<Option compiler="gcc" />
+				<Compiler>
+					<Add option="-g" />
+					<Add directory="include" />
+			                <Add option="-Wall" />
+			                <Add option="-std=c++11" />
+			                <Add option="-fexceptions" />
+			                <Add directory="../assimp-4.0.1/build_win/include" />
+			                <Add directory="../assimp-4.0.1/include" />
+				</Compiler>
+		                <Linker>
+			                <Add library="../assimp-4.0.1/build_win/code/libassimp.a" />
+			                <Add library="../assimp-4.0.1/build_win/contrib/zlib/libzlibstatic.a" />
+			                <Add library="../assimp-4.0.1/build_win/contrib/irrXML/libIrrXML.a" />
+		                </Linker>
+			</Target>
+			<Target title="Windows-Release">
+				<Option output="bin/WinRelease/model-export" prefix_auto="1" extension_auto="1" />
+				<Option object_output="obj/WinRelease/" />
+				<Option type="1" />
+				<Option compiler="gcc" />
+				<Compiler>
+					<Add option="-O2" />
+					<Add directory="include" />
+			                <Add option="-Wall" />
+			                <Add option="-std=c++11" />
+			                <Add option="-fexceptions" />
+			                <Add directory="../assimp-4.0.1/build_win/include" />
+			                <Add directory="../assimp-4.0.1/include" />
+				</Compiler>
+				<Linker>
+					<Add option="-s" />
+			                <Add library="../assimp-4.0.1/build_win/code/libassimp.a" />
+			                <Add library="../assimp-4.0.1/build_win/contrib/zlib/libzlibstatic.a" />
+			                <Add library="../assimp-4.0.1/build_win/contrib/irrXML/libIrrXML.a" />
+				</Linker>
+			</Target>
+		</Build>
+		<Compiler>
+
+		</Compiler>
+		<Linker>
+		</Linker>
+		<Unit filename="include/LoadScene.h" />
+		<Unit filename="include/Node3D.h" />
+		<Unit filename="include/SaveScene.h" />
+		<Unit filename="include/Scene3D.h" />
+		<Unit filename="include/Vector2.h" />
+		<Unit filename="include/Vector3.h" />
+		<Unit filename="main.cpp" />
+		<Unit filename="src/LoadScene.cpp" />
+		<Unit filename="src/Node3D.cpp" />
+		<Unit filename="src/SaveScene.cpp" />
+		<Unit filename="src/Scene3D.cpp" />
+		<Extensions>
+			<code_completion />
+			<debugger />
+		</Extensions>
+	</Project>
+</CodeBlocks_project_file>
