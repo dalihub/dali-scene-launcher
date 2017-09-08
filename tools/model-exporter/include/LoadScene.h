@@ -21,6 +21,6 @@
 #include "Scene3D.h"
 
 void GetSceneNodes(Scene3D &scene_data, Node3D *parent, const aiScene *scene, aiNode *aNode);
-
+void GetSceneCameras( Scene3D &scene_data, const aiScene *scene );
 
 #endif // LOADSCENE_H

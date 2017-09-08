@@ -19,6 +19,7 @@
  */
 
 #include "Node3D.h"
+#include "Camera3D.h"
 #include <vector>
 
 using namespace std;
@@ -30,12 +31,16 @@ class Scene3D
         void AddNode(Node3D *enode);
         virtual ~Scene3D();
         unsigned int GetNumNodes();
-        Node3D *GetNode(unsigned int idx);
+        unsigned int GetNumCameras();
+        Node3D* GetNode(unsigned int idx);
+        void AddCamera(Camera3D &ecam);
+        Camera3D* GetCamera(unsigned int idx);
     protected:
 
     private:
         unsigned int index;
         vector<Node3D*> m_nodes;
+        vector<Camera3D> m_cameras;
 };
 
 #endif // SCENE3D_H

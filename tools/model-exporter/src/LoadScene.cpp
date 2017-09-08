@@ -17,10 +17,26 @@
 
 #include <iostream>
 #include <assimp/scene.h>
+#include <math.h>
 
 #include "LoadScene.h"
 
+
 using namespace std;
+
+bool NodeIsCamera( const aiScene *scene, std::string eName )
+{
+
+    for( unsigned int n = 0; n < scene->mNumCameras; n++ )
+    {
+        const aiCamera *acam = scene->mCameras[n];
+        string camname;
+        camname.assign(acam->mName.data,acam->mName.length);
+        if( eName == camname )
+            return true;
+    }
+    return false;
+}
 
 void GetSceneNodes(Scene3D &scene_data, Node3D *parent, const aiScene *scene, aiNode *aNode)
 {
@@ -28,6 +44,15 @@ void GetSceneNodes(Scene3D &scene_data, Node3D *parent, const aiScene *scene, ai
     Node3D *pnode;
     if(!aNode->mNumMeshes)
     {
+        if(!aNode->mNumChildren)
+        {
+            string camname;
+            camname.assign(aNode->mName.data,aNode->mName.length);
+            if( NodeIsCamera( scene, camname ) )
+            {
+                return;
+            }
+        }
         pnode = new Node3D(parent, false);
         pnode->m_Name.assign(aNode->mName.data,aNode->mName.length);
         scene_data.AddNode(pnode);
@@ -103,5 +128,60 @@ void GetSceneNodes(Scene3D &scene_data, Node3D *parent, const aiScene *scene, ai
     for(unsigned int c = 0; c < aNode->mNumChildren; c++ )
     {
         GetSceneNodes(scene_data, pnode, scene, aNode->mChildren[c]);
+    }
+}
+aiNode *GetCameraNode( const aiScene *scene, aiNode *aNode )
+{
+    if(!aNode->mNumMeshes)
+    {
+        if(!aNode->mNumChildren)
+        {
+            string camname;
+            camname.assign(aNode->mName.data,aNode->mName.length);
+            if( NodeIsCamera( scene, camname ) )
+            {
+                return aNode;
+            }
+        }
+    }
+
+    for(unsigned int c = 0; c < aNode->mNumChildren; c++ )
+    {
+        aiNode *returnNode = GetCameraNode( scene, aNode->mChildren[c]);
+        if(returnNode)
+            return returnNode;
+    }
+    return nullptr;
+}
+
+void GetSceneCameras( Scene3D &scene_data, const aiScene *scene )
+{
+    for( unsigned int n = 0; n < scene->mNumCameras; n++ )
+    {
+        const aiCamera *acam = scene->mCameras[n];
+        Camera3D cam;
+        cam.far = acam->mClipPlaneFar;
+        cam.near = acam->mClipPlaneNear;
+        cam.fov = acam->mHorizontalFOV *180.0f / 3.14159265358979323846;
+        Vector3 vlookat;
+        Vector3 vUp;
+        Vector3 vPosition;
+        vlookat.x = acam->mLookAt.x;
+        vlookat.y = acam->mLookAt.y;
+        vlookat.z = acam->mLookAt.z;
+        vUp.x = acam->mUp.x;
+        vUp.y = acam->mUp.y;
+        vUp.z = acam->mUp.z;
+        vPosition.x = acam->mPosition.x;
+        vPosition.y = acam->mPosition.y;
+        vPosition.z = acam->mPosition.z;
+        aiNode *pnode = GetCameraNode( scene, scene->mRootNode );
+        if( pnode )
+        {
+            cam.SetMatrix( pnode->mTransformation );
+            //cam.SetMatrix( vlookat, vUp , vPosition );
+            scene_data.AddCamera( cam );
+        }
+
     }
 }

@@ -163,56 +163,56 @@ void SaveMeshes(Scene3D *scene, ofstream &txtFile, ofstream &binFile, std::strin
             txtFile << "            \"uri\": \""<<fileNameBin<<"\",\n";
             txtFile << "            \"attributes\": " << attributes << ",\n";
             txtFile << "            \"primitive\": \"TRIANGLES\"" << ",\n";
-            txtFile << "            \"indices\": { \n";
+            txtFile << "            \"indices\": { ";
             offset += length;
-            txtFile << "                \"byteOffset\": "<< offset <<",\n";
+            txtFile << "\"byteOffset\": "<< offset <<", ";
             length = node->m_Indices.size() * sizeof(unsigned short);
-            txtFile << "                \"byteLength\": "<< length  <<"}";
+            txtFile << "\"byteLength\": "<< length  <<" }";
             binFile.write((char*)node->m_Indices.data(), length );
 
-            txtFile << ",\n            \"positions\": { \n";
+            txtFile << ",\n            \"positions\": { ";
             offset += length;
-            txtFile << "                \"byteOffset\": "<< offset <<",\n";
+            txtFile << "\"byteOffset\": "<< offset <<", ";
             length = node->m_Positions.size() * sizeof(Vector3);
-            txtFile << "                \"byteLength\": "<< length  <<"}";
+            txtFile << "\"byteLength\": "<< length  <<" }";
             binFile.write((char*)node->m_Positions.data(), length );
 
             if(node->m_Normals.size())
             {
-                txtFile << ",\n            \"normals\": { \n";
+                txtFile << ",\n            \"normals\": { ";
                 offset += length;
-                txtFile << "                \"byteOffset\": "<< offset <<",\n";
+                txtFile << "\"byteOffset\": "<< offset <<", ";
                 length = node->m_Normals.size() * sizeof(Vector3);
-                txtFile << "                \"byteLength\": "<< length  <<"}";
+                txtFile << "\"byteLength\": "<< length  <<" }";
                 binFile.write((char*)node->m_Normals.data(), length );
             }
             if(node->m_Textures.size())
             {
-                txtFile << ",\n            \"textures\": { \n";
+                txtFile << ",\n            \"textures\": { ";
                 offset += length;
-                txtFile << "                \"byteOffset\": "<< offset <<",\n";
+                txtFile << "\"byteOffset\": "<< offset <<", ";
                 length = node->m_Textures.size() * sizeof(Vector2);
-                txtFile << "                \"byteLength\": "<< length  <<"}";
+                txtFile << "\"byteLength\": "<< length  <<" }";
                 binFile.write((char*)node->m_Textures.data(), length );
             }
 
             if(node->m_Tangents.size())
             {
-                txtFile << ",\n            \"tangents\": { \n";
+                txtFile << ",\n            \"tangents\": { ";
                 offset += length;
-                txtFile << "                \"byteOffset\": "<< offset <<",\n";
+                txtFile << "\"byteOffset\": "<< offset <<", ";
                 length = node->m_Tangents.size() * sizeof(Vector3);
-                txtFile << "                \"byteLength\": "<< length  <<"}";
+                txtFile << "\"byteLength\": "<< length  <<" }";
                 binFile.write((char*)node->m_Tangents.data(), length );
             }
 
             if(node->m_Bitangents.size())
             {
-                txtFile << ",\n            \"bitangents\": { \n";
+                txtFile << ",\n            \"bitangents\": { ";
                 offset += length;
-                txtFile << "                \"byteOffset\": "<< offset <<",\n";
+                txtFile << "\"byteOffset\": "<< offset <<", ";
                 length = node->m_Bitangents.size() * sizeof(Vector3);
-                txtFile << "                \"byteLength\": "<< length  <<"}";
+                txtFile << "\"byteLength\": "<< length  <<" }";
                 binFile.write((char*)node->m_Bitangents.data(), length );
             }
 
@@ -226,12 +226,39 @@ void SaveMeshes(Scene3D *scene, ofstream &txtFile, ofstream &binFile, std::strin
 
 void SaveCameras(Scene3D *scene, ofstream &txtFile)
 {
-    txtFile << "        {\n";
-    txtFile << "            \"fov\": 60.0,\n";
-    txtFile << "            \"near\": 0.1,\n";
-    txtFile << "            \"far\": 1000.0,\n";
-    txtFile << "            \"position\": [0.0, 0.0, 3.5]\n";
-    txtFile << "        }\n";
+    if( !scene->GetNumCameras() )
+    {
+        txtFile << "        {\n";
+        txtFile << "            \"fov\": 60.0,\n";
+        txtFile << "            \"near\": 0.1,\n";
+        txtFile << "            \"far\": 1000.0,\n";
+        txtFile << "            \"position\": [0.0, 0.0, 3.5]\n";
+        txtFile << "        }\n";
+    }
+    for( unsigned int i = 0; i <scene->GetNumCameras(); i++)
+    {
+        Camera3D *cam = scene->GetCamera( i );
+        txtFile << "        {\n";
+        txtFile << "            \"fov\": " << cam->fov << ",\n";
+        txtFile << "            \"near\": " << cam->near << ",\n";
+        txtFile << "            \"far\": " << cam->far << ",\n";
+        txtFile << "            \"matrix\": [";
+
+        for(int i=0;i<15;i++)
+        {
+            txtFile << cam->m_Matrix[i]<<", ";
+        }
+        txtFile << cam->m_Matrix[15]<<"]\n";
+
+        if( i == scene->GetNumCameras() - 1)
+        {
+            txtFile << "        }\n";
+        }
+        else
+        {
+            txtFile << "        },\n";
+        }
+    }
 }
 
 void SaveMaterials(Scene3D *scene, ofstream &txtFile)

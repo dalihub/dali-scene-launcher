@@ -1,6 +1,7 @@
 #ifndef VECTOR3_H
 #define VECTOR3_H
 
+#include <math.h>
 /*
  * Copyright (c) 2017 Samsung Electronics Co., Ltd.
  *
@@ -27,7 +28,13 @@ struct Vector3
          {
 
          }
-
+        void normalize()
+        {
+            float temp = sqrtf( x*x + y*y + z*z );
+            x /= temp;
+            y /= temp;
+            y /= temp;
+        }
         float x;
         float y;
         float z;

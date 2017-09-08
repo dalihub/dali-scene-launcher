@@ -39,7 +39,7 @@ int main(int argc, char* argv[])
     }
     else
     {
-        fileName = "C:\\Users\\g.reynaga\\Documents\\models\\PipeTest_Single.dae";
+        fileName = "C:\\Users\\g.reynaga\\Documents\\models\\MW_v3_006.dae";
     }
     scene = importer.ReadFile(fileName,
                                       aiProcess_CalcTangentSpace |
@@ -55,6 +55,7 @@ int main(int argc, char* argv[])
 
 
     GetSceneNodes(scene_data, nullptr, scene, scene->mRootNode);
+    GetSceneCameras(scene_data, scene);
 
     string fname("TestWatch_007.dli");
     string fnamebin("TestWatch_007.bin");

@@ -47,3 +47,18 @@ Node3D *Scene3D::GetNode(unsigned int idx)
 {
     return m_nodes[idx];
 }
+
+void Scene3D::AddCamera(Camera3D &ecam)
+{
+    m_cameras.push_back(ecam);
+}
+
+unsigned int Scene3D::GetNumCameras()
+{
+    return m_cameras.size();
+}
+
+Camera3D* Scene3D::GetCamera(unsigned int idx)
+{
+    return &m_cameras[idx];
+}
