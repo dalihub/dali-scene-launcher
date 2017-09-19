@@ -62,3 +62,26 @@ Camera3D* Scene3D::GetCamera(unsigned int idx)
 {
     return &m_cameras[idx];
 }
+
+void Scene3D::AddAnimation(Animation3D &eanim)
+{
+    m_animations.push_back(eanim);
+}
+unsigned int Scene3D::GetNumAnimations()
+{
+    return m_animations.size();
+}
+
+Animation3D* Scene3D::GetAnimation(unsigned int idx)
+{
+    return &m_animations[idx];
+}
+bool Scene3D::HasAnimations()
+{
+    bool anim = false;
+    for( unsigned int i = 0; i < m_animations.size(); i++ )
+    {
+        anim |= m_animations[i].HasAnimations();
+    }
+    return anim;
+}

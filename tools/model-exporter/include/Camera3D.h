@@ -13,7 +13,7 @@ class Camera3D
         float near;
         float far;
         float m_Matrix[16];
-        void SetMatrix( Vector3 look_atVector, Vector3 upVector, Vector3 positionVector );
+        void MultLookAtMatrix( Vector3 look_atVector, Vector3 upVector, Vector3 positionVector );
         void SetMatrix(aiMatrix4x4 eMat);
     protected:
 

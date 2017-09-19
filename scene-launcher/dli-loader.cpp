@@ -249,8 +249,8 @@ Property::Value GetPropertyValue( const Property::Type& propType, const TreeNode
       {
         Vector4 v;
         ReadVector(&child, v.AsFloat(), 4u );
-        // angle, axis as per spec
-        return Property::Value( Quaternion( Radian( Degree( v.w ) ), Vector3( v ) ) );
+        //Quaternion
+        return Property::Value( Quaternion( v ) );
       }
       else
       {

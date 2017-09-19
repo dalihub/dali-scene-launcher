@@ -79,18 +79,31 @@ void GetSceneNodes(Scene3D &scene_data, Node3D *parent, const aiScene *scene, ai
                 parent->m_Children.push_back(pnode);
             }
         }
-        for(unsigned int f = 0; f < mesh->mNumFaces; f++ )
+        for( unsigned int f = 0; f < mesh->mNumFaces; f++ )
         {
             struct aiFace *face = &mesh->mFaces[f];
-            if(face->mNumIndices != 3) //Is not a triangle
+            if( (face->mNumIndices > 4) ||(face->mNumIndices < 3)) //Is not a triangle or quad
             {
                 continue;
             }
-            for(unsigned int i = 0; i < face->mNumIndices; i++ )
+            if( face->mNumIndices == 3 ) //Triangle
             {
-                unsigned short index = face->mIndices[i];
-                node->m_Indices.push_back(index);
+                for(unsigned int i = 0; i < face->mNumIndices; i++ )
+                {
+                    unsigned short index = face->mIndices[i];
+                    node->m_Indices.push_back( index );
+                }
             }
+            if( face->mNumIndices == 4 ) //Quads
+            {
+               node->m_Indices.push_back( face->mIndices[0] );
+               node->m_Indices.push_back( face->mIndices[1] );
+               node->m_Indices.push_back( face->mIndices[2] );
+               node->m_Indices.push_back( face->mIndices[3] );
+               node->m_Indices.push_back( face->mIndices[0] );
+               node->m_Indices.push_back( face->mIndices[2] );
+            }
+
         }
         node->m_Positions.assign( (Vector3*) mesh->mVertices, (Vector3*) (mesh->mVertices + mesh->mNumVertices));
         node->m_Normals.assign( (Vector3*) mesh->mNormals, (Vector3*) (mesh->mNormals + mesh->mNumVertices) );
@@ -179,9 +192,121 @@ void GetSceneCameras( Scene3D &scene_data, const aiScene *scene )
         if( pnode )
         {
             cam.SetMatrix( pnode->mTransformation );
-            //cam.SetMatrix( vlookat, vUp , vPosition );
+            cam.MultLookAtMatrix( vlookat, vUp , vPosition );
             scene_data.AddCamera( cam );
         }
+    }
+}
 
+void GetAnimations( Scene3D &scene_data, const aiScene *scene )
+{
+    if(!scene->HasAnimations())
+    {
+        return;
+    }
+
+    for( unsigned int a = 0; a < scene->mNumAnimations; a++)
+    {
+        float timeFactor = 1.0f;
+        aiAnimation *animation = scene->mAnimations[a];
+        if( !animation->mNumChannels )
+        {
+            continue;
+        }
+        Animation3D dataAnim;
+        timeFactor = dataAnim.TicksPerSecond;
+
+        dataAnim.Duration = animation->mDuration;
+        dataAnim.TicksPerSecond = animation->mTicksPerSecond;
+
+
+        dataAnim.Name.assign(animation->mName.data, animation->mName.length);
+
+
+         for( unsigned int ch = 0; ch < animation->mNumChannels; ch++)
+         {
+            bool diffFlag = false;
+            aiQuaternion cquat;
+            aiVector3D cvec;
+            aiNodeAnim* nAnim = animation->mChannels[ch];
+            NodeAnimation3D nodeAnim;
+            nodeAnim.NodeName.assign( nAnim->mNodeName.data, nAnim->mNodeName.length );
+
+            for( unsigned int k = 0; k < nAnim->mNumRotationKeys; k++ )
+            {
+                aiQuatKey qkey = nAnim->mRotationKeys[k];
+                NodeKey nkey;
+                nkey.time = qkey.mTime * timeFactor;
+                nkey.v[0] = qkey.mValue.x;
+                nkey.v[1] = qkey.mValue.y;
+                nkey.v[2] = qkey.mValue.z;
+                nkey.v[3] = qkey.mValue.w;
+                nodeAnim.Rotations.push_back( nkey );
+                if(!k)
+                {
+                  cquat =  qkey.mValue;
+                }
+                else if(cquat != qkey.mValue)
+                {
+                    diffFlag = true;
+                }
+            }
+            if( !diffFlag )
+            {
+                nodeAnim.Rotations.clear();
+            }
+            diffFlag = false;
+            for( unsigned int k = 0; k < nAnim->mNumPositionKeys; k++ )
+            {
+                aiVectorKey vkey = nAnim->mPositionKeys[k];
+                NodeKey nkey;
+                nkey.time = vkey.mTime * timeFactor;
+                nkey.v[0] = vkey.mValue[0];
+                nkey.v[1] = vkey.mValue[1];
+                nkey.v[2] = vkey.mValue[2];
+                nodeAnim.Positions.push_back( nkey );
+                if(!k)
+                {
+                  cvec =  vkey.mValue;
+                }
+                else if(cvec != vkey.mValue)
+                {
+                    diffFlag = true;
+                }
+            }
+            if( !diffFlag )
+            {
+                nodeAnim.Positions.clear();
+            }
+            diffFlag = false;
+            for( unsigned int k = 0; k < nAnim->mNumScalingKeys; k++ )
+            {
+                aiVectorKey vkey = nAnim->mScalingKeys[k];
+                NodeKey nkey;
+                nkey.time = vkey.mTime * timeFactor;
+                nkey.v[0] = vkey.mValue[0];
+                nkey.v[1] = vkey.mValue[1];
+                nkey.v[2] = vkey.mValue[2];
+                nodeAnim.Scales.push_back( nkey );
+                if(!k)
+                {
+                  cvec =  vkey.mValue;
+                }
+                else if(cvec != vkey.mValue)
+                {
+                    diffFlag = true;
+                }
+            }
+            if( !diffFlag )
+            {
+                nodeAnim.Scales.clear();
+            }
+
+            if(nodeAnim.Rotations.size() + nodeAnim.Positions.size() + nodeAnim.Scales.size())
+            {
+                dataAnim.AnimNodesList.push_back(nodeAnim);
+            }
+         }
+        scene_data.AddAnimation(dataAnim);
     }
 }

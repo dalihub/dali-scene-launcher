@@ -101,12 +101,14 @@
 		<Unit filename="include/Scene3D.h" />
 		<Unit filename="include/Vector2.h" />
 		<Unit filename="include/Vector3.h" />
+		<Unit filename="include/Animation3D.h" />
 		<Unit filename="main.cpp" />
 		<Unit filename="src/Camera3D.cpp" />
 		<Unit filename="src/LoadScene.cpp" />
 		<Unit filename="src/Node3D.cpp" />
 		<Unit filename="src/SaveScene.cpp" />
 		<Unit filename="src/Scene3D.cpp" />
+		<Unit filename="src/Animation3D.cpp" />
 		<Extensions>
 			<code_completion />
 			<debugger />

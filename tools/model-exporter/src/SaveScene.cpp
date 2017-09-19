@@ -28,6 +28,7 @@ void SaveCameras(Scene3D *scene, ofstream &txtFile);
 void SaveMaterials(Scene3D *scene, ofstream &txtFile);
 void SaveEnvironment(Scene3D *scene, ofstream &txtFile);
 void SaveShaders(Scene3D *scene, ofstream &txtFile);
+void SaveAnimations(Scene3D *scene, ofstream &txtFile);
 
 bool SaveScene(Scene3D *scene,std::string fileNamePath, std::string fileNameBinPath)
 {
@@ -42,36 +43,44 @@ bool SaveScene(Scene3D *scene,std::string fileNamePath, std::string fileNameBinP
     txtFile << "    \"scenes\" : [ { \"nodes\" : [ 0 ] } ],\n";
 
     //Save Nodes
-    txtFile << "    \"nodes\" : [ \n";
+    txtFile << "    \"nodes\" : [\n";
         SaveNodes( scene, txtFile );
     txtFile << "    ], \n";
 
-    txtFile << "    \"meshes\" : [ \n";
+    txtFile << "    \"meshes\" : [\n";
         SaveMeshes( scene, txtFile, binFile, fileNameBin );
     txtFile << "    ], \n";
 
     //Save Cameras
-    txtFile << "    \"cameras\" : [ \n";
+    txtFile << "    \"cameras\" : [\n";
         SaveCameras( scene, txtFile );
     txtFile << "    ], \n";
 
     //Save Materials
-    txtFile << "    \"materials\" : [ \n";
+    txtFile << "    \"materials\" : [\n";
         SaveMaterials( scene, txtFile );
-    txtFile << "    ], \n";
+    txtFile << "    ],\n";
 
     //Save Environment
-    txtFile << "    \"environment\" : { \n";
+    txtFile << "    \"environment\" : {\n";
         SaveEnvironment( scene, txtFile );
-    txtFile << "    }, \n";
+    txtFile << "    },\n";
 
     //Save Shaders
-    txtFile << "    \"shaders\" : [ \n";
+    txtFile << "    \"shaders\" : [\n";
         SaveShaders( scene, txtFile );
-    txtFile << "    ] \n";
+    txtFile << "    ]";
+
+    //Save Animations
+    if(scene->HasAnimations())
+    {
+        txtFile << ",\n    \"animations\" : {\n";
+            SaveAnimations( scene, txtFile );
+        txtFile << "\n    }";
+    }
 
 
-    txtFile << "}\n";
+    txtFile << "\n}\n";
     txtFile.close();
     binFile.close();
     return true;
@@ -219,12 +228,10 @@ void SaveMeshes(Scene3D *scene, ofstream &txtFile, ofstream &binFile, std::strin
             txtFile << "\n        }\n";
             meshIdx++;
         }
-
-
     }
 }
 
-void SaveCameras(Scene3D *scene, ofstream &txtFile)
+void SaveCameras( Scene3D *scene, ofstream &txtFile )
 {
     if( !scene->GetNumCameras() )
     {
@@ -232,10 +239,10 @@ void SaveCameras(Scene3D *scene, ofstream &txtFile)
         txtFile << "            \"fov\": 60.0,\n";
         txtFile << "            \"near\": 0.1,\n";
         txtFile << "            \"far\": 1000.0,\n";
-        txtFile << "            \"position\": [0.0, 0.0, 3.5]\n";
+        txtFile << "            \"matrix\": [1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 3.5, 1.0]\n";
         txtFile << "        }\n";
     }
-    for( unsigned int i = 0; i <scene->GetNumCameras(); i++)
+    for( unsigned int i = 0; i < scene->GetNumCameras(); i++ )
     {
         Camera3D *cam = scene->GetCamera( i );
         txtFile << "        {\n";
@@ -261,25 +268,118 @@ void SaveCameras(Scene3D *scene, ofstream &txtFile)
     }
 }
 
-void SaveMaterials(Scene3D *scene, ofstream &txtFile)
+void SaveMaterials( Scene3D *scene, ofstream &txtFile )
 {
     txtFile << "        {\n";
-    txtFile << "            \"texture1\": \"\",\n";
-    txtFile << "            \"texture2\": \"\"\n";
+    txtFile << "            \"texture1\": \"scenes/Basic_albedo_metallic.png\",\n";
+    txtFile << "            \"texture2\": \"scenes/Basic_normal_roughness.png\"\n";
     txtFile << "        }\n";
 }
 
-void SaveEnvironment(Scene3D *scene, ofstream &txtFile)
+void SaveEnvironment( Scene3D *scene, ofstream &txtFile )
 {
     txtFile << "        \"cubeSpecular\": \"scenes/EnvironmentTest_Radiance.ktx\",\n";
     txtFile << "        \"cubeDiffuse\": \"scenes/EnvironmentTest_Irradiance.ktx\",\n";
     txtFile << "        \"maxLOD\": 8\n";
 }
 
-void SaveShaders(Scene3D *scene, ofstream &txtFile)
+void SaveShaders( Scene3D *scene, ofstream &txtFile )
 {
     txtFile << "        {\n";
     txtFile << "            \"vertex\": \"scenes/default_pbr_shader.vsh\",\n";
     txtFile << "            \"fragment\": \"scenes/default_pbr_shader.fsh\"\n";
     txtFile << "        }\n";
+}
+
+void SaveAnimations( Scene3D *scene, ofstream &txtFile )
+{
+    for(unsigned int a = 0; a < scene->GetNumAnimations(); a++ )
+    {
+        Animation3D *animation = scene->GetAnimation( a );
+        if( !a )
+        {
+           txtFile << "      \"" << animation->Name << "\" : [ \n";
+        }
+        else
+        {
+           txtFile << ",\n      \"" << animation->Name << "\" : [ \n";
+        }
+        for(unsigned int n = 0; n < animation->AnimNodesList.size(); n++ )
+        {
+            NodeAnimation3D nodeAnim = animation->AnimNodesList[n];
+            bool keyComaFlag = false;
+            if(nodeAnim.Rotations.size())
+            {
+                keyComaFlag = true;
+                txtFile << "        {\n";
+                txtFile << "          \"properties\": [{\n";
+                txtFile << "            \"actor\": \""<< nodeAnim.NodeName <<"\",\n";
+                txtFile << "            \"property\": \"orientation\",\n";
+                txtFile << "            \"timePeriod\": { \"delay\": 0.0, \"duration\": " << animation->Duration * animation->TicksPerSecond<<" },\n";
+                txtFile << "            \"keyFrames\": [\n";
+                for(unsigned int k = 0; k < nodeAnim.Rotations.size(); k++ )
+                {
+                    NodeKey nkey = nodeAnim.Rotations[k];
+                    if(k)
+                        txtFile << ",\n";
+                    txtFile << "              { \"progress\": "<< nkey.time/animation->Duration << ", \"value\": ["<<nkey.v[0]<<", "<<nkey.v[1]<<", "<<nkey.v[2]<<", "<<nkey.v[3]<< "]}";
+                }
+                txtFile << "\n            ]\n";
+                txtFile << "          }],\n          \"loop\": true\n";
+                txtFile << "        }";
+            }
+            if(nodeAnim.Positions.size())
+            {
+                if(keyComaFlag)
+                {
+                    txtFile << ",\n";
+                }
+
+                keyComaFlag = true;
+                txtFile << "        {\n";
+                txtFile << "          \"properties\": [{\n";
+                txtFile << "            \"actor\": \""<< nodeAnim.NodeName <<"\",\n";
+                txtFile << "            \"property\": \"position\",\n";
+                txtFile << "            \"timePeriod\": { \"delay\": 0.0, \"duration\": " << animation->Duration * animation->TicksPerSecond<<" },\n";
+                txtFile << "            \"keyFrames\": [\n";
+                for(unsigned int k = 0; k < nodeAnim.Positions.size(); k++ )
+                {
+                    NodeKey nkey = nodeAnim.Positions[k];
+                    if(k)
+                        txtFile << ",\n";
+                    txtFile << "              { \"progress\": "<< nkey.time/animation->Duration << ", \"value\": ["<<nkey.v[0]<<", "<<nkey.v[1]<<", " << nkey.v[2] <<"]}";
+                }
+                txtFile << "\n            ]\n";
+                txtFile << "          }],\n          \"loop\": true\n";
+                txtFile << "        }";
+            }
+            if(nodeAnim.Scales.size())
+            {
+                if(keyComaFlag)
+                {
+                    txtFile << ",\n";
+                }
+
+                keyComaFlag = true;
+                txtFile << "        {\n";
+                txtFile << "          \"properties\": [{\n";
+                txtFile << "            \"actor\": \""<< nodeAnim.NodeName <<"\",\n";
+                txtFile << "            \"property\": \"scale\",\n";
+                txtFile << "            \"timePeriod\": { \"delay\": 0.0, \"duration\": " << animation->Duration * animation->TicksPerSecond<<" },\n";
+                txtFile << "            \"keyFrames\": [\n";
+                for(unsigned int k = 0; k < nodeAnim.Scales.size(); k++ )
+                {
+                    NodeKey nkey = nodeAnim.Scales[k];
+                    if(k)
+                        txtFile << ",\n";
+                    txtFile << "              { \"progress\": "<< nkey.time/animation->Duration << ", \"value\": ["<<nkey.v[0]<<", "<<nkey.v[1]<<", " << nkey.v[2] <<"]}";
+                }
+                txtFile << "\n            ]\n";
+                txtFile << "          }],\n          \"loop\": true\n";
+                txtFile << "        }";
+            }
+        }
+
+        txtFile << "\n      ]";
+    }
 }
