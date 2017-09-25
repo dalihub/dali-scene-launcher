@@ -98,7 +98,6 @@ private:
   std::vector<RendererOptions> mRendererOptionsArray;
   std::vector<Shader>* mShaderArrayPtr;
   std::string mDirectory;
-  float mMaxLOD;
 
 };
 

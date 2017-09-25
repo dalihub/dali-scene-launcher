@@ -344,7 +344,7 @@ Shader LoadShaders( const std::string& shaderVertexFileName, const std::string& 
   {
     if( LoadShaderCode( shaderFragFileName.c_str(), bufF ) )
     {
-      shader = Shader::New( bufV.data() , bufF.data() );
+      shader = Shader::New( bufV.data() , bufF.data(), Shader::Hint::MODIFIES_GEOMETRY );
     }
   }
   return shader;
@@ -382,8 +382,7 @@ void DliLoader::GetCameraParameters( unsigned int eidx, DliCameraParameters* cam
 
 DliLoader::DliLoader()
 : mNodes( NULL ),
-  mShaderArrayPtr( NULL ),
-  mMaxLOD( 8.f )
+  mShaderArrayPtr( NULL )
 {
 }
 
@@ -395,37 +394,44 @@ void DliLoader::CreateEnvironmentTextures( const std::string& cubeDiffuse, const
 {
   // This texture should have 6 faces and only one mipmap
   CubeData diffuse;
-  bool result = LoadCubeMapFromKtxFile( ASSET_TEXTURE_DIR + cubeDiffuse, diffuse );
-
-  if( !result )
+  bool result;
+  if( !cubeDiffuse.empty() )
   {
-    throw Dali::DaliException( ASSERT_LOCATION, "Failed to load cubemap textures." );
-  }
+    result = LoadCubeMapFromKtxFile( ASSET_TEXTURE_DIR + cubeDiffuse, diffuse );
 
-  eDiffuseTexture = Texture::New( TextureType::TEXTURE_CUBE, diffuse.img[0][0].GetPixelFormat(), diffuse.img[0][0].GetWidth(), diffuse.img[0][0].GetHeight() );
-  for( unsigned int midmapLevel = 0; midmapLevel < diffuse.img[0].size(); ++midmapLevel )
-  {
-    for( unsigned int i = 0; i < diffuse.img.size(); ++i )
+    if( !result )
     {
-      eDiffuseTexture.Upload( diffuse.img[i][midmapLevel], CubeMapLayer::POSITIVE_X + i, midmapLevel, 0, 0, diffuse.img[i][midmapLevel].GetWidth(), diffuse.img[i][midmapLevel].GetHeight() );
+      throw Dali::DaliException( ASSERT_LOCATION, "Failed to load cubemap textures." );
+    }
+
+    eDiffuseTexture = Texture::New( TextureType::TEXTURE_CUBE, diffuse.img[0][0].GetPixelFormat(), diffuse.img[0][0].GetWidth(), diffuse.img[0][0].GetHeight() );
+    for( unsigned int midmapLevel = 0; midmapLevel < diffuse.img[0].size(); ++midmapLevel )
+    {
+      for( unsigned int i = 0; i < diffuse.img.size(); ++i )
+      {
+        eDiffuseTexture.Upload( diffuse.img[i][midmapLevel], CubeMapLayer::POSITIVE_X + i, midmapLevel, 0, 0, diffuse.img[i][midmapLevel].GetWidth(), diffuse.img[i][midmapLevel].GetHeight() );
+      }
     }
   }
 
   // This texture should have 6 faces and 6 mipmaps
-  CubeData specular;
-  result = LoadCubeMapFromKtxFile( ASSET_TEXTURE_DIR + cubeSpecular, specular);
-
-  if( !result )
+  if( !cubeSpecular.empty() )
   {
-    throw Dali::DaliException( ASSERT_LOCATION, "Failed to load cubemap textures." );
-  }
+    CubeData specular;
+    result = LoadCubeMapFromKtxFile( ASSET_TEXTURE_DIR + cubeSpecular, specular);
 
-  eSpecularTexture = Texture::New( TextureType::TEXTURE_CUBE, specular.img[0][0].GetPixelFormat(), specular.img[0][0].GetWidth(), specular.img[0][0].GetHeight() );
-  for( unsigned int midmapLevel = 0; midmapLevel < specular.img[0].size(); ++midmapLevel )
-  {
-    for( unsigned int i = 0; i < specular.img.size(); ++i )
+    if( !result )
     {
-      eSpecularTexture.Upload( specular.img[i][midmapLevel], CubeMapLayer::POSITIVE_X + i, midmapLevel, 0, 0, specular.img[i][midmapLevel].GetWidth(), specular.img[i][midmapLevel].GetHeight() );
+      throw Dali::DaliException( ASSERT_LOCATION, "Failed to load cubemap textures." );
+    }
+
+    eSpecularTexture = Texture::New( TextureType::TEXTURE_CUBE, specular.img[0][0].GetPixelFormat(), specular.img[0][0].GetWidth(), specular.img[0][0].GetHeight() );
+    for( unsigned int midmapLevel = 0; midmapLevel < specular.img[0].size(); ++midmapLevel )
+    {
+      for( unsigned int i = 0; i < specular.img.size(); ++i )
+      {
+        eSpecularTexture.Upload( specular.img[i][midmapLevel], CubeMapLayer::POSITIVE_X + i, midmapLevel, 0, 0, specular.img[i][midmapLevel].GetWidth(), specular.img[i][midmapLevel].GetHeight() );
+      }
     }
   }
 }
@@ -478,23 +484,24 @@ bool DliLoader::LoadTextureSetArray( Texture& eCubeSpecular )
 {
   const TreeNode *materials = mParser.GetRoot()->GetChild( "materials" );
   const TreeNode *environment = mParser.GetRoot()->GetChild( "environment" );
-  if(!materials || !environment)
+  if(!materials || !environment )
   {
     return false;
   }
-
-  std::string cubeDiffuse = environment->GetChild( "cubeDiffuse" )->GetString();
-  std::string cubeSpecular = environment->GetChild( "cubeSpecular" )->GetString();
-  const TreeNode *nodeMaxLOD = environment->GetChild( "maxLOD" );
-
-  if( nodeMaxLOD->GetType() ==  TreeNode::INTEGER )
+  std::string cubeDiffuse;
+  const TreeNode *envNode = environment->GetChild( "cubeDiffuse" );
+  if( envNode && (envNode->GetType() == TreeNode::STRING ) )
   {
-    mMaxLOD = nodeMaxLOD->GetInteger();
+    cubeDiffuse = envNode->GetString();
   }
-  else
+
+  envNode = environment->GetChild( "cubeSpecular" );
+  std::string cubeSpecular;
+  if( envNode )
   {
-    mMaxLOD = nodeMaxLOD->GetFloat();
+     cubeSpecular= envNode->GetString();
   }
+
   Texture diffuseTexture;
 
   CreateEnvironmentTextures( cubeDiffuse, cubeSpecular, diffuseTexture, eCubeSpecular);
@@ -502,21 +509,17 @@ bool DliLoader::LoadTextureSetArray( Texture& eCubeSpecular )
   for( TreeNode::ConstIterator it = (*materials).CBegin(); it != (*materials).CEnd(); ++it)
   {
     const TreeNode *node = &((*it).second);
+    bool addEnvironment = false;
     std::string strTexture[4];
     Texture texture[4];
-    if(node->GetChild( "texture1" ))
+    ReadBool( node->GetChild( "environment" ), addEnvironment );
+    if( ReadString( node->GetChild( "texture1" ), strTexture[0] ) )
     {
-      strTexture[0] = node->GetChild( "texture1" )->GetString();
-      if(node->GetChild( "texture2" ))
+      if( ReadString( node->GetChild( "texture2" ), strTexture[1] ) )
       {
-        strTexture[1] = node->GetChild( "texture2" )->GetString();
-        if(node->GetChild( "texture3" ))
+        if( ReadString( node->GetChild( "texture3" ), strTexture[2] ) )
         {
-          strTexture[2] = node->GetChild( "texture3" )->GetString();
-          if(node->GetChild( "texture4" ))
-          {
-            strTexture[3] = node->GetChild( "texture4" )->GetString();
-          }
+          ReadString( node->GetChild( "texture4" ), strTexture[3] );
         }
       }
     }
@@ -525,12 +528,12 @@ bool DliLoader::LoadTextureSetArray( Texture& eCubeSpecular )
     TextureSet textureSet = TextureSet::New();
 
     Sampler samplerA = Sampler::New();
-    samplerA.SetWrapMode(WrapMode::REPEAT,WrapMode::REPEAT);
-    samplerA.SetFilterMode(FilterMode::LINEAR_MIPMAP_LINEAR,FilterMode::LINEAR);
+    samplerA.SetWrapMode( WrapMode::REPEAT, WrapMode::REPEAT );
+    samplerA.SetFilterMode( FilterMode::LINEAR_MIPMAP_LINEAR, FilterMode::LINEAR );
 
     Sampler sampler = Sampler::New();
-    sampler.SetWrapMode(WrapMode::CLAMP_TO_EDGE,WrapMode::CLAMP_TO_EDGE,WrapMode::CLAMP_TO_EDGE);
-    sampler.SetFilterMode(FilterMode::LINEAR_MIPMAP_LINEAR,FilterMode::LINEAR);
+    sampler.SetWrapMode( WrapMode::CLAMP_TO_EDGE,WrapMode::CLAMP_TO_EDGE, WrapMode::CLAMP_TO_EDGE );
+    sampler.SetFilterMode( FilterMode::LINEAR_MIPMAP_LINEAR, FilterMode::LINEAR );
     unsigned int i = 0;
     for( ; i < 4u ; i++)
     {
@@ -544,10 +547,22 @@ bool DliLoader::LoadTextureSetArray( Texture& eCubeSpecular )
         break;
       }
     }
-    textureSet.SetTexture( i , diffuseTexture );
-    textureSet.SetTexture( i + 1 , eCubeSpecular );
-    textureSet.SetSampler( i + 1 , sampler );
-    mTextureSetArray.push_back( textureSet );
+    if( addEnvironment )
+    {
+
+      if( diffuseTexture )
+      {
+        textureSet.SetTexture( i++ , diffuseTexture );
+      }
+
+      if( eCubeSpecular )
+      {
+        textureSet.SetTexture( i , eCubeSpecular );
+        textureSet.SetSampler( i , sampler );
+      }
+
+      mTextureSetArray.push_back( textureSet );
+    }
   }
 
   return true;
@@ -581,13 +596,59 @@ bool DliLoader::LoadShaderArray(std::vector<Shader>& shaderArray)
       shaderArray.push_back( shader );
     }
 
+    for( TreeNode::ConstIterator uniformNode = node->CBegin(); uniformNode != node->CEnd(); ++uniformNode )
+    {
+      const TreeNode::KeyNodePair& pKeyChild = *uniformNode;
+      std::string strItem( pKeyChild.first );
+
+      if( !strItem.compare( "vertex" ) || !strItem.compare( "fragment" ) || !strItem.compare( "renderMode" ))
+      {
+        continue;
+      }
+
+      float fNum[16];
+      if( ( pKeyChild.second.GetType() ==  TreeNode::INTEGER ) || ( pKeyChild.second.GetType() ==  TreeNode::FLOAT ) )
+      {
+        if(ReadFloat( &pKeyChild.second, fNum[0]))
+        {
+          shader.RegisterProperty( pKeyChild.first, fNum[0] );
+        }
+      }
+      else if( ReadVector( &pKeyChild.second, fNum, 16 ) )
+      {
+        Matrix matrix( fNum );
+        shader.RegisterProperty( pKeyChild.first, matrix );
+      }
+      else if( ReadVector( &pKeyChild.second, fNum, 9 ) )
+      {
+        Matrix3 matrix( fNum[0], fNum[1], fNum[2], fNum[3], fNum[4], fNum[5], fNum[6], fNum[7], fNum[8] );
+        shader.RegisterProperty( pKeyChild.first, matrix );
+      }
+      else if( ReadVector( &pKeyChild.second, fNum, 4 ) )
+      {
+        Vector4 vector( fNum );
+        shader.RegisterProperty( pKeyChild.first, vector );
+      }
+      else if( ReadVector( &pKeyChild.second, fNum, 3 ) )
+      {
+        Vector3 vector( fNum );
+        shader.RegisterProperty( pKeyChild.first, vector );
+      }
+      else if( ReadVector( &pKeyChild.second, fNum, 2 ) )
+      {
+        Vector2 vector( fNum );
+        shader.RegisterProperty( pKeyChild.first, vector );
+      }
+
+    }
+
+
+
+
     RendererOptions renderer;
-    ReadInt( node->GetChild( "blend" ), renderer.blend );
+    ReadInt( node->GetChild( "renderMode" ), renderer.blend );
 
     mRendererOptionsArray.push_back( renderer );
-    //mMaxLOD is set from the LoadTextureSetArray function
-    shader.RegisterProperty( "uMaxLOD", mMaxLOD );
-    shader.RegisterProperty( "uCubeMatrix" , Matrix::IDENTITY );
   }
   mShaderArrayPtr = &shaderArray;
   return true;

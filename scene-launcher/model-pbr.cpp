@@ -185,7 +185,11 @@ void ModelPbr::SetShaderUniform(std::string property, const Property::Value& val
 
   for(std::vector<Shader>::iterator it = mShaderArray.begin(); it != mShaderArray.end(); ++it)
   {
-    (*it).SetProperty( (*it).GetPropertyIndex( property ), value );
+    int index = (*it).GetPropertyIndex( property );
+    if( index != Property::INVALID_INDEX )
+    {
+      (*it).SetProperty( (*it).GetPropertyIndex( property ), value );
+    }
   }
 
 }
@@ -203,7 +207,7 @@ Actor ModelPbr::CreateNode( Shader shader, int blend, TextureSet textureSet, Geo
   if( blend == 1 ) //to use mask textures with blend
   {
     renderer.SetProperty( Renderer::Property::DEPTH_WRITE_MODE, DepthWriteMode::OFF );
-    renderer.SetProperty( Renderer::Property::DEPTH_TEST_MODE, DepthTestMode::ON );
+    renderer.SetProperty( Renderer::Property::DEPTH_TEST_MODE, DepthTestMode::OFF );
 
     renderer.SetProperty( Renderer::Property::FACE_CULLING_MODE, FaceCullingMode::NONE );
     renderer.SetProperty( Renderer::Property::BLEND_MODE, BlendMode::ON );
@@ -223,6 +227,7 @@ Actor ModelPbr::CreateNode( Shader shader, int blend, TextureSet textureSet, Geo
     // This is sufficient to render a single object; for more complex scenes depth-testing might be required
     renderer.SetProperty( Renderer::Property::DEPTH_TEST_MODE, DepthTestMode::ON );
     renderer.SetProperty( Renderer::Property::DEPTH_WRITE_MODE, DepthWriteMode::ON );
+    renderer.SetProperty( Renderer::Property::BLEND_MODE, BlendMode::OFF );
     renderer.SetProperty( Renderer::Property::DEPTH_FUNCTION, DepthFunction::LESS_EQUAL );
     renderer.SetProperty( Renderer::Property::FACE_CULLING_MODE, FaceCullingMode::BACK );
   }
