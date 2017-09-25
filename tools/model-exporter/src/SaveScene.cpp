@@ -272,22 +272,24 @@ void SaveMaterials( Scene3D *scene, ofstream &txtFile )
 {
     txtFile << "        {\n";
     txtFile << "            \"texture1\": \"scenes/Basic_albedo_metallic.png\",\n";
-    txtFile << "            \"texture2\": \"scenes/Basic_normal_roughness.png\"\n";
+    txtFile << "            \"texture2\": \"scenes/Basic_normal_roughness.png\",\n";
+    txtFile << "            \"environment\": true\n";
     txtFile << "        }\n";
 }
 
 void SaveEnvironment( Scene3D *scene, ofstream &txtFile )
 {
     txtFile << "        \"cubeSpecular\": \"scenes/EnvironmentTest_Radiance.ktx\",\n";
-    txtFile << "        \"cubeDiffuse\": \"scenes/EnvironmentTest_Irradiance.ktx\",\n";
-    txtFile << "        \"maxLOD\": 8\n";
+    txtFile << "        \"cubeDiffuse\": \"scenes/EnvironmentTest_Irradiance.ktx\"\n";
 }
 
 void SaveShaders( Scene3D *scene, ofstream &txtFile )
 {
     txtFile << "        {\n";
     txtFile << "            \"vertex\": \"scenes/default_pbr_shader.vsh\",\n";
-    txtFile << "            \"fragment\": \"scenes/default_pbr_shader.fsh\"\n";
+    txtFile << "            \"fragment\": \"scenes/default_pbr_shader.fsh\",\n";
+    txtFile << "            \"uCubeMatrix\": [ 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1 ],\n";
+    txtFile << "            \"maxLOD\": 8\n";
     txtFile << "        }\n";
 }
 
