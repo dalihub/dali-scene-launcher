@@ -20,48 +20,43 @@
 #include <assimp/scene.h>
 #include <assimp/postprocess.h>
 
-
 #include "Scene3D.h"
 #include "LoadScene.h"
 #include "SaveScene.h"
 
 using namespace std;
 
-
 int main(int argc, char* argv[])
 {
-    Assimp::Importer importer;
-    const aiScene *scene;
-    string fileName;
-    if(argc>1)
-    {
-        fileName = argv[1];
-    }
-    else
-    {
-    }
-    scene = importer.ReadFile(fileName,
-                                      aiProcess_CalcTangentSpace |
-                                      aiProcess_SortByPType
-                                      );
-    if( !scene)
-    {
-        cout << importer.GetErrorString()<< endl;
-        return false;
-    }
+  Assimp::Importer importer;
+  const aiScene *scene;
+  string fileName;
+  if(argc>1)
+  {
+    fileName = argv[1];
+  }
 
-    Scene3D scene_data;
+  scene = importer.ReadFile( fileName,
+                             aiProcess_CalcTangentSpace |
+                             aiProcess_SortByPType );
 
+  if( !scene )
+  {
+    cout << importer.GetErrorString()<< endl;
+    return false;
+  }
 
-    GetSceneNodes(scene_data, nullptr, scene, scene->mRootNode);
-    GetSceneCameras(scene_data, scene);
-    GetAnimations(scene_data, scene);
+  Scene3D scene_data;
 
-    string fname("TestWatch_007.dli");
-    string fnamebin("TestWatch_007.bin");
+  GetSceneNodes(scene_data, nullptr, scene, scene->mRootNode);
+  GetSceneCameras(scene_data, scene);
+  GetAnimations(scene_data, scene);
 
-    fname = fileName.substr(0, fileName.length()-4) + ".dli";
-    fnamebin = fileName.substr(0, fileName.length()-4) + ".bin";
-    SaveScene(&scene_data,fname,fnamebin);
-    return 0;
+  string fname("TestWatch_007.dli");
+  string fnamebin("TestWatch_007.bin");
+
+  fname = fileName.substr(0, fileName.length()-4) + ".dli";
+  fnamebin = fileName.substr(0, fileName.length()-4) + ".bin";
+  SaveScene(&scene_data,fname,fnamebin);
+  return 0;
 }
