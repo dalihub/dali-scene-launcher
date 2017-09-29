@@ -67,16 +67,6 @@ public:
   void Init( const std::string& modelUrl, const Vector3& position, const Vector3& size, DliCameraParameters *camera, std::vector<Animation> *loadAnimation );
 
   /**
-   * @brief Initializes the @p mTextureSet member with the needed textures for Physically Based Rendering.
-   *
-   * @param[in] albedoMetalTexture The albedo metal texture.
-   * @param[in] normalRoughTexture The normal rough texture.
-   * @param[in] diffuseTexture The diffuse cubemap texture.
-   * @param[in] specularTexture The specular cubemap texture.
-   */
-  void InitPbrTexture( Texture albedoMetalTexture, Texture normalRoughTexture, Texture diffuseTexture, Texture specularTexture );
-
-  /**
    * @brief Clears the previously allocated PBR model resources.
    */
   void Clear();
@@ -91,26 +81,14 @@ public:
   void SetShaderUniform(std::string property, const Property::Value& value);
   Texture GetCubeSpecularTexture();
 
-  static Actor CreateNode( Shader shader, int blend, TextureSet textureSet, Geometry geometry, std::string name );
+  static Actor CreateNode( Shader shader, int blend, TextureSet textureSet, Geometry geometry, const std::string& name );
 
 private:
-
-  /**
-   * @brief Creates a geometry from a @e obj model.
-   *
-   * @param[in] url A url pointing a file with a @e obj model.
-   * @param[out] geometry an array of Geometry, each element correspond to a group in OBJ file
-   * @param[out] names, array of string that correspond to name of groups in OBJ file
-   */
-  void CreateGeometry( const std::string& url,
-                       std::vector<Geometry>& geometry,
-                       std::vector<std::string>& names );
 
   static int mOrderIdx;
   Actor mActor;
   std::vector<Shader> mShaderArray;
   Texture mCubeSpecularTexture;
-  TextureSet mTextureSet;
 };
 
 } // namespace SceneLauncher

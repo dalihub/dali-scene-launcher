@@ -90,7 +90,6 @@ private:
   bool LoadTextureSetArray( Texture& eCubeSpecular );
   bool LoadGeometryArray();
 
-
   JsonParser mParser;
   const TreeNode *mNodes;
   std::vector<Geometry> mGeometryArray;

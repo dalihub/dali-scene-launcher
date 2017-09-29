@@ -344,7 +344,7 @@ public:
 
     mSkybox.GetActor().SetOrientation( mCubeOrientation );
 
-    m3dRoot.Add( mSkybox.GetActor() );
+    //m3dRoot.Add( mSkybox.GetActor() );
     m3dRoot.Add( mModel.GetActor() );
 
 

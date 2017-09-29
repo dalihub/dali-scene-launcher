@@ -287,7 +287,7 @@ std::string SceneFileParser::GetCurrentModelFile() const
   return file;
 }
 
-void SceneFileParser::SetCameraParameters(const DliCameraParameters &camera)
+void SceneFileParser::SetCameraParameters( const DliCameraParameters &camera )
 {
   mAssets[mViewModel].cameraFar = camera.cameraFar;
   mAssets[mViewModel].cameraNear = camera.cameraNear;

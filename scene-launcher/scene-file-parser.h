@@ -44,8 +44,8 @@ struct Asset
     fragmentShader(),
     cubeSpecular(),
     cubeDiffuse(),
-    modelScaleFactor( Vector3::ONE ),
     cameraMatrix( Matrix::IDENTITY ),
+    modelScaleFactor( Vector3::ONE ),
     cameraFov( 60.f ),
     cameraNear( 0.1f ),
     cameraFar( 1000.f ),
@@ -67,8 +67,8 @@ struct Asset
   std::string fragmentShader;
   std::string cubeSpecular;
   std::string cubeDiffuse;
-  Vector3 modelScaleFactor;
   Matrix cameraMatrix;
+  Vector3 modelScaleFactor;
   float cameraFov;
   float cameraNear;
   float cameraFar;
@@ -142,6 +142,10 @@ public:
    */
   const Asset& GetAsset() const;
 
+  /**
+   * @brief Set camera parameters.
+   *
+   */
   void SetCameraParameters(const DliCameraParameters &camera);
 
   /**
