@@ -137,6 +137,7 @@ bool ReadFloat( const TreeNode* node, float& num )
     return false;
   }
   bool returnValue = false;
+
   if( node->GetType() == TreeNode::FLOAT )
   {
     num = node->GetFloat();
@@ -158,6 +159,7 @@ bool ReadVector( const TreeNode* node, float* num, unsigned int size)
     return false;
   }
   bool returnValue = false;
+
   if( ( node->Size() >= size ) && ( node->GetType() == TreeNode::ARRAY ) )
   {
     unsigned int offset = 0u;
@@ -182,6 +184,7 @@ bool ReadBool( const TreeNode* node, bool& num )
     return false;
   }
   bool returnValue = false;
+
   if( node->GetType() == TreeNode::BOOLEAN )
   {
     num = node->GetBoolean();
@@ -197,6 +200,7 @@ bool ReadTimePeriod( const TreeNode* node, TimePeriod& timePeriod )
   {
     return false;
   }
+
   if(!ReadFloat(node->GetChild("delay"), timePeriod.delaySeconds ) || !ReadFloat(node->GetChild("duration"), timePeriod.durationSeconds ) )
   {
     return false;
@@ -210,14 +214,14 @@ Property::Value GetPropertyValue( const Property::Type& propType, const TreeNode
   {
     case Property::BOOLEAN:
     {
-      bool value( false );
+      bool value = false;
       ReadBool(&child, value);
       return Property::Value( value );
     }
 
     case Property::FLOAT:
     {
-      float value( 0.0f );
+      float value = 0.0f;
       ReadFloat(&child, value);
       return Property::Value( value );
     }
@@ -394,7 +398,7 @@ void DliLoader::CreateEnvironmentTextures( const std::string& cubeDiffuse, const
 {
   // This texture should have 6 faces and only one mipmap
   CubeData diffuse;
-  bool result;
+  bool result = false;
   if( !cubeDiffuse.empty() )
   {
     result = LoadCubeMapFromKtxFile( ASSET_TEXTURE_DIR + cubeDiffuse, diffuse );
@@ -484,7 +488,7 @@ bool DliLoader::LoadTextureSetArray( Texture& eCubeSpecular )
 {
   const TreeNode *materials = mParser.GetRoot()->GetChild( "materials" );
   const TreeNode *environment = mParser.GetRoot()->GetChild( "environment" );
-  if(!materials || !environment )
+  if( !materials || !environment )
   {
     return false;
   }
@@ -534,7 +538,8 @@ bool DliLoader::LoadTextureSetArray( Texture& eCubeSpecular )
     Sampler sampler = Sampler::New();
     sampler.SetWrapMode( WrapMode::CLAMP_TO_EDGE,WrapMode::CLAMP_TO_EDGE, WrapMode::CLAMP_TO_EDGE );
     sampler.SetFilterMode( FilterMode::LINEAR_MIPMAP_LINEAR, FilterMode::LINEAR );
-    unsigned int i = 0;
+
+    unsigned int i = 0u;
     for( ; i < 4u ; i++)
     {
       if(texture[i])
@@ -547,9 +552,9 @@ bool DliLoader::LoadTextureSetArray( Texture& eCubeSpecular )
         break;
       }
     }
+
     if( addEnvironment )
     {
-
       if( diffuseTexture )
       {
         textureSet.SetTexture( i++ , diffuseTexture );
@@ -560,9 +565,9 @@ bool DliLoader::LoadTextureSetArray( Texture& eCubeSpecular )
         textureSet.SetTexture( i , eCubeSpecular );
         textureSet.SetSampler( i , sampler );
       }
-
-      mTextureSetArray.push_back( textureSet );
     }
+
+    mTextureSetArray.push_back( textureSet );
   }
 
   return true;
@@ -669,6 +674,7 @@ bool DliLoader::LoadAnimation( Actor toActor, std::vector<Animation> *animArray,
   {
     return false;
   }
+
   for( TreeNode::ConstIterator animIt = ( *animations ).CBegin(); animIt != ( *animations ).CEnd(); ++animIt )
   {
     Animation animation( Animation::New( 0.0f ) );
@@ -679,6 +685,7 @@ bool DliLoader::LoadAnimation( Actor toActor, std::vector<Animation> *animArray,
     {
       animation.SetDuration( duration );
     }
+
     bool looping;
     if( ReadBool( animNode.GetChild( "loop" ), looping ) )
     {
@@ -863,7 +870,9 @@ bool DliLoader::LoadAnimation( Actor toActor, std::vector<Animation> *animArray,
 
     }
     if(animArray)
+    {
       animArray->push_back( animation );
+    }
   }
 
   return true;
@@ -896,6 +905,7 @@ bool DliLoader::CreateScene( std::vector<Shader>& shaderArray, Actor toActor, Te
   AddNode( toActor, inodes );
 
   mShaderArrayPtr = NULL;
+
   return true;
 }
 
@@ -1051,7 +1061,11 @@ void DliLoader::AddNode( Actor toActor, const TreeNode *addnode )
     ReadInt( addnode->GetChild( "shader" ), shaderIdx );
     ReadInt( addnode->GetChild( "material" ), materialIndex );
 
-    actor = ModelPbr::CreateNode( (*mShaderArrayPtr)[shaderIdx], mRendererOptionsArray[shaderIdx].blend, mTextureSetArray[materialIndex], mGeometryArray[ itn->GetInteger() ], nodeName );
+    actor = ModelPbr::CreateNode( (*mShaderArrayPtr)[shaderIdx],
+                                  mRendererOptionsArray[shaderIdx].blend,
+                                  mTextureSetArray[materialIndex],
+                                  mGeometryArray[ itn->GetInteger() ],
+                                  nodeName );
   }
 
   {
@@ -1059,29 +1073,34 @@ void DliLoader::AddNode( Actor toActor, const TreeNode *addnode )
     if( ReadVector( addnode->GetChild( "matrix" ), num, 16 ) )
     {
       Dali::Quaternion quaternion( Vector3( num ), Vector3( num + 4 ), Vector3( num + 8 ) );
-      actor.SetOrientation( quaternion );
-      actor.SetPosition( Vector3( num + 12 ) );
+      if( actor )
+      {
+        actor.SetOrientation( quaternion );
+        actor.SetPosition( Vector3( num + 12 ) );
+      }
     }
   }
 
-  toActor.Add( actor );
-
-  if((itn = addnode->GetChild("children")))
+  if( actor )
   {
-    Vector<int> children;
-    children.Reserve(itn->Size());
-    for( TreeNode::ConstIterator it = ( *itn ).CBegin(); it != ( *itn ).CEnd(); ++it )
-    {
-      children.PushBack( ( ( *it ).second).GetInteger() );
-    }
+    toActor.Add( actor );
 
-    for( unsigned int i = 0; i < children.Size(); ++i )
+    if((itn = addnode->GetChild("children")))
     {
-      const TreeNode *inodes = Tidx( mNodes, children[i] );
-      AddNode( actor, inodes );
+      Vector<int> children;
+      children.Reserve(itn->Size());
+      for( TreeNode::ConstIterator it = ( *itn ).CBegin(); it != ( *itn ).CEnd(); ++it )
+      {
+        children.PushBack( ( ( *it ).second).GetInteger() );
+      }
+
+      for( unsigned int i = 0; i < children.Size(); ++i )
+      {
+        const TreeNode *inodes = Tidx( mNodes, children[i] );
+        AddNode( actor, inodes );
+      }
     }
   }
-
 }
 
 } // namespace SceneLauncher

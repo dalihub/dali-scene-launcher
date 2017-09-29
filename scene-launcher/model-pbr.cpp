@@ -25,7 +25,6 @@
 #include <dali/devel-api/actors/actor-devel.h>
 
 // INTERNAL INCLUDES
-#include "obj-loader.h"
 #include "dli-loader.h"
 
 namespace
@@ -68,7 +67,7 @@ void ModelPbr::Init( const std::string& modelUrl, const Vector3& position, const
     DliLoader dliLoader;
     if( dliLoader.LoadObject( modelUrl ) )
     {
-      dliLoader.CreateScene(mShaderArray, mActor, mCubeSpecularTexture );
+      dliLoader.CreateScene( mShaderArray, mActor, mCubeSpecularTexture );
       dliLoader.GetCameraParameters( 0, camera );
       dliLoader.LoadAnimation( mActor, loadAnimation, "loaded" );
     }
@@ -77,67 +76,10 @@ void ModelPbr::Init( const std::string& modelUrl, const Vector3& position, const
       throw DaliException( ASSERT_LOCATION, dliLoader.GetParseError().c_str() );
     }
   }
-  else
-  {
-    std::vector<Geometry> geometry;
-    std::vector<std::string> names;
-    CreateGeometry( modelUrl, geometry, names );
-
-    std::vector<Geometry>::iterator gIt = geometry.begin(), gEndIt = geometry.end();
-    std::vector<std::string>::iterator nIt = names.begin(), nEndIt = names.end();
-    for( ; ( gIt != gEndIt ) && ( nIt != nEndIt ); ++gIt, ++ nIt )
-    {
-      Renderer renderer = Renderer::New( *gIt, mShaderArray[0] );
-      const std::string& name = *nIt;
-
-      if( mTextureSet )
-      {
-        renderer.SetTextures( mTextureSet );
-      }
-
-      // Face culling is enabled to hide the backwards facing sides of the model
-      // This is sufficient to render a single object; for more complex scenes depth-testing might be required
-      renderer.SetProperty( Renderer::Property::DEPTH_TEST_MODE, DepthTestMode::ON );
-      renderer.SetProperty( Renderer::Property::DEPTH_WRITE_MODE, DepthWriteMode::ON );
-      renderer.SetProperty( Renderer::Property::DEPTH_FUNCTION, DepthFunction::LESS_EQUAL );
-      renderer.SetProperty( Renderer::Property::FACE_CULLING_MODE, FaceCullingMode::BACK );
-
-      Actor actor = Actor::New();
-      actor.SetName( name );
-
-      actor.SetAnchorPoint( AnchorPoint::CENTER );
-      actor.SetParentOrigin( ParentOrigin::CENTER );
-      actor.SetSize( size );
-      actor.AddRenderer( renderer );
-
-      mActor.Add( actor );
-    }
-  }
-}
-
-void ModelPbr::InitPbrTexture(Texture albedoM, Texture normalR, Texture texDiffuse, Texture texSpecular)
-{
-  mTextureSet = TextureSet::New();
-  mTextureSet.SetTexture( 0u, albedoM );
-  mTextureSet.SetTexture( 1u, normalR );
-  mTextureSet.SetTexture( 2u, texDiffuse );
-  mTextureSet.SetTexture( 3u, texSpecular );
-
-  Sampler samplerA = Sampler::New();
-  samplerA.SetWrapMode(WrapMode::REPEAT,WrapMode::REPEAT);
-  samplerA.SetFilterMode(FilterMode::LINEAR_MIPMAP_LINEAR,FilterMode::LINEAR);
-  mTextureSet.SetSampler(0,samplerA);
-  mTextureSet.SetSampler(1,samplerA);
-
-  Sampler sampler = Sampler::New();
-  sampler.SetWrapMode(WrapMode::CLAMP_TO_EDGE,WrapMode::CLAMP_TO_EDGE,WrapMode::CLAMP_TO_EDGE);
-  sampler.SetFilterMode(FilterMode::LINEAR_MIPMAP_LINEAR,FilterMode::LINEAR);
-  mTextureSet.SetSampler(3,sampler);
 }
 
 void ModelPbr::Clear()
 {
-  mTextureSet.Reset();
   for(std::vector<Shader>::iterator it = mShaderArray.begin(); it !=mShaderArray.end(); ++it)
   {
      (*it).Reset();
@@ -150,34 +92,6 @@ void ModelPbr::Clear()
 Actor& ModelPbr::GetActor()
 {
   return mActor;
-}
-
-void ModelPbr::CreateGeometry( const std::string& url,
-                               std::vector<Geometry>& geometry,
-                               std::vector<std::string>& names )
-{
-  std::streampos fileSize;
-  Dali::Vector<char> fileContent;
-  if( url.rfind( ".obj" ) + 4 == url.length() )
-  {
-    if( FileLoader::ReadFile( url, fileSize, fileContent, FileLoader::TEXT ) )
-    {
-      PbrDemo::ObjLoader objLoader;
-
-      objLoader.LoadObject( fileContent.Begin(), fileSize );
-
-      objLoader.CreateGeometry( PbrDemo::ObjLoader::TEXTURE_COORDINATES | PbrDemo::ObjLoader::TANGENTS, true, geometry, names );
-    }
-    else
-    {
-      throw DaliException( ASSERT_LOCATION, "Failed to load obj model.");
-    }
-  }
-  else
-  {
-     throw DaliException( ASSERT_LOCATION, "Format not supported");
-  }
-
 }
 
 void ModelPbr::SetShaderUniform(std::string property, const Property::Value& value)
@@ -199,10 +113,14 @@ Texture ModelPbr::GetCubeSpecularTexture()
   return mCubeSpecularTexture;
 }
 
-Actor ModelPbr::CreateNode( Shader shader, int blend, TextureSet textureSet, Geometry geometry, std::string name )
+Actor ModelPbr::CreateNode( Shader shader, int blend, TextureSet textureSet, Geometry geometry, const std::string& name )
 {
   Renderer renderer = Renderer::New( geometry, shader );
-  renderer.SetTextures( textureSet );
+
+  if( textureSet )
+  {
+    renderer.SetTextures( textureSet );
+  }
 
   if( blend == 1 ) //to use mask textures with blend
   {
@@ -221,13 +139,47 @@ Actor ModelPbr::CreateNode( Shader shader, int blend, TextureSet textureSet, Geo
     renderer.SetProperty( Renderer::Property::BLEND_MODE, BlendMode::ON );
     renderer.SetProperty( Renderer::Property::BLEND_FACTOR_SRC_RGB, BlendFactor::ONE_MINUS_DST_ALPHA );
   }
+  else if( blend == 3 )
+  {
+    // The stencil plane is only for stencilling.
+    renderer.SetProperty( Renderer::Property::RENDER_MODE, RenderMode::STENCIL );
+
+    renderer.SetProperty( Renderer::Property::STENCIL_FUNCTION, StencilFunction::ALWAYS );
+    renderer.SetProperty( Renderer::Property::STENCIL_FUNCTION_REFERENCE, 1 );
+    renderer.SetProperty( Renderer::Property::STENCIL_FUNCTION_MASK, 0xFF );
+    renderer.SetProperty( Renderer::Property::STENCIL_OPERATION_ON_FAIL, StencilOperation::KEEP );
+    renderer.SetProperty( Renderer::Property::STENCIL_OPERATION_ON_Z_FAIL, StencilOperation::KEEP );
+    renderer.SetProperty( Renderer::Property::STENCIL_OPERATION_ON_Z_PASS, StencilOperation::REPLACE );
+    renderer.SetProperty( Renderer::Property::STENCIL_MASK, 0xFF );
+
+    // We don't want to write to the depth buffer, as this would block the reflection being drawn.
+    renderer.SetProperty( Renderer::Property::DEPTH_WRITE_MODE, DepthWriteMode::OFF );
+    // We test the depth buffer as we want the stencil to only exist underneath the cube.
+    renderer.SetProperty( Renderer::Property::DEPTH_TEST_MODE, DepthTestMode::ON );
+  }
+  else if( blend == 4 )
+  {
+    // Also enable the stencil buffer, as we will be testing against it to only draw to areas within the stencil.
+    renderer.SetProperty( Renderer::Property::RENDER_MODE, RenderMode::COLOR_STENCIL );
+    renderer.SetProperty( Renderer::Property::BLEND_MODE, BlendMode::ON );
+
+    renderer.SetProperty( Renderer::Property::FACE_CULLING_MODE, FaceCullingMode::NONE );
+    renderer.SetProperty( Renderer::Property::DEPTH_WRITE_MODE, DepthWriteMode::OFF );
+    renderer.SetProperty( Renderer::Property::DEPTH_TEST_MODE, DepthTestMode::ON );
+
+    // Enable stencil. Here we only draw to areas within the stencil.
+    renderer.SetProperty( Renderer::Property::STENCIL_FUNCTION, StencilFunction::EQUAL );
+    renderer.SetProperty( Renderer::Property::STENCIL_FUNCTION_REFERENCE, 1 );
+    renderer.SetProperty( Renderer::Property::STENCIL_FUNCTION_MASK, 0xff );
+    // Don't write to the stencil.
+    renderer.SetProperty( Renderer::Property::STENCIL_MASK, 0x00 );
+  }
   else //use default renderer options
   {
     // Face culling is enabled to hide the backwards facing sides of the model
     // This is sufficient to render a single object; for more complex scenes depth-testing might be required
     renderer.SetProperty( Renderer::Property::DEPTH_TEST_MODE, DepthTestMode::ON );
     renderer.SetProperty( Renderer::Property::DEPTH_WRITE_MODE, DepthWriteMode::ON );
-    renderer.SetProperty( Renderer::Property::BLEND_MODE, BlendMode::OFF );
     renderer.SetProperty( Renderer::Property::DEPTH_FUNCTION, DepthFunction::LESS_EQUAL );
     renderer.SetProperty( Renderer::Property::FACE_CULLING_MODE, FaceCullingMode::BACK );
   }
@@ -236,7 +188,7 @@ Actor ModelPbr::CreateNode( Shader shader, int blend, TextureSet textureSet, Geo
   actor.SetAnchorPoint( AnchorPoint::CENTER );
   actor.SetParentOrigin( ParentOrigin::CENTER );
   actor.SetProperty( DevelActor::Property::SIBLING_ORDER, mOrderIdx++ );
-  actor.SetPosition( Vector3() );
+  actor.SetPosition( Vector3::ZERO );
   actor.SetSize( Vector3::ONE );
   actor.AddRenderer( renderer );
   actor.SetName(name);
