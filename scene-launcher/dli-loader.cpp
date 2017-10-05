@@ -33,7 +33,7 @@ namespace
 const std::string ASSET_SHADER_DIR = SCENE_LAUNCHER_SHADER_DIR;
 const std::string ASSET_TEXTURE_DIR = SCENE_LAUNCHER_IMAGE_DIR;
 
-AlphaFunction GetAlphaFunction(const std::string &alphaFunctionValue)
+AlphaFunction GetAlphaFunction( const std::string& alphaFunctionValue )
 {
   if( "DEFAULT" == alphaFunctionValue )
   {
@@ -440,6 +440,29 @@ void DliLoader::CreateEnvironmentTextures( const std::string& cubeDiffuse, const
   }
 }
 
+void DliLoader::CreateSkyboxTexture( const std::string& skyBoxTexturePath, Texture& skyboxTexture )
+{
+  if( !skyBoxTexturePath.empty() )
+  {
+    CubeData skybox;
+    const bool result = LoadCubeMapFromKtxFile( ASSET_TEXTURE_DIR + skyBoxTexturePath, skybox );
+
+    if( !result )
+    {
+      throw Dali::DaliException( ASSERT_LOCATION, "Failed to load skybox textures." );
+    }
+
+    skyboxTexture = Texture::New( TextureType::TEXTURE_CUBE, skybox.img[0][0].GetPixelFormat(), skybox.img[0][0].GetWidth(), skybox.img[0][0].GetHeight() );
+    for( unsigned int midmapLevel = 0u; midmapLevel < skybox.img[0].size(); ++midmapLevel )
+    {
+      for( unsigned int i = 0u; i < skybox.img.size(); ++i )
+      {
+        skyboxTexture.Upload( skybox.img[i][midmapLevel], CubeMapLayer::POSITIVE_X + i, midmapLevel, 0, 0, skybox.img[i][midmapLevel].GetWidth(), skybox.img[i][midmapLevel].GetHeight() );
+      }
+    }
+  }
+}
+
 void DliLoader::CreateTextures(std::string strTexture[4], Texture eTexture[4] )
 {
   PixelData pixelData;
@@ -484,39 +507,65 @@ std::string DliLoader::GetParseError() const
   return stream.str();
 }
 
-bool DliLoader::LoadTextureSetArray( Texture& eCubeSpecular )
+bool DliLoader::LoadTextureSetArray( Texture& skyboxTexture )
 {
-  const TreeNode *materials = mParser.GetRoot()->GetChild( "materials" );
-  const TreeNode *environment = mParser.GetRoot()->GetChild( "environment" );
-  if( !materials || !environment )
+  const TreeNode* materials = mParser.GetRoot()->GetChild( "materials" );
+  const TreeNode* environment = mParser.GetRoot()->GetChild( "environment" );
+  if( ( NULL == materials ) || ( NULL == environment ) )
   {
+    // Nothing to do if there aren't materials or environment.
     return false;
   }
-  std::string cubeDiffuse;
-  const TreeNode *envNode = environment->GetChild( "cubeDiffuse" );
-  if( envNode && (envNode->GetType() == TreeNode::STRING ) )
+
+  const TreeNode* skybox = mParser.GetRoot()->GetChild( "skybox" );
+  if( NULL != skybox )
   {
-    cubeDiffuse = envNode->GetString();
+    std::string skyboxTexturePath;
+    if( ReadString( skybox->GetChild( "texture" ), skyboxTexturePath ) )
+    {
+      CreateSkyboxTexture( skyboxTexturePath, skyboxTexture );
+    }
   }
 
-  envNode = environment->GetChild( "cubeSpecular" );
-  std::string cubeSpecular;
-  if( envNode )
+  const unsigned int numberOfEnvironments = environment->Size();
+
+  std::vector<Texture> cubeDiffuseTextures;
+  std::vector<Texture> cubeSpecularTextures;
+
+  cubeDiffuseTextures.reserve( numberOfEnvironments );
+  cubeSpecularTextures.reserve( numberOfEnvironments );
+
+  for( TreeNode::ConstIterator it = environment->CBegin(); it != environment->CEnd(); ++it )
   {
-     cubeSpecular= envNode->GetString();
+    const TreeNode *node = &((*it).second);
+
+    std::string cubeDiffuse;
+    std::string cubeSpecular;
+
+    ReadString( node->GetChild( "cubeDiffuse" ), cubeDiffuse );
+    ReadString( node->GetChild( "cubeSpecular" ), cubeSpecular );
+
+    Texture diffuseTexture;
+    Texture specularTexture;
+
+    CreateEnvironmentTextures( cubeDiffuse, cubeSpecular, diffuseTexture, specularTexture );
+
+    cubeDiffuseTextures.push_back( diffuseTexture );
+    cubeSpecularTextures.push_back( specularTexture );
   }
-
-  Texture diffuseTexture;
-
-  CreateEnvironmentTextures( cubeDiffuse, cubeSpecular, diffuseTexture, eCubeSpecular);
 
   for( TreeNode::ConstIterator it = (*materials).CBegin(); it != (*materials).CEnd(); ++it)
   {
     const TreeNode *node = &((*it).second);
-    bool addEnvironment = false;
+
+    int environmentIndex = 0;
+    ReadInt( node->GetChild( "environment" ), environmentIndex );
+
+    Texture diffuseTexture = cubeDiffuseTextures[environmentIndex];
+    Texture specularTexture = cubeSpecularTextures[environmentIndex];
+
     std::string strTexture[4];
     Texture texture[4];
-    ReadBool( node->GetChild( "environment" ), addEnvironment );
     if( ReadString( node->GetChild( "texture1" ), strTexture[0] ) )
     {
       if( ReadString( node->GetChild( "texture2" ), strTexture[1] ) )
@@ -527,7 +576,7 @@ bool DliLoader::LoadTextureSetArray( Texture& eCubeSpecular )
         }
       }
     }
-    CreateTextures(strTexture, texture );
+    CreateTextures( strTexture, texture );
 
     TextureSet textureSet = TextureSet::New();
 
@@ -540,9 +589,9 @@ bool DliLoader::LoadTextureSetArray( Texture& eCubeSpecular )
     sampler.SetFilterMode( FilterMode::LINEAR_MIPMAP_LINEAR, FilterMode::LINEAR );
 
     unsigned int i = 0u;
-    for( ; i < 4u ; i++)
+    for( ; i < 4u ; ++i )
     {
-      if(texture[i])
+      if( texture[i] )
       {
         textureSet.SetTexture( i , texture[i] );
         textureSet.SetSampler( i, samplerA );
@@ -553,18 +602,15 @@ bool DliLoader::LoadTextureSetArray( Texture& eCubeSpecular )
       }
     }
 
-    if( addEnvironment )
+    if( diffuseTexture )
     {
-      if( diffuseTexture )
-      {
-        textureSet.SetTexture( i++ , diffuseTexture );
-      }
+      textureSet.SetTexture( i++ , diffuseTexture );
+    }
 
-      if( eCubeSpecular )
-      {
-        textureSet.SetTexture( i , eCubeSpecular );
-        textureSet.SetSampler( i , sampler );
-      }
+    if( specularTexture )
+    {
+      textureSet.SetTexture( i , specularTexture );
+      textureSet.SetSampler( i , sampler );
     }
 
     mTextureSetArray.push_back( textureSet );
@@ -878,25 +924,28 @@ bool DliLoader::LoadAnimation( Actor toActor, std::vector<Animation> *animArray,
   return true;
 }
 
-bool DliLoader::CreateScene( std::vector<Shader>& shaderArray, Actor toActor, Texture& specularTexture )
+bool DliLoader::CreateScene( std::vector<Shader>& shaderArray, Actor toActor, Texture& skyboxTexture )
 {
   const TreeNode *root = mParser.GetRoot();
   const TreeNode *inodes = NULL;
   const TreeNode *itn = NULL;
 
-  itn = root->GetChild("scene");
+  itn = root->GetChild( "scene" );
   int scene_load = itn->GetInteger();
 
-  if(!((itn = root->GetChild( "scenes" ) ) && (mNodes = root->GetChild( "nodes" ) ) ) )
+  if( !( ( itn = root->GetChild( "scenes" ) ) && ( mNodes = root->GetChild( "nodes" ) ) ) )
+  {
     return false;
+  }
 
-  itn = Tidx(itn, scene_load);
-  if(!itn)
+  itn = Tidx( itn, scene_load );
+  if( !itn )
+  {
     return false;
+  }
 
-
-  LoadTextureSetArray(specularTexture);
-  LoadShaderArray(shaderArray);
+  LoadTextureSetArray( skyboxTexture );
+  LoadShaderArray( shaderArray );
   LoadGeometryArray();
 
   int starting_node = itn->GetInteger();
@@ -1039,13 +1088,21 @@ void DliLoader::AddNode( Actor toActor, const TreeNode *addnode )
 {
   const TreeNode *itn = NULL;
   Actor actor;
+  Vector3 actorSize( Vector3::ONE );
+  float floatVec[3];
+  if( ReadVector( addnode->GetChild( "bounds" ), floatVec, 3 ) )
+  {
+    actorSize = Vector3( floatVec[0], floatVec[1], floatVec[2] );
+  }
+
   if( !( itn = addnode->GetChild( "mesh" ) ) )
   {
+
     actor = Actor::New();
     actor.SetAnchorPoint( AnchorPoint::CENTER );
     actor.SetParentOrigin( ParentOrigin::CENTER );
     actor.SetPosition( Vector3() );
-    actor.SetSize( Vector3::ONE );
+    actor.SetSize( actorSize );
     const TreeNode *itname = addnode->GetChild( "name" );
     if( itname )
     {
@@ -1057,6 +1114,7 @@ void DliLoader::AddNode( Actor toActor, const TreeNode *addnode )
     std::string nodeName;
     int shaderIdx = 0;
     int materialIndex = 0;
+    int meshIndex = itn->GetInteger();
     ReadString( addnode->GetChild( "name" ), nodeName );
     ReadInt( addnode->GetChild( "shader" ), shaderIdx );
     ReadInt( addnode->GetChild( "material" ), materialIndex );
@@ -1064,7 +1122,8 @@ void DliLoader::AddNode( Actor toActor, const TreeNode *addnode )
     actor = ModelPbr::CreateNode( (*mShaderArrayPtr)[shaderIdx],
                                   mRendererOptionsArray[shaderIdx].blend,
                                   mTextureSetArray[materialIndex],
-                                  mGeometryArray[ itn->GetInteger() ],
+                                  mGeometryArray[meshIndex],
+                                  actorSize,
                                   nodeName );
   }
 

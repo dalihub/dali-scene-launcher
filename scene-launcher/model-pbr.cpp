@@ -53,7 +53,7 @@ ModelPbr::~ModelPbr()
 {
 }
 
-void ModelPbr::Init( const std::string& modelUrl, const Vector3& position, const Vector3& size, DliCameraParameters *camera, std::vector<Animation> *loadAnimation )
+void ModelPbr::Init( const std::string& modelUrl, const Vector3& position, const Vector3& size, DliCameraParameters *camera, std::vector<std::vector<Animation>> *animations, std::vector<std::string> *animationsName )
 {
   mActor = Actor::New();
   mActor.SetAnchorPoint( AnchorPoint::CENTER );
@@ -67,9 +67,17 @@ void ModelPbr::Init( const std::string& modelUrl, const Vector3& position, const
     DliLoader dliLoader;
     if( dliLoader.LoadObject( modelUrl ) )
     {
-      dliLoader.CreateScene( mShaderArray, mActor, mCubeSpecularTexture );
+      dliLoader.CreateScene( mShaderArray, mActor, mSkyboxTexture );
       dliLoader.GetCameraParameters( 0, camera );
-      dliLoader.LoadAnimation( mActor, loadAnimation, "loaded" );
+      if(animationsName)
+      {
+        for(std::vector<std::string>::iterator it = animationsName->begin(); it != animationsName->end(); ++it)
+        {
+          std::vector<Animation> aniItem;
+          dliLoader.LoadAnimation( mActor, &aniItem, *it );
+          animations->push_back(aniItem);
+        }
+      }
     }
     else
     {
@@ -85,7 +93,7 @@ void ModelPbr::Clear()
      (*it).Reset();
   }
   mShaderArray.clear();
-  mCubeSpecularTexture.Reset();
+  mSkyboxTexture.Reset();
   UnparentAndReset( mActor );
 }
 
@@ -108,12 +116,12 @@ void ModelPbr::SetShaderUniform(std::string property, const Property::Value& val
 
 }
 
-Texture ModelPbr::GetCubeSpecularTexture()
+Texture ModelPbr::GetSkyboxTexture()
 {
-  return mCubeSpecularTexture;
+  return mSkyboxTexture;
 }
 
-Actor ModelPbr::CreateNode( Shader shader, int blend, TextureSet textureSet, Geometry geometry, const std::string& name )
+Actor ModelPbr::CreateNode( Shader shader, int blend, TextureSet textureSet, Geometry geometry, Vector3 actorSize, const std::string& name )
 {
   Renderer renderer = Renderer::New( geometry, shader );
 
@@ -189,7 +197,7 @@ Actor ModelPbr::CreateNode( Shader shader, int blend, TextureSet textureSet, Geo
   actor.SetParentOrigin( ParentOrigin::CENTER );
   actor.SetProperty( DevelActor::Property::SIBLING_ORDER, mOrderIdx++ );
   actor.SetPosition( Vector3::ZERO );
-  actor.SetSize( Vector3::ONE );
+  actor.SetSize( actorSize );
   actor.AddRenderer( renderer );
   actor.SetName(name);
 
