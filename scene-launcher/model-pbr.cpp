@@ -67,7 +67,7 @@ void ModelPbr::Init( const std::string& modelUrl, const Vector3& position, const
     DliLoader dliLoader;
     if( dliLoader.LoadObject( modelUrl ) )
     {
-      dliLoader.CreateScene( mShaderArray, mActor, mCubeSpecularTexture );
+      dliLoader.CreateScene( mShaderArray, mActor, mSkyboxTexture );
       dliLoader.GetCameraParameters( 0, camera );
       dliLoader.LoadAnimation( mActor, loadAnimation, "loaded" );
     }
@@ -85,7 +85,7 @@ void ModelPbr::Clear()
      (*it).Reset();
   }
   mShaderArray.clear();
-  mCubeSpecularTexture.Reset();
+  mSkyboxTexture.Reset();
   UnparentAndReset( mActor );
 }
 
@@ -108,9 +108,9 @@ void ModelPbr::SetShaderUniform(std::string property, const Property::Value& val
 
 }
 
-Texture ModelPbr::GetCubeSpecularTexture()
+Texture ModelPbr::GetSkyboxTexture()
 {
-  return mCubeSpecularTexture;
+  return mSkyboxTexture;
 }
 
 Actor ModelPbr::CreateNode( Shader shader, int blend, TextureSet textureSet, Geometry geometry, const std::string& name )

@@ -76,10 +76,10 @@ public:
    *
    * @return The Actor for the Physically Based Rendering.
    */
-  Actor &GetActor();
+  Actor& GetActor();
 
   void SetShaderUniform(std::string property, const Property::Value& value);
-  Texture GetCubeSpecularTexture();
+  Texture GetSkyboxTexture();
 
   static Actor CreateNode( Shader shader, int blend, TextureSet textureSet, Geometry geometry, const std::string& name );
 
@@ -88,7 +88,7 @@ private:
   static int mOrderIdx;
   Actor mActor;
   std::vector<Shader> mShaderArray;
-  Texture mCubeSpecularTexture;
+  Texture mSkyboxTexture;
 };
 
 } // namespace SceneLauncher

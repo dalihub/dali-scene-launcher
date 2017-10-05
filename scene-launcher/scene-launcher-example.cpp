@@ -317,8 +317,11 @@ public:
     Stage stage = Stage::GetCurrent();
     const SceneLauncher::Asset& asset = mSceneParser.GetAsset();
 
-    mSkybox.InitTexture( mModel.GetCubeSpecularTexture() );
-    mSkybox.Init();
+    if( mModel.GetSkyboxTexture() )
+    {
+      mSkybox.InitTexture( mModel.GetSkyboxTexture() );
+      mSkybox.Init();
+    }
 
     mCameraPosition = asset.cameraMatrix.GetTranslation3();
 
@@ -341,10 +344,13 @@ public:
     camOrientation.Conjugate();
     mCameraOrientationInv = camOrientation;
 
+    Actor skyBoxActor = mSkybox.GetActor();
+    if( skyBoxActor )
+    {
+      skyBoxActor.SetOrientation( mCubeOrientation );
+      m3dRoot.Add( skyBoxActor );
+    }
 
-    mSkybox.GetActor().SetOrientation( mCubeOrientation );
-
-    m3dRoot.Add( mSkybox.GetActor() );
     m3dRoot.Add( mModel.GetActor() );
 
 
