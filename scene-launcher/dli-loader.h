@@ -74,7 +74,7 @@ public:
 
   std::string GetParseError() const;
 
-  bool CreateScene( std::vector<Shader>& shaderArray, Actor toActor, Texture& specularTexture );
+  bool CreateScene( std::vector<Shader>& shaderArray, Actor toActor, Texture& skyboxTexture );
 
   bool LoadAnimation( Actor toActor, std::vector<Animation> *animArray, const std::string& animationName );
 
@@ -85,6 +85,7 @@ private:
   bool LoadBuffer(const TreeNode* mesh, Geometry geometry, std::string& ebinFilename, unsigned char*& efileContent);
   void CreateTextures( std::string strTexture[4], Texture eTexture[4] );
   void CreateEnvironmentTextures( const std::string& cubeDiffuse, const std::string& cubeSpecular, Texture& eDiffuseTexture, Texture& eSpecularTexture );
+  void CreateSkyboxTexture( const std::string& skyBoxTexturePath, Texture& skyboxTexture );
 
   bool LoadShaderArray( std::vector<Shader>& shaderArray );
   bool LoadTextureSetArray( Texture& eCubeSpecular );
