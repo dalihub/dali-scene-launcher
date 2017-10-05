@@ -62,9 +62,10 @@ public:
    * @param[in] position The position of the actor.
    * @param[in] size The size of the actor.
    * @param[in] camera pointer to load the camera from file.
-   * @param[in] pointer to an array of animations from file.
+   * @param[in] pointer to an array of array of animations from file.
+   * @param[in] pointer to an array animations names to be loaded.
    */
-  void Init( const std::string& modelUrl, const Vector3& position, const Vector3& size, DliCameraParameters *camera, std::vector<Animation> *loadAnimation );
+  void Init( const std::string& modelUrl, const Vector3& position, const Vector3& size, DliCameraParameters *camera, std::vector<std::vector<Animation>> *animations, std::vector<std::string> *animationsName );
 
   /**
    * @brief Clears the previously allocated PBR model resources.
@@ -76,19 +77,64 @@ public:
    *
    * @return The Actor for the Physically Based Rendering.
    */
-  Actor &GetActor();
+  Actor& GetActor();
 
-  void SetShaderUniform(std::string property, const Property::Value& value);
-  Texture GetCubeSpecularTexture();
+  /**
+   * @brief Retrieves the Uniform value
+   *
+   * @param[in] property Uniform name.
+   * @param[out] value The value will be saved in this variable.
+   * @param[in] shaderIndex, It is the shader index to get the uniform value,
+   *            if shaderIndex is -1, then find the uniform in any shader and
+   *            return the first value it finds.
+   *
+   * @return true if uniforms exist in shader, else return false.
+   */
+  bool GetUniform(std::string property, Property::Value& value, int shaderIndex );
 
-  static Actor CreateNode( Shader shader, int blend, TextureSet textureSet, Geometry geometry, const std::string& name );
+  /**
+   * @brief Set Shader uniform in all shaders it has this uniform name
+   *
+   * @param[in] property Uniform name.
+   * @param[in] value To be set in the shaders.
+   */
+  void SetShaderUniform( std::string property, const Property::Value& value );
+
+  /**
+   * @brief Set Shader uniform in all shaders it has this uniform name with animation
+   *
+   * @param[in] property Uniform name.
+   * @param[in] value To be set in the shaders.
+   * @param[in] alpha Animation function.
+   * @param[in] etime Animation period.
+   */
+  void SetShaderAnimationUniform( std::string property, const Property::Value& value, AlphaFunction alpha, TimePeriod etime );
+
+  /**
+   * @brief Retrieves the Skybox Texture from the file format
+   *
+   * @return Skybox texture.
+   */
+  Texture GetSkyboxTexture();
+
+  /**
+   * @brief Create a node with actor, mesh and renderer
+   *
+   * @param[in] shader used for this node.
+   * @param[in] blend rendering mode.
+   * @param[in] textureSet textures used for this node.
+   * @param[in] geometry.
+   * @param[in] actorSize, used to set the boundary box for touch/click events for this node.
+   * @param[in] name of the node.
+   */
+  static Actor CreateNode( Shader shader, int blend, TextureSet textureSet, Geometry geometry, Vector3 actorSize, const std::string& name );
 
 private:
 
   static int mOrderIdx;
   Actor mActor;
   std::vector<Shader> mShaderArray;
-  Texture mCubeSpecularTexture;
+  Texture mSkyboxTexture;
 };
 
 } // namespace SceneLauncher

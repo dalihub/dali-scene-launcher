@@ -53,7 +53,7 @@ ModelPbr::~ModelPbr()
 {
 }
 
-void ModelPbr::Init( const std::string& modelUrl, const Vector3& position, const Vector3& size, DliCameraParameters *camera, std::vector<Animation> *loadAnimation )
+void ModelPbr::Init( const std::string& modelUrl, const Vector3& position, const Vector3& size, DliCameraParameters *camera, std::vector<std::vector<Animation>> *animations, std::vector<std::string> *animationsName )
 {
   mActor = Actor::New();
   mActor.SetAnchorPoint( AnchorPoint::CENTER );
@@ -67,9 +67,17 @@ void ModelPbr::Init( const std::string& modelUrl, const Vector3& position, const
     DliLoader dliLoader;
     if( dliLoader.LoadObject( modelUrl ) )
     {
-      dliLoader.CreateScene( mShaderArray, mActor, mCubeSpecularTexture );
+      dliLoader.CreateScene( mShaderArray, mActor, mSkyboxTexture );
       dliLoader.GetCameraParameters( 0, camera );
-      dliLoader.LoadAnimation( mActor, loadAnimation, "loaded" );
+      if(animationsName)
+      {
+        for(std::vector<std::string>::iterator it = animationsName->begin(); it != animationsName->end(); ++it )
+        {
+          std::vector<Animation> aniItem;
+          dliLoader.LoadAnimation( mActor, &aniItem, *it );
+          animations->push_back(aniItem);
+        }
+      }
     }
     else
     {
@@ -80,12 +88,12 @@ void ModelPbr::Init( const std::string& modelUrl, const Vector3& position, const
 
 void ModelPbr::Clear()
 {
-  for(std::vector<Shader>::iterator it = mShaderArray.begin(); it !=mShaderArray.end(); ++it)
+  for(std::vector<Shader>::iterator it = mShaderArray.begin(); it !=mShaderArray.end(); ++it )
   {
      (*it).Reset();
   }
   mShaderArray.clear();
-  mCubeSpecularTexture.Reset();
+  mSkyboxTexture.Reset();
   UnparentAndReset( mActor );
 }
 
@@ -94,10 +102,35 @@ Actor& ModelPbr::GetActor()
   return mActor;
 }
 
+bool ModelPbr::GetUniform(std::string property, Property::Value& value, int shaderIndex )
+{
+  if( shaderIndex < 0 )
+  {
+    for(std::vector<Shader>::iterator it = mShaderArray.begin(); it != mShaderArray.end(); ++it )
+    {
+      int index = (*it).GetPropertyIndex( property );
+      if( index != Property::INVALID_INDEX )
+      {
+        value = (*it).GetProperty( index );
+        return true;
+      }
+    }
+  }
+  else if( shaderIndex < static_cast<int>( mShaderArray.size() ) )
+  {
+    int index = mShaderArray[shaderIndex].GetPropertyIndex( property );
+    if( index != Property::INVALID_INDEX )
+    {
+      value = mShaderArray[shaderIndex].GetProperty( index );
+      return true;
+    }
+  }
+  return false;
+}
+
 void ModelPbr::SetShaderUniform(std::string property, const Property::Value& value)
 {
-
-  for(std::vector<Shader>::iterator it = mShaderArray.begin(); it != mShaderArray.end(); ++it)
+  for(std::vector<Shader>::iterator it = mShaderArray.begin(); it != mShaderArray.end(); ++it )
   {
     int index = (*it).GetPropertyIndex( property );
     if( index != Property::INVALID_INDEX )
@@ -105,15 +138,29 @@ void ModelPbr::SetShaderUniform(std::string property, const Property::Value& val
       (*it).SetProperty( (*it).GetPropertyIndex( property ), value );
     }
   }
-
 }
 
-Texture ModelPbr::GetCubeSpecularTexture()
+void ModelPbr::SetShaderAnimationUniform(std::string property, const Property::Value& value, AlphaFunction alpha, TimePeriod etime )
 {
-  return mCubeSpecularTexture;
+  for(std::vector<Shader>::iterator it = mShaderArray.begin(); it != mShaderArray.end(); ++it )
+  {
+    int index = (*it).GetPropertyIndex( property );
+    if( index != Property::INVALID_INDEX )
+    {
+      Animation animation;
+      animation = Animation::New( 3.0f );
+      animation.AnimateTo( Property( *it, index ) , value, alpha, etime );
+      animation.Play();
+    }
+  }
 }
 
-Actor ModelPbr::CreateNode( Shader shader, int blend, TextureSet textureSet, Geometry geometry, const std::string& name )
+Texture ModelPbr::GetSkyboxTexture()
+{
+  return mSkyboxTexture;
+}
+
+Actor ModelPbr::CreateNode( Shader shader, int blend, TextureSet textureSet, Geometry geometry, Vector3 actorSize, const std::string& name )
 {
   Renderer renderer = Renderer::New( geometry, shader );
 
@@ -188,8 +235,9 @@ Actor ModelPbr::CreateNode( Shader shader, int blend, TextureSet textureSet, Geo
   actor.SetAnchorPoint( AnchorPoint::CENTER );
   actor.SetParentOrigin( ParentOrigin::CENTER );
   actor.SetProperty( DevelActor::Property::SIBLING_ORDER, mOrderIdx++ );
+  actor.SetColor( Vector4::ONE );
   actor.SetPosition( Vector3::ZERO );
-  actor.SetSize( Vector3::ONE );
+  actor.SetSize( actorSize );
   actor.AddRenderer( renderer );
   actor.SetName(name);
 

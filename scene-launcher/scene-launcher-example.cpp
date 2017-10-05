@@ -61,6 +61,8 @@ public:
     mDoubleTapTime(),
     m3dRoot(),
     mUiRoot(),
+    mAnimations(),
+    mAnimationsName(),
     mCameraPosition( CAMERA_DEFAULT_POSITION ),
     mCameraOrientationInv(),
     mModelOrientation(),
@@ -69,6 +71,8 @@ public:
     mDoubleTap( false ),
     mRotateEnvironment( true )
   {
+    mAnimationsName.push_back("loaded");
+
     // Connect to the Application's Init signal
     mApplication.InitSignal().Connect( this, &Scene3dLauncher::Create );
   }
@@ -303,7 +307,7 @@ public:
   {
     const SceneLauncher::Asset& asset = mSceneParser.GetAsset();
     SceneLauncher::DliCameraParameters camera;
-    mModel.Init( ASSET_MODEL_DIR + asset.model, Vector3::ZERO, asset.modelScaleFactor, &camera, &mLoadAnimation );
+    mModel.Init( ASSET_MODEL_DIR + asset.model, Vector3::ZERO, asset.modelScaleFactor, &camera, &mAnimations, &mAnimationsName );
 
     mModel.GetActor().SetOrientation( mModelOrientation );
     mSceneParser.SetCameraParameters( camera );
@@ -317,8 +321,11 @@ public:
     Stage stage = Stage::GetCurrent();
     const SceneLauncher::Asset& asset = mSceneParser.GetAsset();
 
-    mSkybox.InitTexture( mModel.GetCubeSpecularTexture() );
-    mSkybox.Init();
+    if( mModel.GetSkyboxTexture() )
+    {
+      mSkybox.InitTexture( mModel.GetSkyboxTexture() );
+      mSkybox.Init();
+    }
 
     mCameraPosition = asset.cameraMatrix.GetTranslation3();
 
@@ -338,15 +345,26 @@ public:
     Quaternion camOrientation( asset.cameraMatrix );
     camOrientation = camOrientation * viewQuaternion;
     camera3d.SetOrientation( camOrientation );
-    camOrientation.Conjugate();
     mCameraOrientationInv = camOrientation;
+    mCameraOrientationInv.Conjugate();
 
+    Property::Value uniformValue;
+    if( mModel.GetUniform( "uCubeMatrix", uniformValue, -1 ) )
+    {
+      Matrix cubeMatrix;
+      uniformValue.Get( cubeMatrix );
+      cubeMatrix.Transpose();
+      mCubeOrientation = camOrientation * Quaternion( cubeMatrix );
+    }
 
-    mSkybox.GetActor().SetOrientation( mCubeOrientation );
+    Actor skyBoxActor = mSkybox.GetActor();
+    if( skyBoxActor )
+    {
+      skyBoxActor.SetOrientation( mCubeOrientation );
+      m3dRoot.Add( skyBoxActor );
+    }
 
-    m3dRoot.Add( mSkybox.GetActor() );
     m3dRoot.Add( mModel.GetActor() );
-
 
     Matrix matCube( mCameraOrientationInv * mCubeOrientation );
     matCube.Transpose();
@@ -375,7 +393,10 @@ public:
 
     // Initialise Main Actors
     InitActors();
-    PlayAnimation( mLoadAnimation );
+    if( mAnimations.size() > 0)
+    {
+      PlayAnimation( mAnimations[0] );
+    }
   }
 
 
@@ -402,7 +423,7 @@ public:
     mUiRoot.Add( mErrorMessage );
   }
 
-  void PlayAnimation(std::vector<Animation> animationList )
+  void PlayAnimation( std::vector<Animation> animationList )
   {
      for(std::vector<Animation>::iterator it = animationList.begin(); it != animationList.end(); ++it)
      {
@@ -422,6 +443,8 @@ private:
   Actor mUiRoot;
   ModelSkybox mSkybox;
   SceneLauncher::ModelPbr mModel;
+  std::vector<std::vector<Animation>> mAnimations;
+  std::vector<std::string> mAnimationsName;
 
   Vector3 mCameraPosition;
   Vector2 mPointZ;
@@ -435,7 +458,6 @@ private:
   float mZoomLevel;
   bool mDoubleTap;
   bool mRotateEnvironment;
-  std::vector<Animation> mLoadAnimation;
 };
 
 // Entry point for Linux & Tizen applications

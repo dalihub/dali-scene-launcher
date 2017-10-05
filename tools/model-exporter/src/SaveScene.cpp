@@ -62,9 +62,9 @@ bool SaveScene(Scene3D *scene,std::string fileNamePath, std::string fileNameBinP
     txtFile << "    ],\n";
 
     //Save Environment
-    txtFile << "    \"environment\" : {\n";
+    txtFile << "    \"environment\" : [\n";
         SaveEnvironment( scene, txtFile );
-    txtFile << "    },\n";
+    txtFile << "    ],\n";
 
     //Save Shaders
     txtFile << "    \"shaders\" : [\n";
@@ -273,14 +273,18 @@ void SaveMaterials( Scene3D *scene, ofstream &txtFile )
     txtFile << "        {\n";
     txtFile << "            \"texture1\": \"scenes/Basic_albedo_metallic.png\",\n";
     txtFile << "            \"texture2\": \"scenes/Basic_normal_roughness.png\",\n";
-    txtFile << "            \"environment\": true\n";
+    txtFile << "            \"environment\": 1\n";
     txtFile << "        }\n";
 }
 
 void SaveEnvironment( Scene3D *scene, ofstream &txtFile )
 {
-    txtFile << "        \"cubeSpecular\": \"scenes/EnvironmentTest_Radiance.ktx\",\n";
-    txtFile << "        \"cubeDiffuse\": \"scenes/EnvironmentTest_Irradiance.ktx\"\n";
+    txtFile << "        {\n";
+    txtFile << "        },\n";
+    txtFile << "        {\n";
+    txtFile << "            \"cubeSpecular\": \"scenes/EnvironmentTest_Radiance.ktx\",\n";
+    txtFile << "            \"cubeDiffuse\": \"scenes/EnvironmentTest_Irradiance.ktx\"\n";
+    txtFile << "        }\n";
 }
 
 void SaveShaders( Scene3D *scene, ofstream &txtFile )
@@ -298,6 +302,7 @@ void SaveAnimations( Scene3D *scene, ofstream &txtFile )
     for(unsigned int a = 0; a < scene->GetNumAnimations(); a++ )
     {
         Animation3D *animation = scene->GetAnimation( a );
+        bool keyComaFlag = false;
         if( !a )
         {
            txtFile << "      \"" << animation->Name << "\" : [ \n";
@@ -309,9 +314,13 @@ void SaveAnimations( Scene3D *scene, ofstream &txtFile )
         for(unsigned int n = 0; n < animation->AnimNodesList.size(); n++ )
         {
             NodeAnimation3D nodeAnim = animation->AnimNodesList[n];
-            bool keyComaFlag = false;
+
             if(nodeAnim.Rotations.size())
             {
+                if(keyComaFlag)
+                {
+                    txtFile << ",\n";
+                }
                 keyComaFlag = true;
                 txtFile << "        {\n";
                 txtFile << "          \"properties\": [{\n";
