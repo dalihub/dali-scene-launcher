@@ -64,7 +64,7 @@ public:
    * @param[in] camera pointer to load the camera from file.
    * @param[in] pointer to an array of animations from file.
    */
-  void Init( const std::string& modelUrl, const Vector3& position, const Vector3& size, DliCameraParameters *camera, std::vector<Animation> *loadAnimation );
+  void Init( const std::string& modelUrl, const Vector3& position, const Vector3& size, DliCameraParameters *camera, std::vector<std::vector<Animation>> *animations, std::vector<std::string> *animationsName );
 
   /**
    * @brief Clears the previously allocated PBR model resources.
@@ -76,19 +76,20 @@ public:
    *
    * @return The Actor for the Physically Based Rendering.
    */
-  Actor &GetActor();
+  Actor& GetActor();
 
-  void SetShaderUniform(std::string property, const Property::Value& value);
-  Texture GetCubeSpecularTexture();
+  void SetShaderUniform( std::string property, const Property::Value& value );
+  void SetShaderAnimationUniform( std::string property, const Property::Value& value, AlphaFunction alpha, TimePeriod etime );
+  Texture GetSkyboxTexture();
 
-  static Actor CreateNode( Shader shader, int blend, TextureSet textureSet, Geometry geometry, const std::string& name );
+  static Actor CreateNode( Shader shader, int blend, TextureSet textureSet, Geometry geometry, Vector3 actorSize, const std::string& name );
 
 private:
 
   static int mOrderIdx;
   Actor mActor;
   std::vector<Shader> mShaderArray;
-  Texture mCubeSpecularTexture;
+  Texture mSkyboxTexture;
 };
 
 } // namespace SceneLauncher
