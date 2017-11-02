@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+<CodeBlocks_project_file>
+	<FileVersion major="1" minor="6" />
+	<Project>
+		<Option title="model-exporter-core" />
+		<Option pch_mode="2" />
+		<Option compiler="gcc" />
+		<Build>
+			<Target title="Linux-Debug">
+				<Option output="bin/Debug/model-exporter-core" prefix_auto="1" extension_auto="1" />
+				<Option working_dir="" />
+				<Option object_output="obj/Debug/" />
+				<Option type="2" />
+				<Option compiler="gcc" />
+				<Compiler>
+					<Add option="-g" />
+					<Add option="-std=c++11" />
+					<Add option="-Wall" />
+					<Add option="-fexceptions" />
+					<Add option="-fPIC" />
+					<Add directory="include" />
+					<Add directory="../assimp-4.0.1/include" />
+					<Add directory="../assimp-4.0.1/build-linux64/include" />
+				</Compiler>
+			</Target>
+			<Target title="Linux-Release">
+				<Option output="bin/Release/model-exporter-core" prefix_auto="1" extension_auto="1" />
+				<Option working_dir="" />
+				<Option object_output="obj/Release/" />
+				<Option type="2" />
+				<Option compiler="gcc" />
+				<Compiler>
+					<Add option="-O2" />
+					<Add option="-std=c++11" />
+					<Add option="-Wall" />
+					<Add option="-fexceptions" />
+					<Add option="-fPIC" />
+					<Add directory="include" />
+					<Add directory="../assimp-4.0.1/include" />
+					<Add directory="../assimp-4.0.1/build-linux64/include" />
+				</Compiler>
+			</Target>
+			<Target title="Windows-Debug">
+				<Option output="bin/WinDebug/model-exporter-core" prefix_auto="1" extension_auto="1" />
+				<Option working_dir="" />
+				<Option object_output="obj/WinDebug/" />
+				<Option type="2" />
+				<Option compiler="gcc" />
+				<Compiler>
+					<Add option="-g" />
+					<Add option="-Wall" />
+					<Add option="-std=c++11" />
+					<Add option="-fexceptions" />
+					<Add option="-fPIC" />
+					<Add directory="include" />
+					<Add directory="../assimp-4.0.1/build-win32/include" />
+					<Add directory="../assimp-4.0.1/include" />
+				</Compiler>
+			</Target>
+			<Target title="Windows-Release">
+				<Option output="bin/WinRelease/model-exporter-core" prefix_auto="1" extension_auto="1" />
+				<Option working_dir="" />
+				<Option object_output="obj/WinRelease/" />
+				<Option type="2" />
+				<Option compiler="gcc" />
+				<Compiler>
+					<Add option="-O2" />
+					<Add option="-Wall" />
+					<Add option="-std=c++11" />
+					<Add option="-fexceptions" />
+					<Add option="-fPIC" />
+					<Add directory="include" />
+					<Add directory="../assimp-4.0.1/build-win32/include" />
+					<Add directory="../assimp-4.0.1/include" />
+				</Compiler>
+			</Target>
+		</Build>
+		<Unit filename="include/Animation3D.h" />
+		<Unit filename="include/Camera3D.h" />
+		<Unit filename="include/LoadScene.h" />
+		<Unit filename="include/Node3D.h" />
+		<Unit filename="include/SaveScene.h" />
+		<Unit filename="include/Scene3D.h" />
+		<Unit filename="include/Vector2.h" />
+		<Unit filename="include/Vector3.h" />
+		<Unit filename="src/Animation3D.cpp" />
+		<Unit filename="src/Camera3D.cpp" />
+		<Unit filename="src/LoadScene.cpp" />
+		<Unit filename="src/Node3D.cpp" />
+		<Unit filename="src/SaveScene.cpp" />
+		<Unit filename="src/Scene3D.cpp" />
+		<Extensions>
+			<code_completion />
+			<debugger />
+		</Extensions>
+	</Project>
+</CodeBlocks_project_file>

@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+<CodeBlocks_project_file>
+	<FileVersion major="1" minor="6" />
+	<Project>
+		<Option title="model-exporter-jni" />
+		<Option pch_mode="2" />
+		<Option compiler="gcc" />
+		<Build>
+			<Target title="Linux-Debug">
+				<Option output="bin/Linux-Debug/model-exporter-jni" prefix_auto="1" extension_auto="1" />
+				<Option object_output="obj/Linux-Debug/" />
+				<Option external_deps="../model-exporter-core/bin/Linux-Debug/libmodel-exporter-core.a" />
+				<Option type="3" />
+				<Option compiler="gcc" />
+				<Compiler>
+					<Add option="-g" />
+					<Add option="-std=c++11" />
+					<Add option="-Wall" />
+					<Add option="-fexceptions" />
+					<Add option="-fPIC" />
+					<Add directory="include" />
+					<Add directory="$(J2SDKDIR)/include" />
+					<Add directory="$(J2SDKDIR)/include/linux" />
+					<Add directory="../model-exporter-core/include" />
+					<Add directory="../assimp-4.0.1/include" />
+					<Add directory="../assimp-4.0.1/build-linux64/include" />
+				</Compiler>
+				<Linker>
+					<Add library="../assimp-4.0.1/build-linux64/code/libassimp.a" />
+					<Add library="../assimp-4.0.1/build-linux64/contrib/irrXML/libIrrXML.a" />
+					<Add library="../assimp-4.0.1/build-linux64/contrib/zlib/libzlibstatic.a" />
+					<Add library="../model-exporter-core/bin/Linux-Debug/libmodel-exporter-core.a" />
+				</Linker>
+			</Target>
+			<Target title="Linux-Release">
+				<Option output="bin/Linux-Release/model-exporter-jni" prefix_auto="1" extension_auto="1" />
+				<Option object_output="obj/Linux-Release/" />
+				<Option external_deps="../model-exporter-core/bin/Linux-Release/libmodel-exporter-core.a" />
+				<Option type="3" />
+				<Option compiler="gcc" />
+				<Compiler>
+					<Add option="-O2" />
+					<Add option="-std=c++11" />
+					<Add option="-Wall" />
+					<Add option="-fexceptions" />
+					<Add option="-fPIC" />
+					<Add directory="include" />
+					<Add directory="$(J2SDKDIR)/include" />
+					<Add directory="$(J2SDKDIR)/include/linux" />
+					<Add directory="../model-exporter-core/include" />
+					<Add directory="../assimp-4.0.1/include" />
+					<Add directory="../assimp-4.0.1/build-linux64/include" />
+				</Compiler>
+				<Linker>
+					<Add option="-s" />
+					<Add library="../assimp-4.0.1/build-linux64/code/libassimp.a" />
+					<Add library="../assimp-4.0.1/build-linux64/contrib/irrXML/libIrrXML.a" />
+					<Add library="../assimp-4.0.1/build-linux64/contrib/zlib/libzlibstatic.a" />
+					<Add library="../model-exporter-core/bin/Linux-Release/libmodel-exporter-core.a" />
+				</Linker>
+			</Target>
+			<Target title="Win32-Debug">
+				<Option output="bin/Win32-Debug/model-exporter-jni" prefix_auto="1" extension_auto="1" />
+				<Option object_output="obj/Win32-Debug/" />
+				<Option external_deps="../model-exporter-core/bin/Win32-Debug/libmodel-exporter-core.a" />
+				<Option type="3" />
+				<Option compiler="gcc" />
+				<Compiler>
+					<Add option="-g" />
+					<Add option="-Wall" />
+					<Add option="-std=c++11" />
+					<Add option="-fexceptions" />
+					<Add option="-fPIC" />
+					<Add directory="include" />
+					<Add directory="%JAVA_HOME%/include" />
+					<Add directory="%JAVA_HOME%/include/win32" />
+					<Add directory="../model-exporter-core/include" />
+					<Add directory="../assimp-4.0.1/build-win32/include" />
+					<Add directory="../assimp-4.0.1/include" />
+				</Compiler>
+				<Linker>
+					<Add library="../assimp-4.0.1/build-win32/code/libassimp.a" />
+					<Add library="../assimp-4.0.1/build-win32/contrib/zlib/libzlibstatic.a" />
+					<Add library="../assimp-4.0.1/build-win32/contrib/irrXML/libIrrXML.a" />
+					<Add library="../model-exporter-core/bin/Win32-Debug/libmodel-exporter-core.a" />
+				</Linker>
+			</Target>
+			<Target title="Win32-Release">
+				<Option output="bin/Win32-Release/model-exporter-jni" prefix_auto="1" extension_auto="1" />
+				<Option object_output="obj/Win32-Release/" />
+				<Option external_deps="../model-exporter-core/bin/Win32-Release/libmodel-exporter-core.a" />
+				<Option type="3" />
+				<Option compiler="gcc" />
+				<Compiler>
+					<Add option="-O2" />
+					<Add option="-Wall" />
+					<Add option="-std=c++11" />
+					<Add option="-fexceptions" />
+					<Add option="-fPIC" />
+					<Add directory="include" />
+					<Add directory="%JAVA_HOME%/include" />
+					<Add directory="%JAVA_HOME%/include/win32" />
+					<Add directory="../model-exporter-core/include" />
+					<Add directory="../assimp-4.0.1/build-win32/include" />
+					<Add directory="../assimp-4.0.1/include" />
+				</Compiler>
+				<Linker>
+					<Add option="-s" />
+					<Add library="../assimp-4.0.1/build-win32/code/libassimp.a" />
+					<Add library="../assimp-4.0.1/build-win32/contrib/zlib/libzlibstatic.a" />
+					<Add library="../assimp-4.0.1/build-win32/contrib/irrXML/libIrrXML.a" />
+					<Add library="../model-exporter-core/bin/Win32-Release/libmodel-exporter-core.a" />
+				</Linker>
+			</Target>
+		</Build>
+		<Unit filename="include/ModelExporter.h" />
+		<Unit filename="src/ModelExporter.cpp" />
+		<Extensions>
+			<code_completion />
+			<debugger />
+		</Extensions>
+	</Project>
+</CodeBlocks_project_file>

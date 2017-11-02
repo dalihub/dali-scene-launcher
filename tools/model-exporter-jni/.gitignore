@@ -1,0 +1,9 @@
+/Debug/
+/Release/
+
+**.depend
+**.layout
+/LinDebug/
+/LinRelease/
+/WinDebug/
+/WinRelease/
