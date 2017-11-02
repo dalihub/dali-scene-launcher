@@ -1,0 +1,7 @@
+/Debug/
+/Release/
+
+**.depend
+**.layout
+/LinDebug/
+/LinRelease/
