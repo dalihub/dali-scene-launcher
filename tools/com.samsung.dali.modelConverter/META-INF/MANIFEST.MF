@@ -15,4 +15,4 @@ Require-Bundle: javax.inject;bundle-version="0.0.0",
   org.eclipse.e4.ui.di;bundle-version="0.0.0",
   org.eclipse.e4.core.contexts;bundle-version="0.0.0"
 Bundle-RequiredExecutionEnvironment: JavaSE-1.8
-Bundle-NativeCode: /model-exporter-jni.dll; osname=Win32; processor=x86, /libmodel-exporter-jni.so; osname=Linux; processor=x86_64
+Bundle-NativeCode: /model-exporter-jni.dll; osname=Win32; processor=x86, /libmodel-exporter-jni.so; osname=Linux; processor=x86_64, /model-exporter-jni.dll; osname=Win32; processor=x86_64
