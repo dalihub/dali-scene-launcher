@@ -1,8 +1,24 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<application:Application xmi:version="2.0" xmlns:xmi="http://www.omg.org/XMI" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:application="http://www.eclipse.org/ui/2010/UIModel/application" xmlns:basic="http://www.eclipse.org/ui/2010/UIModel/application/ui/basic" xmi:id="_6wlLcMgZEeSyMNYR5xypkQ" elementId="com.samsung.dali.modelConverter.application">
+<application:Application xmi:version="2.0" xmlns:xmi="http://www.omg.org/XMI" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:application="http://www.eclipse.org/ui/2010/UIModel/application" xmlns:basic="http://www.eclipse.org/ui/2010/UIModel/application/ui/basic" xmlns:menu="http://www.eclipse.org/ui/2010/UIModel/application/ui/menu" xmi:id="_6wlLcMgZEeSyMNYR5xypkQ" elementId="com.samsung.dali.modelConverter.application">
   <children xsi:type="basic:TrimmedWindow" xmi:id="_6wlLccgZEeSyMNYR5xypkQ" elementId="com.samsung.dali.modelConverter.window.main" label="DALi Model Converter" tooltip="Main" width="800" height="600">
-    <children xsi:type="basic:Part" xmi:id="_6wlLlMgZEeSyMNYR5xypkQ" elementId="com.samsung.dali.modelConverter.part.sample" contributionURI="bundleclass://com.samsung.dali.modelConverter/com.samsung.dali.modelConverter.MainPart" label=""/>
+    <children xsi:type="basic:Part" xmi:id="_6wlLlMgZEeSyMNYR5xypkQ" elementId="com.samsung.dali.modelConverter.part.Main" contributionURI="bundleclass://com.samsung.dali.modelConverter/com.samsung.dali.modelConverter.MainPart" label="Main"/>
+    <mainMenu xmi:id="_3YEbMMMIEee_geLWYt7DcQ" elementId="com.samsung.dali.modelconverter.menu.0">
+      <children xsi:type="menu:Menu" xmi:id="_5Qf8cMMIEee_geLWYt7DcQ" elementId="com.samsung.dali.modelconverter.menu.File" label="File">
+        <children xsi:type="menu:Menu" xmi:id="_KJPUgMRkEeerKPh-shuU-A" elementId="com.samsung.dali.modelconverter.menu.SDB" label="SDB">
+          <children xsi:type="menu:HandledMenuItem" xmi:id="_Q5q00MPHEeeesrefmYMVsg" elementId="com.samsung.dali.modelconverter.handledmenuitem.restartsdbdaemon" label="Restart Daemon" command="_NC7z0MPHEeeesrefmYMVsg"/>
+          <children xsi:type="menu:HandledMenuItem" xmi:id="_5q4LUMMIEee_geLWYt7DcQ" elementId="com.samsung.dali.modelconverter.handledmenuitem.Deploy" label="Deploy RPM..." command="_-Fv-sMMJEeeWmtfmTd2neg"/>
+        </children>
+        <children xsi:type="menu:MenuSeparator" xmi:id="_FlUuoMMKEeeWmtfmTd2neg" elementId="com.samsung.dali.modelconverter.menuseparator.0"/>
+        <children xsi:type="menu:HandledMenuItem" xmi:id="_GJekkMMKEeeWmtfmTd2neg" elementId="com.samsung.dali.modelconverter.handledmenuitem.Exit" label="Exit" command="_H3atEMMKEeeWmtfmTd2neg"/>
+      </children>
+    </mainMenu>
   </children>
+  <handlers xmi:id="_UJg0AMMOEeeWmtfmTd2neg" elementId="com.samsung.dali.modelconverter.handler.Exit" contributionURI="bundleclass://com.samsung.dali.modelConverter/com.samsung.dali.modelConverter.handlers.ExitHandler" command="_H3atEMMKEeeWmtfmTd2neg"/>
+  <handlers xmi:id="_W6NaAMMOEeeWmtfmTd2neg" elementId="com.samsung.dali.modelconverter.handler.Deploy" contributionURI="bundleclass://com.samsung.dali.modelConverter/com.samsung.dali.modelConverter.handlers.DeployRpmHandler" command="_-Fv-sMMJEeeWmtfmTd2neg"/>
+  <handlers xmi:id="_J4htUMPHEeeesrefmYMVsg" elementId="com.samsung.dali.modelconverter.handler.RestartSdbDaemon" contributionURI="bundleclass://com.samsung.dali.modelConverter/com.samsung.dali.modelConverter.handlers.RestartSdbDaemonHandler" command="_NC7z0MPHEeeesrefmYMVsg"/>
+  <commands xmi:id="_NC7z0MPHEeeesrefmYMVsg" elementId="com.samsung.dali.modelconverter.command.RestartSdbDaemon" commandName="Restart SDB Daemon"/>
+  <commands xmi:id="_-Fv-sMMJEeeWmtfmTd2neg" elementId="com.samsung.dali.modelconverter.command.DeployRpm" commandName="Deploy RPM"/>
+  <commands xmi:id="_H3atEMMKEeeWmtfmTd2neg" elementId="com.samsung.dali.modelconverter.command.Exit" commandName="Exit"/>
   <addons xmi:id="_6wlLcsgZEeSyMNYR5xypkQ" elementId="org.eclipse.e4.core.commands.service" contributionURI="bundleclass://org.eclipse.e4.core.commands/org.eclipse.e4.core.commands.CommandServiceAddon"/>
   <addons xmi:id="_6wlLc8gZEeSyMNYR5xypkQ" elementId="org.eclipse.e4.ui.contexts.service" contributionURI="bundleclass://org.eclipse.e4.ui.services/org.eclipse.e4.ui.services.ContextServiceAddon"/>
   <addons xmi:id="_6wlLdMgZEeSyMNYR5xypkQ" elementId="org.eclipse.e4.ui.bindings.service" contributionURI="bundleclass://org.eclipse.e4.ui.bindings/org.eclipse.e4.ui.bindings.BindingServiceAddon"/>
