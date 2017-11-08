@@ -25,9 +25,9 @@
 ## 1. Minimum Requirements
 
  * Windows: Windows 8 or later
-   * MinGW32
-   * 32-bit JDK v1.8
-   * 32-bit Eclipse v4.7.1. RCP & RAP
+   * MinGW 64-bits. Note that while 32-bit Windows builds are currently supported, this might not continue.
+   * 64=bit JDK v1.8
+   * 64-bits Eclipse v4.7.1. RCP & RAP
    * CodeBlocks > 13.12
 
    WARNING: the linking of model-exporter-jni is known to be problematic on Windows with GCC latest at the time of writing (6.3.0).
@@ -40,11 +40,13 @@
 
  * Both platforms: install the' C++ Development Tools' for Eclipse. ('Help' -> 'Install New Software...')
 
+ * modelConverter offers a few tools - currently in development - that facilitate the use of the Smart Development Bridge that comes with [Tizen Studio](https://developer.tizen.org/development/tizen-studio/download). To be able to use these, make sure that SDB is in your PATH.
+
 ## 2. Building with Eclipse
 
 This folder may be used as an Eclipse workspace from which the projects can be imported as "Existing Projects (into Workspace)".
 
-You might be required to set the JAVA_HOME / JDK_HOME environment variables to the location of your JDK installation (i.e. C:\Program Files (x86)\Java\jdk1.8.0_152 or /usr/lib/jvm/java-8-oracle).
+You might be required to set the JAVA_HOME / JDK_HOME environment variables to the location of your JDK installation (i.e. C:\Program Files\Java\jdk1.8.0_152 or /usr/lib/jvm/java-8-oracle).
 
 You might want to make sure that you're building the correct configuration (right-click project -> 'Build Configurations' -> 'Set Active'); Eclipse will default to the first target, which is Linux, and this might lead to misleading build errors on Windows.
 

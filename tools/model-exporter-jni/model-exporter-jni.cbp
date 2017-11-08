@@ -112,6 +112,59 @@
 					<Add library="../model-exporter-core/WinRelease/libmodel-exporter-core.a" />
 				</Linker>
 			</Target>
+			<Target title="Win64Debug">
+				<Option output="Win64Debug/model-exporter-jni" prefix_auto="1" extension_auto="1" />
+				<Option object_output="Win64Debug/obj/" />
+				<Option external_deps="../model-exporter-core/Win64Debug/libmodel-exporter-core.a" />
+				<Option type="3" />
+				<Option compiler="gcc" />
+				<Compiler>
+					<Add option="-g" />
+					<Add option="-Wall" />
+					<Add option="-std=c++11" />
+					<Add option="-fexceptions" />
+					<Add option="-fPIC" />
+					<Add directory="include" />
+					<Add directory="%JAVA_HOME%/include" />
+					<Add directory="%JAVA_HOME%/include/win64" />
+					<Add directory="../model-exporter-core/include" />
+					<Add directory="../assimp-4.0.1/build-win64/include" />
+					<Add directory="../assimp-4.0.1/include" />
+				</Compiler>
+				<Linker>
+					<Add library="../assimp-4.0.1/build-win64/code/libassimp.a" />
+					<Add library="../assimp-4.0.1/build-win64/contrib/zlib/libzlibstatic.a" />
+					<Add library="../assimp-4.0.1/build-win64/contrib/irrXML/libIrrXML.a" />
+					<Add library="../model-exporter-core/Win64Debug/libmodel-exporter-core.a" />
+				</Linker>
+			</Target>
+			<Target title="Win64Release">
+				<Option output="Win64Release/model-exporter-jni" prefix_auto="1" extension_auto="1" />
+				<Option object_output="Win64Release/obj/" />
+				<Option external_deps="../model-exporter-core/Win64Release/libmodel-exporter-core.a" />
+				<Option type="3" />
+				<Option compiler="gcc" />
+				<Compiler>
+					<Add option="-O2" />
+					<Add option="-Wall" />
+					<Add option="-std=c++11" />
+					<Add option="-fexceptions" />
+					<Add option="-fPIC" />
+					<Add directory="include" />
+					<Add directory="%JAVA_HOME%/include" />
+					<Add directory="%JAVA_HOME%/include/win64" />
+					<Add directory="../model-exporter-core/include" />
+					<Add directory="../assimp-4.0.1/build-win64/include" />
+					<Add directory="../assimp-4.0.1/include" />
+				</Compiler>
+				<Linker>
+					<Add option="-s" />
+					<Add library="../assimp-4.0.1/build-win64/code/libassimp.a" />
+					<Add library="../assimp-4.0.1/build-win64/contrib/zlib/libzlibstatic.a" />
+					<Add library="../assimp-4.0.1/build-win64/contrib/irrXML/libIrrXML.a" />
+					<Add library="../model-exporter-core/Win64Release/libmodel-exporter-core.a" />
+				</Linker>
+			</Target>
 		</Build>
 		<Unit filename="include/ModelExporter.h" />
 		<Unit filename="src/ModelExporter.cpp" />
