@@ -88,7 +88,7 @@ void ModelPbr::Init( const std::string& modelUrl, const Vector3& position, const
 
 void ModelPbr::Clear()
 {
-  for(std::vector<Shader>::iterator it = mShaderArray.begin(); it !=mShaderArray.end(); ++it )
+  for( std::vector<Shader>::iterator it = mShaderArray.begin(); it !=mShaderArray.end(); ++it )
   {
      (*it).Reset();
   }
@@ -130,7 +130,7 @@ bool ModelPbr::GetUniform(std::string property, Property::Value& value, int shad
 
 void ModelPbr::SetShaderUniform(std::string property, const Property::Value& value)
 {
-  for(std::vector<Shader>::iterator it = mShaderArray.begin(); it != mShaderArray.end(); ++it )
+  for( std::vector<Shader>::iterator it = mShaderArray.begin(); it != mShaderArray.end(); ++it )
   {
     int index = (*it).GetPropertyIndex( property );
     if( index != Property::INVALID_INDEX )
@@ -142,7 +142,7 @@ void ModelPbr::SetShaderUniform(std::string property, const Property::Value& val
 
 void ModelPbr::SetShaderAnimationUniform(std::string property, const Property::Value& value, AlphaFunction alpha, TimePeriod etime )
 {
-  for(std::vector<Shader>::iterator it = mShaderArray.begin(); it != mShaderArray.end(); ++it )
+  for( std::vector<Shader>::iterator it = mShaderArray.begin(); it != mShaderArray.end(); ++it )
   {
     int index = (*it).GetPropertyIndex( property );
     if( index != Property::INVALID_INDEX )

@@ -25,6 +25,10 @@
 #include <sstream>
 #include <dali/integration-api/debug.h>
 
+
+#include <iostream>
+
+
 using namespace Dali;
 using namespace Dali::Toolkit;
 
@@ -1034,53 +1038,79 @@ bool DliLoader::LoadBuffer( const TreeNode* mesh, Geometry geometry, std::string
     return false;
   }
 
-  geometry.SetIndexBuffer ((unsigned short*) &efileContent[byteOffset], byteLength / sizeof( unsigned short ) );
+  if( 0 != byteLength )
+  {
+    geometry.SetIndexBuffer ((unsigned short*) &efileContent[byteOffset], byteLength / sizeof( unsigned short ) );
+  }
 
+  PropertyBuffer positionBuffer;
+  PropertyBuffer normalBuffer;
+  PropertyBuffer texCoordBuffer;
+  PropertyBuffer tangentBuffer;
+
+  byteLength = 0;
   temp = mesh->GetChild( "positions" );
   if( temp && ( !ReadInt( temp->GetChild( "byteOffset" ), byteOffset ) || !ReadInt( temp->GetChild( "byteLength" ), byteLength ) ) )
   {
     return false;
   }
-  Property::Map positionMap;
-  positionMap["aPosition"] = Property::VECTOR3;
-  PropertyBuffer positionBuffer = PropertyBuffer::New( positionMap );
-  positionBuffer.SetData( &efileContent[byteOffset], byteLength / ( sizeof( Vector3 ) ) );
 
-  temp = mesh->GetChild( "normals" );
-  if( temp && ( !ReadInt( temp->GetChild( "byteOffset" ), byteOffset ) || !ReadInt( temp->GetChild( "byteLength" ), byteLength ) ) )
+  if( 0 != byteLength )
   {
-    return false;
+    Property::Map positionMap;
+    positionMap["aPosition"] = Property::VECTOR3;
+    positionBuffer = PropertyBuffer::New( positionMap );
+    positionBuffer.SetData( &efileContent[byteOffset], byteLength / ( sizeof( Vector3 ) ) );
+    geometry.AddVertexBuffer( positionBuffer );
   }
-  Property::Map normalMap;
-  normalMap["aNormal"] = Property::VECTOR3;
-  PropertyBuffer normalBuffer = PropertyBuffer::New( normalMap );
-  normalBuffer.SetData( &efileContent[byteOffset], byteLength / ( sizeof( Vector3 ) ) );
 
-
+  byteLength = 0;
   temp = mesh->GetChild( "textures" );
   if( temp && ( !ReadInt( temp->GetChild( "byteOffset" ), byteOffset ) || !ReadInt( temp->GetChild( "byteLength" ), byteLength ) ) )
   {
     return false;
   }
-  Property::Map textCoordMap;
-  textCoordMap["aTexCoord"] = Property::VECTOR2;
-  PropertyBuffer texCoordBuffer = PropertyBuffer::New( textCoordMap );
-  texCoordBuffer.SetData( &efileContent[byteOffset], byteLength / ( sizeof( Vector2 ) ) );
 
+  if( 0 != byteLength )
+  {
+    Property::Map textCoordMap;
+    textCoordMap["aTexCoord"] = Property::VECTOR2;
+    texCoordBuffer = PropertyBuffer::New( textCoordMap );
+    texCoordBuffer.SetData( &efileContent[byteOffset], byteLength / ( sizeof( Vector2 ) ) );
+    geometry.AddVertexBuffer( texCoordBuffer );
+  }
+
+  byteLength = 0;
+  temp = mesh->GetChild( "normals" );
+  if( temp && ( !ReadInt( temp->GetChild( "byteOffset" ), byteOffset ) || !ReadInt( temp->GetChild( "byteLength" ), byteLength ) ) )
+  {
+    return false;
+  }
+
+  if( 0 != byteLength )
+  {
+    Property::Map normalMap;
+    normalMap["aNormal"] = Property::VECTOR3;
+    normalBuffer = PropertyBuffer::New( normalMap );
+    normalBuffer.SetData( &efileContent[byteOffset], byteLength / ( sizeof( Vector3 ) ) );
+    geometry.AddVertexBuffer( normalBuffer );
+  }
+
+  byteLength = 0;
   temp = mesh->GetChild( "tangents" );
   if( temp && ( !ReadInt( temp->GetChild( "byteOffset" ), byteOffset ) || !ReadInt( temp->GetChild( "byteLength" ), byteLength ) ) )
   {
     return false;
   }
-  Property::Map tangentMap;
-  tangentMap["aTangent"] = Property::VECTOR3;
-  PropertyBuffer tangentBuffer = PropertyBuffer::New( tangentMap );
-  tangentBuffer.SetData( &efileContent[byteOffset], byteLength / ( sizeof( Vector3 ) ) );
 
-  geometry.AddVertexBuffer( positionBuffer );
-  geometry.AddVertexBuffer( normalBuffer );
-  geometry.AddVertexBuffer( texCoordBuffer );
-  geometry.AddVertexBuffer( tangentBuffer );
+  if( 0 != byteLength )
+  {
+    Property::Map tangentMap;
+    tangentMap["aTangent"] = Property::VECTOR3;
+    tangentBuffer = PropertyBuffer::New( tangentMap );
+    tangentBuffer.SetData( &efileContent[byteOffset], byteLength / ( sizeof( Vector3 ) ) );
+    geometry.AddVertexBuffer( tangentBuffer );
+  }
 
   return true;
 }
@@ -1098,7 +1128,6 @@ void DliLoader::AddNode( Actor toActor, const TreeNode *addnode )
 
   if( !( itn = addnode->GetChild( "mesh" ) ) )
   {
-
     actor = Actor::New();
     actor.SetAnchorPoint( AnchorPoint::CENTER );
     actor.SetParentOrigin( ParentOrigin::CENTER );
@@ -1120,10 +1149,48 @@ void DliLoader::AddNode( Actor toActor, const TreeNode *addnode )
     ReadInt( addnode->GetChild( "shader" ), shaderIdx );
     ReadInt( addnode->GetChild( "material" ), materialIndex );
 
+    const int blend = mRendererOptionsArray[shaderIdx].blend;
+
+    // Remove the extra vertex buffers from the stencil and shadow objects.
+    // Ideally the model-exporter shouldn't create these buffers.
+
+    Geometry geometry = mGeometryArray[ meshIndex ];
+
+    switch( blend )
+    {
+      case 0: // PBR objects.
+      case 1: // PBR objects with blending.
+      case 2: // Shadow Layers (is it used?). FALL THROUGH
+      {
+        // Nothing to do.
+        break;
+      }
+      case 3: // Stencil.
+      {
+        // Remove texture coordinates, normals and tangents.
+        geometry.RemoveVertexBuffer( 3u );
+        geometry.RemoveVertexBuffer( 2u );
+        geometry.RemoveVertexBuffer( 1u );
+        break;
+      }
+      case 4: // Shadows.
+      {
+        // Remove normals and tangents.
+        geometry.RemoveVertexBuffer( 3u );
+        geometry.RemoveVertexBuffer( 2u );
+        break;
+      }
+      default:
+      {
+        // Nothing to do.
+        break;
+      }
+    }
+
     actor = ModelPbr::CreateNode( (*mShaderArrayPtr)[shaderIdx],
-                                  mRendererOptionsArray[shaderIdx].blend,
+                                  blend,
                                   mTextureSetArray[materialIndex],
-                                  mGeometryArray[meshIndex],
+                                  geometry,
                                   actorSize,
                                   nodeName );
   }
