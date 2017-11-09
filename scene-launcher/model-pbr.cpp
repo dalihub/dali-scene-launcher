@@ -88,7 +88,7 @@ void ModelPbr::Init( const std::string& modelUrl, const Vector3& position, const
 
 void ModelPbr::Clear()
 {
-  for(std::vector<Shader>::iterator it = mShaderArray.begin(); it !=mShaderArray.end(); ++it )
+  for( std::vector<Shader>::iterator it = mShaderArray.begin(); it !=mShaderArray.end(); ++it )
   {
      (*it).Reset();
   }
@@ -130,7 +130,7 @@ bool ModelPbr::GetUniform(std::string property, Property::Value& value, int shad
 
 void ModelPbr::SetShaderUniform(std::string property, const Property::Value& value)
 {
-  for(std::vector<Shader>::iterator it = mShaderArray.begin(); it != mShaderArray.end(); ++it )
+  for( std::vector<Shader>::iterator it = mShaderArray.begin(); it != mShaderArray.end(); ++it )
   {
     int index = (*it).GetPropertyIndex( property );
     if( index != Property::INVALID_INDEX )
@@ -142,7 +142,7 @@ void ModelPbr::SetShaderUniform(std::string property, const Property::Value& val
 
 void ModelPbr::SetShaderAnimationUniform(std::string property, const Property::Value& value, AlphaFunction alpha, TimePeriod etime )
 {
-  for(std::vector<Shader>::iterator it = mShaderArray.begin(); it != mShaderArray.end(); ++it )
+  for( std::vector<Shader>::iterator it = mShaderArray.begin(); it != mShaderArray.end(); ++it )
   {
     int index = (*it).GetPropertyIndex( property );
     if( index != Property::INVALID_INDEX )
@@ -188,7 +188,12 @@ Actor ModelPbr::CreateNode( Shader shader, int blend, TextureSet textureSet, Geo
   }
   else if( blend == 3 )
   {
-    // The stencil plane is only for stencilling.
+    // Remove the texture coords, tangents and normals from the geometry.
+    geometry.RemoveVertexBuffer( 3u );
+    geometry.RemoveVertexBuffer( 2u );
+    geometry.RemoveVertexBuffer( 1u );
+
+    // Set the render mode to STENCIL to mark where to render the shadows.
     renderer.SetProperty( Renderer::Property::RENDER_MODE, RenderMode::STENCIL );
 
     renderer.SetProperty( Renderer::Property::STENCIL_FUNCTION, StencilFunction::ALWAYS );
@@ -199,19 +204,26 @@ Actor ModelPbr::CreateNode( Shader shader, int blend, TextureSet textureSet, Geo
     renderer.SetProperty( Renderer::Property::STENCIL_OPERATION_ON_Z_PASS, StencilOperation::REPLACE );
     renderer.SetProperty( Renderer::Property::STENCIL_MASK, 0xFF );
 
-    // We don't want to write to the depth buffer, as this would block the reflection being drawn.
+    // We don't want to write to the depth buffer, as it has already been written by the actual geometry.
     renderer.SetProperty( Renderer::Property::DEPTH_WRITE_MODE, DepthWriteMode::OFF );
-    // We test the depth buffer as we want the stencil to only exist underneath the cube.
+    // We test the depth buffer as we want the stencil to only exist on the visible surfaces.
     renderer.SetProperty( Renderer::Property::DEPTH_TEST_MODE, DepthTestMode::ON );
   }
   else if( blend == 4 )
   {
+    // Remove the tangents and normals from the geometry.
+    geometry.RemoveVertexBuffer( 3u );
+    geometry.RemoveVertexBuffer( 1u );
+
     // Also enable the stencil buffer, as we will be testing against it to only draw to areas within the stencil.
     renderer.SetProperty( Renderer::Property::RENDER_MODE, RenderMode::COLOR_STENCIL );
     renderer.SetProperty( Renderer::Property::BLEND_MODE, BlendMode::ON );
 
     renderer.SetProperty( Renderer::Property::FACE_CULLING_MODE, FaceCullingMode::NONE );
+
+    // We don't want to write to the depth buffer, as it has already been written by the actual geometry.
     renderer.SetProperty( Renderer::Property::DEPTH_WRITE_MODE, DepthWriteMode::OFF );
+    // We test the depth buffer as we want the shadows to only exist on the visible surfaces.
     renderer.SetProperty( Renderer::Property::DEPTH_TEST_MODE, DepthTestMode::ON );
 
     // Enable stencil. Here we only draw to areas within the stencil.
