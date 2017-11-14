@@ -31,13 +31,25 @@ public class ModelExporter {
 	}
 
 	/**
-	 * @brief Performs the export.
-	 * @param inputFile - the .dae file to process. Required.
-	 * @param outputName - the name and path to save the .dli and .bin files.
+	 * @brief Performs model export, loading a .dae file, and writing .bin and
+	 *        .dli files.
+	 * @param inputFile - path to the .dae file to process. Required.
+	 * @param outputName - the name and path to save the .dli and .bin files to.
 	 * 						Optional. Will use the input path and name if omitted.
 	 * @return 0 on success, 1 on failure.
 	 */
-	public static native int nativeExport(String inputFile, String outputName);
+	public static native int nativeExport(String inputPath, String outputPath);
+
+	/**
+	 * @brief Performs model export, loading a .dae file, writing a .bin file and
+	 *        returning with the JSON encoded contents of the .dli file.
+	 * @param inputFile - path to the .dae file to process. Required.
+	 * @param binaryOutputName - the name and path to save the .bin file to.
+	 * @note Currently there's a restriction of having to save the .dli in the same
+	 *       location as the .bin file.
+	 * @return 0 on success, 1 on failure.
+	 */
+	public static native String nativeConvert(String inputPath, String binaryOutputPath);
 
 	/**
 	 * @return An explanation on what might have gone wrong, if anything has.
@@ -47,8 +59,8 @@ public class ModelExporter {
 	public static native String nativeGetErrorMessage();
 
 	/**
-	 * @return The path of the .dli file, if only nativeExport() was successful.
-	 * @note Calling nativeExport resets the string returned.
+	 * @return The path of the .dli file, only if nativeExport() was successful.
+	 * @note Calling nativeExport() or nativeConvert() resets the string returned.
 	 */
 	public static native String nativeGetDliPath();
 }

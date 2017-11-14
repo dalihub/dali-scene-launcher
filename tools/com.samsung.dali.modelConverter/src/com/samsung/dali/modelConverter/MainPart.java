@@ -18,10 +18,9 @@ package com.samsung.dali.modelConverter;
  */
 
 import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 
 import javax.annotation.PostConstruct;
 
@@ -70,27 +69,22 @@ public class MainPart {
 				ModelConverterLogic model = ModelConverterLogic.getInstance();
 				model.setImportPath(importText.getText());
 				model.setExportPath(exportText.getText());
-				model.performConversion();
 
-				String dliPath = model.getDliPath();
-				if(dliPath != null)
-				{
-					try {
-						String dliContent = new String(Files.readAllBytes(Paths.get(dliPath)));
+				String dli = model.performConversion();
+				if (dli != null) {
+					String dliName = exportText.getText() + ".dli";
+					
+					MessageBox mb = new MessageBox(parent.getShell());
+					mb.setText("Conversion successful");
+					mb.setMessage("File saved to " + dliName + " and .bin.");
+					mb.open();
 
-						MessageBox mb = new MessageBox(parent.getShell());
-						mb.setText("Conversion successful");
-						mb.setMessage("File saved to " + dliPath + " and .bin.");
-						mb.open();
+					mText.setText(dli.toString());
 
-						mText.setText(dliContent.toString());
-
-						dliPath = new File(dliPath).getAbsolutePath();
-						dliPath = dliPath.substring(0, dliPath.length() - ".dli".length());
-						exportText.setText(dliPath);
+					File dliFile = new File(dliName);
+					try (FileWriter dliWriter = new FileWriter(dliFile)) {
+						dliWriter.write(dli);
 					} catch (IOException e1) {
-						// TODO Auto-generated catch block
-						e1.printStackTrace();
 					}
 				}
 			}
@@ -132,16 +126,15 @@ public class MainPart {
 		mText.setLayoutData(textData);
 	}
 
-	public void setBusy(boolean isBusy)
-	{
+	public void setBusy(boolean isBusy) {
 		Display display = mText.getDisplay();
-		if(!display.isDisposed())
-		{
+		if (!display.isDisposed()) {
 			display.asyncExec(new Runnable() {
 
 				@Override
 				public void run() {
-					// update controls -- note that the busy cursor won't show over enabled text fields (which is most of the UI).
+					// update controls -- note that the busy cursor won't show over enabled text
+					// fields (which is most of the UI).
 					boolean isActive = !isBusy;
 					mPswImport.setEnabled(isActive);
 					mPswExport.setEnabled(isActive);
@@ -152,8 +145,7 @@ public class MainPart {
 					Cursor cursor = new Cursor(display, cursorType);
 					mText.getShell().setCursor(cursor);
 
-					if(mCursor != null)
-					{
+					if (mCursor != null) {
 						mCursor.dispose();
 					}
 					mCursor = cursor;
@@ -163,11 +155,9 @@ public class MainPart {
 
 	}
 
-	public void clearText()
-	{
+	public void clearText() {
 		Display display = mText.getDisplay();
-		if(!display.isDisposed())
-		{
+		if (!display.isDisposed()) {
 			display.asyncExec(new Runnable() {
 
 				@Override
@@ -178,28 +168,22 @@ public class MainPart {
 		}
 	}
 
-	public void appendText(String str) throws UnsupportedEncodingException, IOException
-	{
+	public void appendText(String str) throws UnsupportedEncodingException, IOException {
 		appendText(str, SWT.NONE);
 	}
 
-	public void appendText(String str, int color) throws UnsupportedEncodingException, IOException
-	{
+	public void appendText(String str, int color) throws UnsupportedEncodingException, IOException {
 		Display display = mText.getDisplay();
-		if(!display.isDisposed())
-		{
+		if (!display.isDisposed()) {
 			display.asyncExec(new Runnable() {
-				public void run()
-				{
+				public void run() {
 					Color swtColor = null;
-					if(color != SWT.NONE)
-					{
+					if (color != SWT.NONE) {
 						swtColor = display.getSystemColor(color);
 					}
 
 					StyleRange styleRange = null;
-					if(swtColor != null)
-					{
+					if (swtColor != null) {
 						styleRange = new StyleRange(mText.getText().length(), str.length(), swtColor, null);
 					}
 					appendText(str, styleRange);
@@ -208,18 +192,15 @@ public class MainPart {
 		}
 	}
 
-	public void appendText(String str, StyleRange styleRange)
-	{
+	public void appendText(String str, StyleRange styleRange) {
 		mText.setText(mText.getText() + str);
 		mText.setTopIndex(mText.getLineCount());
-		if(styleRange != null)
-		{
+		if (styleRange != null) {
 			mText.setStyleRange(styleRange);
 		}
 	}
 
-	public String getText()
-	{
+	public String getText() {
 		return mText.getText();
 	}
 

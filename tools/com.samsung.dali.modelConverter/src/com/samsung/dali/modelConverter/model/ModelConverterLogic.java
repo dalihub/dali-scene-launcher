@@ -37,31 +37,31 @@ public class ModelConverterLogic {
 
 	public void setImportPath(String path)
 	{
-		importPath = path;
+		mImportPath = path;
 	}
 
 	public void setExportPath(String path)
 	{
-		exportPath = path;
+		mExportPath = path;
 	}
 
-	public void performConversion()
+	public String performConversion()
 	{
 		// can we read the source file?
-		File in = new File(importPath);
+		File in = new File(mImportPath);
 		if(!in.exists() || !in.canRead())
 		{
 			throw new RuntimeException("Cannot read input: " + in.getAbsolutePath() + "!");
 		}
 
 		// if exportPath was not specified, try to get the import path, minus the .dae extension.
-		if(exportPath.isEmpty())
+		if(mExportPath.isEmpty())
 		{
-			exportPath = importPath.substring(0, importPath.length() - ".dae".length());
+			mExportPath = mImportPath.substring(0, mImportPath.length() - ".dae".length());
 		}
 
 		// if the target path exists, is it writable?
-		File out = new File(exportPath);
+		File out = new File(mExportPath);
 		if(out.exists())
 		{
 			if(out.isFile())
@@ -75,22 +75,18 @@ public class ModelConverterLogic {
 			}
 		}
 
-		int result = ModelExporter.nativeExport(in.getAbsolutePath(), out.getAbsolutePath());
-		if(result != 0)
+		String result = ModelExporter.nativeConvert(in.getAbsolutePath(), out.getAbsolutePath());
+		if(result == null)
 		{
 			throw new RuntimeException(ModelExporter.nativeGetErrorMessage());
 		}
-	}
-
-	public String getDliPath()
-	{
-		return ModelExporter.nativeGetDliPath();
+		return result;
 	}
 
 	private static ModelConverterLogic sInstance;
 
-	private String importPath;
-	private String exportPath;
+	private String mImportPath;
+	private String mExportPath;
 
 	private ModelConverterLogic()
 	{}

@@ -22,74 +22,102 @@
 
 using namespace std;
 
-void SaveNodes(Scene3D *scene, ofstream &txtFile);
-void SaveMeshes(Scene3D *scene, ofstream &txtFile,ofstream &binFile, std::string fileNameBinPath);
-void SaveCameras(Scene3D *scene, ofstream &txtFile);
-void SaveMaterials(Scene3D *scene, ofstream &txtFile);
-void SaveEnvironment(Scene3D *scene, ofstream &txtFile);
-void SaveShaders(Scene3D *scene, ofstream &txtFile);
-void SaveAnimations(Scene3D *scene, ofstream &txtFile);
+void SaveNodes(Scene3D *scene, ostream &txtFile);
+void SaveMeshes(Scene3D *scene, ostream &txtFile, ostream &binFile, std::string fileNameBinPath);
+void SaveCameras(Scene3D *scene, ostream &txtFile);
+void SaveMaterials(Scene3D *scene, ostream &txtFile);
+void SaveEnvironment(Scene3D *scene, ostream &txtFile);
+void SaveShaders(Scene3D *scene, ostream &txtFile);
+void SaveAnimations(Scene3D *scene, ostream &txtFile);
 
 bool SaveScene(Scene3D *scene,std::string fileNamePath, std::string fileNameBinPath)
 {
-    ofstream txtFile;
-    ofstream binFile;
-    txtFile.open( fileNamePath );
-    binFile.open( fileNameBinPath, ios::binary );
+    struct Files
+    {
+        std::ofstream dliStream;
+        std::ofstream binStream;
 
-    auto iBackSlash = std::min(fileNamePath.rfind('\\'), fileNamePath.rfind('/'));
-    std::string fileName = fileNamePath.substr( iBackSlash + 1, fileNamePath.length() - iBackSlash - 1 );
-    std::string fileNameBin = fileNameBinPath.substr( iBackSlash + 1, fileNameBinPath.length() - iBackSlash - 1);
+        Files( std::string dliName, std::string binName )
+        {
+            dliStream.open( dliName );
+            binStream.open( binName, ios::binary );
+        }
 
-    txtFile << "{\n" << "    \"asset\" : { " << "\"version\" : \"1.0\"" << " },\n";
-    txtFile << "    \"scene\" : 0,\n";
-    txtFile << "    \"scenes\" : [ { \"nodes\" : [ 0 ] } ],\n";
+        ~Files()
+        {
+            if( dliStream.is_open() )
+            {
+                dliStream.close();
+            }
+
+            if( binStream.is_open() )
+            {
+                binStream.close();
+            }
+        }
+    } files( fileNamePath, fileNameBinPath );
+
+    return ConvertScene(scene, fileNamePath, files.dliStream, files.binStream);
+}
+
+bool ConvertScene(Scene3D* scene, std::string fileNameBin, std::ostream& outDli, std::ostream& outBin)
+{
+    // If filenameBin is a path, now is a good time to discard all but the filename & extension -
+	// the .bin file that we are going to reference must be in the same directory.
+    auto iDirSeparator = std::min( fileNameBin.rfind( '\\' ), fileNameBin.rfind( '/' ) );
+    if( iDirSeparator != std::string::npos )
+    {
+        fileNameBin = fileNameBin.substr( iDirSeparator + 1, fileNameBin.length() - iDirSeparator - 1);
+    }
+
+    // Write scene data.
+    outDli << "{\n" << "    \"asset\" : { " << "\"version\" : \"1.0\"" << " },\n";
+    outDli << "    \"scene\" : 0,\n";
+    outDli << "    \"scenes\" : [ { \"nodes\" : [ 0 ] } ],\n";
 
     //Save Nodes
-    txtFile << "    \"nodes\" : [\n";
-        SaveNodes( scene, txtFile );
-    txtFile << "    ], \n";
+    outDli << "    \"nodes\" : [\n";
+        SaveNodes( scene, outDli );
+    outDli << "    ], \n";
 
-    txtFile << "    \"meshes\" : [\n";
-        SaveMeshes( scene, txtFile, binFile, fileNameBin );
-    txtFile << "    ], \n";
+    outDli << "    \"meshes\" : [\n";
+        SaveMeshes( scene, outDli, outBin, fileNameBin );
+    outDli << "    ], \n";
 
     //Save Cameras
-    txtFile << "    \"cameras\" : [\n";
-        SaveCameras( scene, txtFile );
-    txtFile << "    ], \n";
+    outDli << "    \"cameras\" : [\n";
+        SaveCameras( scene, outDli );
+    outDli << "    ], \n";
 
     //Save Materials
-    txtFile << "    \"materials\" : [\n";
-        SaveMaterials( scene, txtFile );
-    txtFile << "    ],\n";
+    outDli << "    \"materials\" : [\n";
+        SaveMaterials( scene, outDli );
+    outDli << "    ],\n";
 
     //Save Environment
-    txtFile << "    \"environment\" : [\n";
-        SaveEnvironment( scene, txtFile );
-    txtFile << "    ],\n";
+    outDli << "    \"environment\" : [\n";
+        SaveEnvironment( scene, outDli );
+    outDli << "    ],\n";
 
     //Save Shaders
-    txtFile << "    \"shaders\" : [\n";
-        SaveShaders( scene, txtFile );
-    txtFile << "    ]";
+    outDli << "    \"shaders\" : [\n";
+        SaveShaders( scene, outDli );
+    outDli << "    ]";
 
     //Save Animations
     if(scene->HasAnimations())
     {
-        txtFile << ",\n    \"animations\" : {\n";
-            SaveAnimations( scene, txtFile );
-        txtFile << "\n    }";
+        outDli << ",\n    \"animations\" : {\n";
+            SaveAnimations( scene, outDli );
+        outDli << "\n    }";
     }
 
 
-    txtFile << "\n}\n";
-    txtFile.close();
-    binFile.close();
+    outDli << "\n}\n";
     return true;
 }
 
-void SaveNodes(Scene3D *scene, ofstream &txtFile)
+void SaveNodes(Scene3D *scene, ostream &txtFile)
 {
     unsigned int meshIdx = 0;
     for(unsigned int n = 0; n < scene->GetNumNodes(); n++)
@@ -149,7 +177,7 @@ void SaveNodes(Scene3D *scene, ofstream &txtFile)
     }
 }
 
-void SaveMeshes(Scene3D *scene, ofstream &txtFile, ofstream &binFile, std::string fileNameBin)
+void SaveMeshes(Scene3D *scene, ostream &txtFile, ostream &binFile, std::string fileNameBin)
 {
     unsigned int offset = 0;
     unsigned int length = 0;
@@ -234,7 +262,7 @@ void SaveMeshes(Scene3D *scene, ofstream &txtFile, ofstream &binFile, std::strin
     }
 }
 
-void SaveCameras( Scene3D *scene, ofstream &txtFile )
+void SaveCameras( Scene3D *scene, ostream &txtFile )
 {
     if( !scene->GetNumCameras() )
     {
@@ -271,7 +299,7 @@ void SaveCameras( Scene3D *scene, ofstream &txtFile )
     }
 }
 
-void SaveMaterials( Scene3D *scene, ofstream &txtFile )
+void SaveMaterials( Scene3D *scene, ostream &txtFile )
 {
     txtFile << "        {\n";
     txtFile << "            \"texture1\": \"scenes/Basic_albedo_metallic.png\",\n";
@@ -280,7 +308,7 @@ void SaveMaterials( Scene3D *scene, ofstream &txtFile )
     txtFile << "        }\n";
 }
 
-void SaveEnvironment( Scene3D *scene, ofstream &txtFile )
+void SaveEnvironment( Scene3D *scene, ostream &txtFile )
 {
     txtFile << "        {\n";
     txtFile << "        },\n";
@@ -290,7 +318,7 @@ void SaveEnvironment( Scene3D *scene, ofstream &txtFile )
     txtFile << "        }\n";
 }
 
-void SaveShaders( Scene3D *scene, ofstream &txtFile )
+void SaveShaders( Scene3D *scene, ostream &txtFile )
 {
     txtFile << "        {\n";
     txtFile << "            \"vertex\": \"scenes/default_pbr_shader.vsh\",\n";
@@ -300,7 +328,7 @@ void SaveShaders( Scene3D *scene, ofstream &txtFile )
     txtFile << "        }\n";
 }
 
-void SaveAnimations( Scene3D *scene, ofstream &txtFile )
+void SaveAnimations( Scene3D *scene, ostream &txtFile )
 {
     for(unsigned int a = 0; a < scene->GetNumAnimations(); a++ )
     {

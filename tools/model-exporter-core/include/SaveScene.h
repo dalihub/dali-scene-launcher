@@ -20,6 +20,22 @@
 
 #include "Scene3D.h"
 
-bool SaveScene(Scene3D *scene,std::string fileName, std::string fileNameBin);
+/**
+ * @brief Saves the given @a scene to the given absolute paths for the .dli and
+ *        .bin files.
+ * @return The success of the operation.
+ */
+bool SaveScene(Scene3D* scene, std::string dliOutputPath, std::string binOutputPath);
+
+/**
+ * @brief Performs conversion of the given @a scene, writing the .dli and .bin
+ *        data to the provided streams.
+ * @param fileNameBin is the intended filename for the binary file, which will
+ *        be referenced from the .dli.
+ * @param outDli Stream to write the gltf / dli data to.
+ * @param outBin Stream to write the binary data to.
+ * @return The success of the operation.
+ */
+bool ConvertScene(Scene3D* scene, std::string fileNameBin, std::ostream& outDli, std::ostream& outBin);
 
 #endif // SAVESCENE_H
