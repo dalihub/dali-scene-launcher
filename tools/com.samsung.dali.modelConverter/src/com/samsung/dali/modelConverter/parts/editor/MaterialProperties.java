@@ -1,5 +1,4 @@
-#ifndef MODELEXPORTER_H_
-#define MODELEXPORTER_H_
+package com.samsung.dali.modelConverter.parts.editor;
 
 /*
  * Copyright (c) 2017 Samsung Electronics Co., Ltd.
@@ -18,21 +17,20 @@
  *
  */
 
-#include <jni.h>
+import javax.annotation.PostConstruct;
 
-#ifdef __cplusplus
-extern "C"
-{
-#endif
+import org.eclipse.swt.SWT;
+import org.eclipse.swt.layout.FillLayout;
+import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Text;
 
-JNIEXPORT jint JNICALL Java_com_samsung_dali_modelExporter_ModelExporter_nativeExport(JNIEnv* env, jclass clazz, jstring inputFile, jstring outputFile);
+public class MaterialProperties {
+  private Text mConsoleTxt;
+  @PostConstruct
+  public void createComposite(Composite parent) {
+    parent.setLayout(new FillLayout(SWT.HORIZONTAL));
 
-JNIEXPORT jstring JNICALL Java_com_samsung_dali_modelExporter_ModelExporter_nativeGetErrorMessage(JNIEnv* env, jclass clazz);
+    mConsoleTxt = new Text(parent, SWT.BORDER | SWT.V_SCROLL | SWT.MULTI);
 
-JNIEXPORT jstring JNICALL Java_com_samsung_dali_modelExporter_ModelExporter_nativeGetDliPath(JNIEnv* env, jclass clazz);
-
-#ifdef __cplusplus
+  }
 }
-#endif
-
-#endif /* INCLUDE_MODELEXPORTER_H_ */
