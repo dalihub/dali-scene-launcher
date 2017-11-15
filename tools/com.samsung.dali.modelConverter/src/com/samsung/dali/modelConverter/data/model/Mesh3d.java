@@ -1,5 +1,4 @@
-#ifndef VECTOR2_H
-#define VECTOR2_H
+package com.samsung.dali.modelConverter.data.model;
 
 /*
  * Copyright (c) 2017 Samsung Electronics Co., Ltd.
@@ -18,17 +17,23 @@
  *
  */
 
-struct Vector2
-{
-  Vector2()
-  :x(0.0f),
-   y(0.0f)
-  {
+public class Mesh3d implements Node {
+  int mRendermode;
+  int mIndex;
 
+  public Mesh3d() {
+    // TODO Auto-generated constructor stub
   }
 
-  float x;
-  float y;
-};
+  @Override
+  public String GetLabel() {
+    // TODO Auto-generated method stub
+    return null;
+  }
+  @Override
+  public int GetType() {
+    // TODO Auto-generated method stub
+    return 0;
+  }
 
-#endif // VECTOR2_H
+}

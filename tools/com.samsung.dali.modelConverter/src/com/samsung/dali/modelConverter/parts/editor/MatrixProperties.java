@@ -1,4 +1,4 @@
-package com.samsung.dali.modelConverter.handlers;
+package com.samsung.dali.modelConverter.parts.editor;
 
 /*
  * Copyright (c) 2017 Samsung Electronics Co., Ltd.
@@ -17,18 +17,21 @@ package com.samsung.dali.modelConverter.handlers;
  *
  */
 
-import org.eclipse.e4.core.di.annotations.Execute;
-import org.eclipse.e4.ui.workbench.IWorkbench;
-import org.eclipse.jface.dialogs.MessageDialog;
-import org.eclipse.swt.widgets.Shell;
+import javax.annotation.PostConstruct;
 
-public class ExitHandler {
+import org.eclipse.swt.SWT;
+import org.eclipse.swt.layout.FillLayout;
+import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Text;
 
-	@Execute
-	public void execute(IWorkbench workbench, Shell shell){
-		if (MessageDialog.openConfirm(shell, "Confirmation",
-				"Do you want to exit?")) {
-			workbench.close();
-		}
-	}
+public class MatrixProperties {
+  private Text mConsoleTxt;
+
+  @PostConstruct
+  public void createComposite(Composite parent) {
+    parent.setLayout(new FillLayout(SWT.HORIZONTAL));
+
+    mConsoleTxt = new Text(parent, SWT.BORDER | SWT.V_SCROLL | SWT.MULTI);
+
+  }
 }

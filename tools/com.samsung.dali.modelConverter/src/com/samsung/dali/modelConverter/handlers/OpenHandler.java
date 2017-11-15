@@ -1,5 +1,4 @@
-#ifndef VECTOR2_H
-#define VECTOR2_H
+package com.samsung.dali.modelConverter.handlers;
 
 /*
  * Copyright (c) 2017 Samsung Electronics Co., Ltd.
@@ -18,17 +17,14 @@
  *
  */
 
-struct Vector2
-{
-  Vector2()
-  :x(0.0f),
-   y(0.0f)
-  {
+import org.eclipse.e4.core.di.annotations.Execute;
+import org.eclipse.swt.widgets.FileDialog;
+import org.eclipse.swt.widgets.Shell;
+public class OpenHandler {
 
+  @Execute
+  public void execute(Shell shell){
+    FileDialog dialog = new FileDialog(shell);
+    dialog.open();
   }
-
-  float x;
-  float y;
-};
-
-#endif // VECTOR2_H
+}

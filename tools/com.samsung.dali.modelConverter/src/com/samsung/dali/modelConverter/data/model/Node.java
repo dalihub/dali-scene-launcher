@@ -1,5 +1,4 @@
-#ifndef VECTOR2_H
-#define VECTOR2_H
+package com.samsung.dali.modelConverter.data.model;
 
 /*
  * Copyright (c) 2017 Samsung Electronics Co., Ltd.
@@ -18,17 +17,7 @@
  *
  */
 
-struct Vector2
-{
-  Vector2()
-  :x(0.0f),
-   y(0.0f)
-  {
-
-  }
-
-  float x;
-  float y;
-};
-
-#endif // VECTOR2_H
+public interface Node {
+  public String GetLabel();
+  public int GetType();
+}
