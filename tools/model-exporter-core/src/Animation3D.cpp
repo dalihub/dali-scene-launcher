@@ -3,12 +3,12 @@
 
 NodeAnimation3D::NodeAnimation3D()
 {
-    //ctor
+  //ctor
 }
 
 NodeAnimation3D::~NodeAnimation3D()
 {
-    //dtor
+  //dtor
 }
 
 
@@ -17,23 +17,23 @@ Animation3D::Animation3D()
  Duration(0.0f),
  Name("loaded")
 {
-    //ctor
+  //ctor
 }
 
 Animation3D::~Animation3D()
 {
-    //dtor
+  //dtor
 }
 
 bool Animation3D::HasAnimations()
 {
-    bool flag = false;
-    for( unsigned int i=0; i < AnimNodesList.size(); i++ )
+  bool flag = false;
+  for( unsigned int i=0; i < AnimNodesList.size(); i++ )
+  {
+    if( ( AnimNodesList[i].Rotations.size() + AnimNodesList[i].Positions.size() + AnimNodesList[i].Scales.size() ) > 0 )
     {
-        if( ( AnimNodesList[i].Rotations.size() + AnimNodesList[i].Positions.size() + AnimNodesList[i].Scales.size() ) > 0 )
-        {
-            flag = true;
-        }
+      flag = true;
     }
-    return flag;
+  }
+  return flag;
 }

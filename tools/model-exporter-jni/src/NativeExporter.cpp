@@ -15,7 +15,7 @@
  *
  */
 
-#include <ModelExporter.h>
+#include <NativeExporter.h>
 #include <iostream>
 #include <string>
 #include <memory>
@@ -36,7 +36,13 @@ std::string s_dliPath;
 
 }
 
-jint Java_com_samsung_dali_modelExporter_ModelExporter_nativeExport(JNIEnv* env, jclass clazz, jstring inputFile, jstring outputFile)
+/*
+ * Class:     com_samsung_dali_modelConverter_process_NativeExporter
+ * Method:    Export
+ * Signature: (Ljava/lang/String;Ljava/lang/String;)I
+ */
+JNIEXPORT jint JNICALL Java_com_samsung_dali_modelConverter_process_NativeExporter_Export
+  (JNIEnv *env, jclass clazz, jstring inputFile, jstring outputFile)
 {
   s_dliPath = std::string();
 
@@ -48,13 +54,13 @@ jint Java_com_samsung_dali_modelExporter_ModelExporter_nativeExport(JNIEnv* env,
   env->ReleaseStringUTFChars(inputFile, inputFileChars);
 
   const aiScene* scene = s_importer.ReadFile( fileName,
-                                              aiProcess_CalcTangentSpace |
-											  aiProcess_SortByPType );
+      aiProcess_CalcTangentSpace |
+      aiProcess_SortByPType );
 
   if( !scene )
   {
-	s_errorMessage = s_importer.GetErrorString();
-	return 1;
+    s_errorMessage = s_importer.GetErrorString();
+    return 1;
   }
 
   Scene3D scene_data;
@@ -69,12 +75,12 @@ jint Java_com_samsung_dali_modelExporter_ModelExporter_nativeExport(JNIEnv* env,
   size_t outputFileNameLen = 0;
   if(outputFile)
   {
-	  outputFileChars = env->GetStringUTFChars(outputFile, nullptr);
-	  outputFileNameLen = env->GetStringUTFLength(outputFile);
+    outputFileChars = env->GetStringUTFChars(outputFile, nullptr);
+    outputFileNameLen = env->GetStringUTFLength(outputFile);
   }
   else
   {
-	  outputFileNameLen = strlen(outputFileChars);
+    outputFileNameLen = strlen(outputFileChars);
   }
 
   auto pPeriod = strrchr(outputFileChars, '.');
@@ -82,7 +88,7 @@ jint Java_com_samsung_dali_modelExporter_ModelExporter_nativeExport(JNIEnv* env,
   auto pBackslash = strrchr(outputFileChars, '\\');
   if (pPeriod != nullptr && std::max(pSlash, pBackslash) < pPeriod)
   {
-	  outputFileNameLen = pPeriod - outputFileChars;
+    outputFileNameLen = pPeriod - outputFileChars;
   }
   printf("Writing to: %s\n", outputFileChars);
   fflush(stdout);
@@ -90,10 +96,11 @@ jint Java_com_samsung_dali_modelExporter_ModelExporter_nativeExport(JNIEnv* env,
   string outNameDli(outputFileChars, outputFileNameLen);
   string outNameBin(outNameDli + ".bin");
   outNameDli += ".dli";
-
+  printf("Writing toDLI: %s\n", outNameDli.c_str());
+  printf("Writing toBIN: %s\n", outNameBin.c_str());
   if(outputFile)
   {
-	  env->ReleaseStringUTFChars(outputFile, outputFileChars);
+    env->ReleaseStringUTFChars(outputFile, outputFileChars);
   }
 
   SaveScene(&scene_data, outNameDli, outNameBin);
@@ -103,23 +110,35 @@ jint Java_com_samsung_dali_modelExporter_ModelExporter_nativeExport(JNIEnv* env,
   return 0;
 }
 
-jstring Java_com_samsung_dali_modelExporter_ModelExporter_nativeGetErrorMessage(JNIEnv* env, jclass clazz)
+/*
+ * Class:     com_samsung_dali_modelConverter_process_NativeExporter
+ * Method:    GetErrorMessage
+ * Signature: ()Ljava/lang/String;
+ */
+JNIEXPORT jstring JNICALL Java_com_samsung_dali_modelConverter_process_NativeExporter_GetErrorMessage
+  (JNIEnv *env, jclass clazz)
 {
-	jstring result = nullptr;
-	if(!s_errorMessage.empty())
-	{
-		result = env->NewStringUTF(s_errorMessage.c_str());
-		std::string().swap(s_errorMessage);
-	}
-	return result;
+  jstring result = nullptr;
+  if(!s_errorMessage.empty())
+  {
+    result = env->NewStringUTF(s_errorMessage.c_str());
+    std::string().swap(s_errorMessage);
+  }
+  return result;
 }
 
-jstring Java_com_samsung_dali_modelExporter_ModelExporter_nativeGetDliPath(JNIEnv* env, jclass clazz)
+/*
+ * Class:     com_samsung_dali_modelConverter_process_NativeExporter
+ * Method:    GetDliPath
+ * Signature: ()Ljava/lang/String;
+ */
+JNIEXPORT jstring JNICALL Java_com_samsung_dali_modelConverter_process_NativeExporter_GetDliPath
+  (JNIEnv *env, jclass clazz)
 {
-	jstring result = nullptr;
-	if(!s_dliPath.empty())
-	{
-		result = env->NewStringUTF(s_dliPath.c_str());
-	}
-	return result;
+  jstring result = nullptr;
+  if(!s_dliPath.empty())
+  {
+    result = env->NewStringUTF(s_dliPath.c_str());
+  }
+  return result;
 }

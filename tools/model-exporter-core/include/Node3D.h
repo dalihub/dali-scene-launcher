@@ -29,29 +29,29 @@ using namespace std;
 
 class Node3D
 {
-    public:
-        Node3D(Node3D *eParent, bool hasMesh);
-        virtual ~Node3D();
-        bool IsMatrixIdentity();
+public:
+  Node3D(Node3D *eParent, bool hasMesh);
+  virtual ~Node3D();
+  bool IsMatrixIdentity();
 
-        void SetMatrix(aiMatrix4x4 eMat);
-        unsigned int index;
-        string m_Name;
-        Node3D *m_Parent;
-        bool m_HasMesh;
-        float m_Matrix[16];
+  void SetMatrix(aiMatrix4x4 eMat);
+  unsigned int index;
+  string m_Name;
+  Node3D *m_Parent;
+  bool m_HasMesh;
+  float m_Matrix[16];
 
-        vector<Node3D*> m_Children;
-///////////////////////////////////////////////////
-        vector<Vector3> m_Positions;
-        vector<Vector3> m_Normals;
-        vector<Vector3> m_Tangents;
-        vector<Vector3> m_Bitangents;
-        vector<Vector2> m_Textures;
-        vector<unsigned short> m_Indices;
-    protected:
+  vector<Node3D*> m_Children;
+  ///////////////////////////////////////////////////
+  vector<Vector3> m_Positions;
+  vector<Vector3> m_Normals;
+  vector<Vector3> m_Tangents;
+  vector<Vector3> m_Bitangents;
+  vector<Vector2> m_Textures;
+  vector<unsigned short> m_Indices;
+protected:
 
-    private:
+private:
 };
 
 #endif // NODE3D_H
