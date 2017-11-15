@@ -20,15 +20,15 @@
 
 struct Vector2
 {
-        Vector2()
-        :x(0.0f),
-         y(0.0f)
-         {
+  Vector2()
+  :x(0.0f),
+   y(0.0f)
+  {
 
-         }
+  }
 
-        float x;
-        float y;
+  float x;
+  float y;
 };
 
 #endif // VECTOR2_H
