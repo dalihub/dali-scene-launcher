@@ -21,23 +21,23 @@
 
 struct Vector3
 {
-        Vector3()
-        :x(0.0f),
-         y(0.0f),
-         z(0.0f)
-         {
+  Vector3()
+  :x(0.0f),
+   y(0.0f),
+   z(0.0f)
+  {
 
-         }
-        void normalize()
-        {
-            float temp = sqrtf( x*x + y*y + z*z );
-            x /= temp;
-            y /= temp;
-            y /= temp;
-        }
-        float x;
-        float y;
-        float z;
+  }
+  void normalize()
+  {
+    float temp = sqrtf( x*x + y*y + z*z );
+    x /= temp;
+    y /= temp;
+    y /= temp;
+  }
+  float x;
+  float y;
+  float z;
 };
 
 #endif // VECTOR3_H

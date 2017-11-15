@@ -48,13 +48,13 @@ jint Java_com_samsung_dali_modelExporter_ModelExporter_nativeExport(JNIEnv* env,
   env->ReleaseStringUTFChars(inputFile, inputFileChars);
 
   const aiScene* scene = s_importer.ReadFile( fileName,
-                                              aiProcess_CalcTangentSpace |
-											  aiProcess_SortByPType );
+      aiProcess_CalcTangentSpace |
+      aiProcess_SortByPType );
 
   if( !scene )
   {
-	s_errorMessage = s_importer.GetErrorString();
-	return 1;
+    s_errorMessage = s_importer.GetErrorString();
+    return 1;
   }
 
   Scene3D scene_data;
@@ -69,12 +69,12 @@ jint Java_com_samsung_dali_modelExporter_ModelExporter_nativeExport(JNIEnv* env,
   size_t outputFileNameLen = 0;
   if(outputFile)
   {
-	  outputFileChars = env->GetStringUTFChars(outputFile, nullptr);
-	  outputFileNameLen = env->GetStringUTFLength(outputFile);
+    outputFileChars = env->GetStringUTFChars(outputFile, nullptr);
+    outputFileNameLen = env->GetStringUTFLength(outputFile);
   }
   else
   {
-	  outputFileNameLen = strlen(outputFileChars);
+    outputFileNameLen = strlen(outputFileChars);
   }
 
   auto pPeriod = strrchr(outputFileChars, '.');
@@ -82,7 +82,7 @@ jint Java_com_samsung_dali_modelExporter_ModelExporter_nativeExport(JNIEnv* env,
   auto pBackslash = strrchr(outputFileChars, '\\');
   if (pPeriod != nullptr && std::max(pSlash, pBackslash) < pPeriod)
   {
-	  outputFileNameLen = pPeriod - outputFileChars;
+    outputFileNameLen = pPeriod - outputFileChars;
   }
   printf("Writing to: %s\n", outputFileChars);
   fflush(stdout);
@@ -93,7 +93,7 @@ jint Java_com_samsung_dali_modelExporter_ModelExporter_nativeExport(JNIEnv* env,
 
   if(outputFile)
   {
-	  env->ReleaseStringUTFChars(outputFile, outputFileChars);
+    env->ReleaseStringUTFChars(outputFile, outputFileChars);
   }
 
   SaveScene(&scene_data, outNameDli, outNameBin);
@@ -105,21 +105,21 @@ jint Java_com_samsung_dali_modelExporter_ModelExporter_nativeExport(JNIEnv* env,
 
 jstring Java_com_samsung_dali_modelExporter_ModelExporter_nativeGetErrorMessage(JNIEnv* env, jclass clazz)
 {
-	jstring result = nullptr;
-	if(!s_errorMessage.empty())
-	{
-		result = env->NewStringUTF(s_errorMessage.c_str());
-		std::string().swap(s_errorMessage);
-	}
-	return result;
+  jstring result = nullptr;
+  if(!s_errorMessage.empty())
+  {
+    result = env->NewStringUTF(s_errorMessage.c_str());
+    std::string().swap(s_errorMessage);
+  }
+  return result;
 }
 
 jstring Java_com_samsung_dali_modelExporter_ModelExporter_nativeGetDliPath(JNIEnv* env, jclass clazz)
 {
-	jstring result = nullptr;
-	if(!s_dliPath.empty())
-	{
-		result = env->NewStringUTF(s_dliPath.c_str());
-	}
-	return result;
+  jstring result = nullptr;
+  if(!s_dliPath.empty())
+  {
+    result = env->NewStringUTF(s_dliPath.c_str());
+  }
+  return result;
 }
