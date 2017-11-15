@@ -27,26 +27,26 @@ using namespace std;
 
 class Scene3D
 {
-    public:
-        Scene3D();
-        void AddNode(Node3D *enode);
-        virtual ~Scene3D();
-        unsigned int GetNumNodes();
-        unsigned int GetNumCameras();
-        unsigned int GetNumAnimations();
-        Node3D* GetNode(unsigned int idx);
-        void AddCamera(Camera3D &ecam);
-        Camera3D* GetCamera(unsigned int idx);
-        void AddAnimation(Animation3D &eanim);
-        bool HasAnimations();
-        Animation3D* GetAnimation(unsigned int idx);
-    protected:
+public:
+  Scene3D();
+  void AddNode(Node3D *enode);
+  virtual ~Scene3D();
+  unsigned int GetNumNodes();
+  unsigned int GetNumCameras();
+  unsigned int GetNumAnimations();
+  Node3D* GetNode(unsigned int idx);
+  void AddCamera(Camera3D &ecam);
+  Camera3D* GetCamera(unsigned int idx);
+  void AddAnimation(Animation3D &eanim);
+  bool HasAnimations();
+  Animation3D* GetAnimation(unsigned int idx);
+protected:
 
-    private:
-        unsigned int index;
-        vector<Node3D*> m_nodes;
-        vector<Camera3D> m_cameras;
-        vector<Animation3D> m_animations;
+private:
+  unsigned int index;
+  vector<Node3D*> m_nodes;
+  vector<Camera3D> m_cameras;
+  vector<Animation3D> m_animations;
 
 };
 
