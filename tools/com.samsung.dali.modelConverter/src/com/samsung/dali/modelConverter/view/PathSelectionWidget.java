@@ -1,5 +1,7 @@
 package com.samsung.dali.modelConverter.view;
 
+import java.io.File;
+
 /*
  * Copyright (c) 2017 Samsung Electronics Co., Ltd.
  *
@@ -30,82 +32,82 @@ import org.eclipse.swt.widgets.Text;
 
 public class PathSelectionWidget extends Composite {
 
-	public PathSelectionWidget(Composite parent, int style, String defaultText) {
-		super(parent, style);
+  public PathSelectionWidget(Composite parent, int style, String defaultText) {
+    super(parent, style);
 
-		// create controls
-		textPath = new Text(this, SWT.BORDER);
-		textPath.setMessage(defaultText);
+    // create controls
+    textPath = new Text(this, SWT.BORDER);
+    textPath.setMessage(defaultText);
 
-		btnSelectPath = new Button(this, SWT.BORDER);
-		btnSelectPath.setText("Browse...");
-		btnSelectPath.addSelectionListener(new SelectionListener() {
+    btnSelectPath = new Button(this, SWT.BORDER);
+    btnSelectPath.setText("Browse...");
+    btnSelectPath.addSelectionListener(new SelectionListener() {
 
-			@Override
-			public void widgetSelected(SelectionEvent e) {
-				if(mDirectoryMode)
-				{
-					DirectoryDialog dialog = new DirectoryDialog(parent.getShell(), dialogStyle);
-					dialog.open();
+      @Override
+      public void widgetSelected(SelectionEvent e) {
+        if(mDirectoryMode)
+        {
+          DirectoryDialog dialog = new DirectoryDialog(parent.getShell(), dialogStyle);
+          dialog.open();
 
-					textPath.setText(dialog.getFilterPath());
-				}
-				else
-				{
-					FileDialog dialog = new FileDialog(parent.getShell(), dialogStyle);
-					dialog.setFilterPath(textPath.getText());
-					if(extensions != null)
-					{
-						dialog.setFilterExtensions(extensions);
-					}
-					dialog.open();
+          textPath.setText(dialog.getFilterPath());
+        }
+        else
+        {
+          FileDialog dialog = new FileDialog(parent.getShell(), dialogStyle);
+          dialog.setFilterPath(textPath.getText());
+          if(extensions != null)
+          {
+            dialog.setFilterExtensions(extensions);
+          }
+          dialog.open();
 
-					textPath.setText(dialog.getFilterPath() + "/" + dialog.getFileName());
-				}
-			}
+          textPath.setText(dialog.getFilterPath() + File.separator + dialog.getFileName());
+        }
+      }
 
-			@Override
-			public void widgetDefaultSelected(SelectionEvent e) {
-				// TODO Auto-generated method stub
+      @Override
+      public void widgetDefaultSelected(SelectionEvent e) {
+        // TODO Auto-generated method stub
 
-			}
+      }
 
-		});
+    });
 
-		// Do layouts
-		GridLayout layout = new GridLayout();
-		layout.numColumns = 2;
-		setLayout(layout);
+    // Do layouts
+    GridLayout layout = new GridLayout();
+    layout.numColumns = 2;
+    setLayout(layout);
 
-		GridData textData = new GridData();
-		textData.widthHint = 360;
-		textPath.setLayoutData(textData);
-	}
+    GridData textData = new GridData();
+    textData.widthHint = 360;
+    textPath.setLayoutData(textData);
+  }
 
-	public void setDirectory(boolean isDir)
-	{
-		mDirectoryMode = isDir;
-	}
+  public void setDirectory(boolean isDir)
+  {
+    mDirectoryMode = isDir;
+  }
 
-	public void setFilterExtensions(String[] exts)
-	{
-		extensions = exts;
-	}
+  public void setFilterExtensions(String[] exts)
+  {
+    extensions = exts;
+  }
 
-	public void setDialogStyle(int style)
-	{
-		dialogStyle = style;
-	}
+  public void setDialogStyle(int style)
+  {
+    dialogStyle = style;
+  }
 
-	public Text getText() {
-		return textPath;
-	}
+  public Text getText() {
+    return textPath;
+  }
 
-	private Text textPath;
-	private Button btnSelectPath;
+  private Text textPath;
+  private Button btnSelectPath;
 
-	private boolean mDirectoryMode = false;
-	private String[] extensions;
-	private int dialogStyle = SWT.OPEN;
+  private boolean mDirectoryMode = false;
+  private String[] extensions;
+  private int dialogStyle = SWT.OPEN;
 
 }

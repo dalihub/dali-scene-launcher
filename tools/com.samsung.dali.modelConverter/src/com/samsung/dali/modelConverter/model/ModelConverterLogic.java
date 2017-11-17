@@ -22,72 +22,72 @@ import java.io.File;
 import com.samsung.dali.modelExporter.ModelExporter;
 
 public class ModelConverterLogic {
-	static {
-		ModelExporter.initialise();
-	}
+  static {
+    ModelExporter.initialise();
+  }
 
-	public static ModelConverterLogic getInstance()
-	{
-		if(sInstance == null)
-		{
-			sInstance = new ModelConverterLogic();
-		}
-		return sInstance;
-	}
+  public static ModelConverterLogic getInstance()
+  {
+    if(sInstance == null)
+    {
+      sInstance = new ModelConverterLogic();
+    }
+    return sInstance;
+  }
 
-	public void setImportPath(String path)
-	{
-		mImportPath = path;
-	}
+  public void setImportPath(String path)
+  {
+    mImportPath = path;
+  }
 
-	public void setExportPath(String path)
-	{
-		mExportPath = path;
-	}
+  public void setExportPath(String path)
+  {
+    mExportPath = path;
+  }
 
-	public String performConversion()
-	{
-		// can we read the source file?
-		File in = new File(mImportPath);
-		if(!in.exists() || !in.canRead())
-		{
-			throw new RuntimeException("Cannot read input: " + in.getAbsolutePath() + "!");
-		}
+  public String performConversion()
+  {
+    // can we read the source file?
+    File in = new File(mImportPath);
+    if(!in.exists() || !in.canRead())
+    {
+      throw new RuntimeException("Cannot read input: " + in.getAbsolutePath() + "!");
+    }
 
-		// if exportPath was not specified, try to get the import path, minus the .dae extension.
-		if(mExportPath.isEmpty())
-		{
-			mExportPath = mImportPath.substring(0, mImportPath.length() - ".dae".length());
-		}
+    // if exportPath was not specified, try to get the import path, minus the .dae extension.
+    if(mExportPath == null || mExportPath.isEmpty())
+    {
+      mExportPath = mImportPath.substring(0, mImportPath.length() - ".dae".length());
+    }
 
-		// if the target path exists, is it writable?
-		File out = new File(mExportPath);
-		if(out.exists())
-		{
-			if(out.isFile())
-			{
-				out = out.getParentFile();
-			}
+    // if the target path exists, is it writable?
+    File out = new File(mExportPath);
+    if(out.exists())
+    {
+      if(out.isFile())
+      {
+        out = out.getParentFile();
+      }
 
-			if(out == null || !out.canWrite())
-			{
-				throw new RuntimeException("Cannot write to folder: " + out.getAbsolutePath() + "!");
-			}
-		}
+      if(out == null || !out.canWrite())
+      {
+        throw new RuntimeException("Cannot write to folder: " + out.getAbsolutePath() + "!");
+      }
+    }
 
-		String result = ModelExporter.nativeConvert(in.getAbsolutePath(), out.getAbsolutePath());
-		if(result == null)
-		{
-			throw new RuntimeException(ModelExporter.nativeGetErrorMessage());
-		}
-		return result;
-	}
+    String result = ModelExporter.nativeConvert(in.getAbsolutePath(), out.getAbsolutePath());
+    if(result == null)
+    {
+      throw new RuntimeException(ModelExporter.nativeGetErrorMessage());
+    }
+    return result;
+  }
 
-	private static ModelConverterLogic sInstance;
+  private static ModelConverterLogic sInstance;
 
-	private String mImportPath;
-	private String mExportPath;
+  private String mImportPath;
+  private String mExportPath;
 
-	private ModelConverterLogic()
-	{}
+  private ModelConverterLogic()
+  {}
 }

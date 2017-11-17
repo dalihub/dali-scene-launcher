@@ -40,7 +40,7 @@
 
  * Both platforms: install the' C++ Development Tools' for Eclipse. ('Help' -> 'Install New Software...')
 
- * modelConverter offers a few tools - currently in development - that facilitate the use of the Smart Development Bridge and Tizen build tools that come with [Tizen Studio](https://developer.tizen.org/development/tizen-studio/download). To be able to use these, make sure that SDB and tizen.bat are in your PATH.
+ * modelConverter offers a few tools - currently in development - that facilitate the use of the Smart Development Bridge and Tizen build tools that come with [Tizen Studio](https://developer.tizen.org/development/tizen-studio/download) -- v2.4+ is supported. To be able to use these, make sure that SDB and tizen.bat are in your PATH.
 
 ## 2. Building with Eclipse
 

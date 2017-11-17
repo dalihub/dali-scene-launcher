@@ -18,8 +18,10 @@ package com.samsung.dali.modelConverter.handlers;
  */
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -30,79 +32,101 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.MessageBox;
 import org.eclipse.swt.widgets.Shell;
 
-import com.samsung.dali.modelConverter.LoggingProcessRunner;
+import com.samsung.dali.modelConverter.parts.OutputPart;
+import com.samsung.dali.modelConverter.process.LoggingProcessRunner;
 import com.samsung.dali.modelConverter.view.PackageAppDialog;
+import com.samsung.dali.modelConverter.view.TextAppendHelper;
 
 public class PackageAppHandler {
 
-	@Execute
-	public void execute(IWorkbench workbench, Shell shell) throws InterruptedException {
+  @Execute
+  public void execute(IWorkbench workbench, Shell shell) {
 
-		List<String> profiles;
-		try
-		{
-			profiles = parseProfiles();
+    List<String> profiles;
+    try
+    {
+      boolean isWindows = System.getProperty("os.name").toLowerCase().contains("windows");
 
-			PackageAppDialog dlg = new PackageAppDialog(shell, profiles);
-			if(dlg.open() == Window.OK)
-			{
-				String tizenCmd = "tizen";
-				if(System.getProperty("os.name").toLowerCase().contains("windows"))
-				{
-					tizenCmd += ".bat";
-				}
+      profiles = parseProfiles(isWindows);
 
-				String projectPath = dlg.getProjectPath();
-				String buildConfig = dlg.getBuildConfig();
-				String securityProfile = dlg.getSecurityProfile();
+      PackageAppDialog dlg = new PackageAppDialog(shell, profiles);
+      if(dlg.open() == Window.OK)
+      {
+        String tizenCmd = "tizen";
+        if(isWindows)
+        {
+          tizenCmd += ".bat";
+        }
 
-				LoggingProcessRunner lpr = LoggingProcessRunner.create();
-				if(!dlg.skipBuildingRequested())
-				{
-					lpr.addCommand(tizenCmd + " build-native -a arm -c gcc -C " + buildConfig + " -- " + projectPath);
-				}
-				lpr.addCommand(tizenCmd + " package -t tpk -s " + securityProfile + " -- " + projectPath + "/" + buildConfig)
-					.run();
-			}
-		}
-		catch (IOException e)
-		{
-			MessageBox mb = new MessageBox(shell, SWT.ERROR);
-			mb.setText("Error");
-			mb.setMessage("Failed to get list of security profiles. Have you got Tizen Studio installed and in your PATH?");
-			mb.open();
-		}
-	}
+        String projectPath = dlg.getProjectPath();
+        String buildConfig = dlg.getBuildConfig();
+        String securityProfile = dlg.getSecurityProfile();
 
-	List<String> parseProfiles() throws IOException, InterruptedException
-	{
-		List<String> profiles = new ArrayList<String>();
-		Runtime rt = Runtime.getRuntime();
+        LoggingProcessRunner lpr =
+          LoggingProcessRunner.create(shell.getDisplay(),
+                        OutputPart.sActiveInstance.getOutputPanel());
+        if(!dlg.skipBuildingRequested())
+        {
+          lpr.addCommand(tizenCmd + " build-native -a arm -c gcc -C " + buildConfig + " -- " + projectPath);
+        }
+        lpr.addCommand(tizenCmd + " package -t tpk -s " + securityProfile + " -- " + projectPath + File.separator + buildConfig)
+          .run();
+      }
+    }
+    catch (IOException e)
+    {
+      MessageBox mb = new MessageBox(shell, SWT.ERROR);
+      mb.setText("Error");
+      mb.setMessage("Failed to get list of security profiles. Have you got Tizen Studio installed and in your PATH?");
+      mb.open();
+    } catch (InterruptedException e) {
+      try {
+        new TextAppendHelper(OutputPart.sActiveInstance.getOutputPanel()).appendText(e.getMessage());
+      } catch (UnsupportedEncodingException e1) {
+        // TODO Auto-generated catch block
+        e1.printStackTrace();
+      } catch (IOException e1) {
+        // TODO Auto-generated catch block
+        e1.printStackTrace();
+      }
+    }
+  }
 
-		Process proc = rt.exec("tizen.bat security-profiles list");
-		boolean care = false;
-		try (BufferedReader in = new BufferedReader(new InputStreamReader(proc.getInputStream(), "UTF-8"))) {
-			while (proc.isAlive()) {
-				String line = in.readLine();
-				if (line == null) {
-					break;
-				}
+  private List<String> parseProfiles(boolean isWindows) throws IOException, InterruptedException
+  {
+    List<String> profiles = new ArrayList<String>();
+    Runtime rt = Runtime.getRuntime();
 
-				System.out.println(line);
+    String tizenCmd = "tizen";
+    if(isWindows)
+    {
+      tizenCmd += ".bat";
+    }
+    
+    Process proc = rt.exec(tizenCmd + " security-profiles list");
+    boolean care = false;
+    try (BufferedReader in = new BufferedReader(new InputStreamReader(proc.getInputStream(), "UTF-8"))) {
+      while (proc.isAlive()) {
+        String line = in.readLine();
+        if (line == null) {
+          break;
+        }
 
-				if(!care)
-				{
-					care = line.startsWith("[Profile Name]");
-				}
-				else
-				{
-					line = line.split("[ \t]")[0];
-					profiles.add(line);
-				}
-			}
-		}
+        System.out.println(line);
 
-		proc.waitFor();
-		return profiles;
-	}
+        if(!care)
+        {
+          care = line.startsWith("[Profile Name]");
+        }
+        else
+        {
+          line = line.split("[ \t]")[0];
+          profiles.add(line);
+        }
+      }
+    }
+
+    proc.waitFor();
+    return profiles;
+  }
 }
