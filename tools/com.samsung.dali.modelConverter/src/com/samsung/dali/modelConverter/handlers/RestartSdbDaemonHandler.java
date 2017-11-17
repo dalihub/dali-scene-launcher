@@ -21,16 +21,18 @@ import org.eclipse.e4.core.di.annotations.Execute;
 import org.eclipse.e4.ui.workbench.IWorkbench;
 import org.eclipse.swt.widgets.Shell;
 
-import com.samsung.dali.modelConverter.LoggingProcessRunner;
+import com.samsung.dali.modelConverter.parts.OutputPart;
+import com.samsung.dali.modelConverter.process.LoggingProcessRunner;
 
 public class RestartSdbDaemonHandler {
 
-	@Execute
-	public void execute(IWorkbench workbench, Shell shell) {
+  @Execute
+  public void execute(IWorkbench workbench, Shell shell) {
 
-		LoggingProcessRunner.create()
-			.addCommand("sdb kill-server")
-			.addCommand("sdb devices")
-			.run();
-	}
+    LoggingProcessRunner.create(shell.getDisplay(),
+                  OutputPart.sActiveInstance.getOutputPanel())
+      .addCommand("sdb kill-server")
+      .addCommand("sdb devices")
+      .run();
+  }
 }

@@ -15,9 +15,18 @@
 
    <windowImages/>
 
+   <launcher name="ModelConverter">
+      <win useIco="false">
+         <bmp/>
+      </win>
+   </launcher>
+
+   <vm>
+   </vm>
+
    <plugins>
-      <plugin id="com.samsung.dali.modelConverter"/>
       <plugin id="com.ibm.icu"/>
+      <plugin id="com.samsung.dali.modelConverter"/>
       <plugin id="javax.annotation"/>
       <plugin id="javax.inject"/>
       <plugin id="org.apache.batik.css"/>
@@ -88,5 +97,12 @@
       <plugin id="org.w3c.dom.svg"/>
    </plugins>
 
+
+   <preferencesInfo>
+      <targetfile overwrite="false"/>
+   </preferencesInfo>
+
+   <cssInfo>
+   </cssInfo>
 
 </product>

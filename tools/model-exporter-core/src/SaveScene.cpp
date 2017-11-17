@@ -63,7 +63,7 @@ bool SaveScene(Scene3D *scene,std::string fileNamePath, std::string fileNameBinP
 bool ConvertScene(Scene3D* scene, std::string fileNameBin, std::ostream& outDli, std::ostream& outBin)
 {
     // If filenameBin is a path, now is a good time to discard all but the filename & extension -
-	// the .bin file that we are going to reference must be in the same directory.
+  // the .bin file that we are going to reference must be in the same directory.
     auto iDirSeparator = std::min( fileNameBin.rfind( '\\' ), fileNameBin.rfind( '/' ) );
     if( iDirSeparator != std::string::npos )
     {

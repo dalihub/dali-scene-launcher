@@ -56,12 +56,12 @@ std::string GetOutputName(JNIEnv* env, jstring outputFile, char const* fallback)
   size_t outputFileNameLen = 0;
   if(outputFile)
   {
-      outputFileChars = env->GetStringUTFChars(outputFile, nullptr);
-      outputFileNameLen = env->GetStringUTFLength(outputFile);
+    outputFileChars = env->GetStringUTFChars(outputFile, nullptr);
+    outputFileNameLen = env->GetStringUTFLength(outputFile);
   }
   else
   {
-      outputFileNameLen = strlen(outputFileChars);
+    outputFileNameLen = strlen(outputFileChars);
   }
 
   auto pPeriod = strrchr(outputFileChars, '.');
@@ -69,13 +69,13 @@ std::string GetOutputName(JNIEnv* env, jstring outputFile, char const* fallback)
   auto pBackslash = strrchr(outputFileChars, '\\');
   if (pPeriod != nullptr && std::max(pSlash, pBackslash) < pPeriod)
   {
-      outputFileNameLen = pPeriod - outputFileChars;
+    outputFileNameLen = pPeriod - outputFileChars;
   }
 
   string outName(outputFileChars, outputFileNameLen);
   if(outputFile)
   {
-      env->ReleaseStringUTFChars(outputFile, outputFileChars);
+    env->ReleaseStringUTFChars(outputFile, outputFileChars);
   }
 
   return outName;
@@ -90,7 +90,7 @@ jint Java_com_samsung_dali_modelExporter_ModelExporter_nativeExport(JNIEnv* env,
   string fileName = GetInputName(env, inputFile);
   const aiScene* scene = importer.ReadFile( fileName,
                                               aiProcess_CalcTangentSpace |
-											  aiProcess_SortByPType );
+                        aiProcess_SortByPType );
 
   if( !scene )
   {
@@ -140,38 +140,38 @@ jstring Java_com_samsung_dali_modelExporter_ModelExporter_nativeConvert(JNIEnv* 
   std::ofstream binStream(outNameBin, ios::binary);
   if (binStream.is_open() && binStream.good())
   {
-      std::ostringstream dliStream;
-      jstring result = nullptr;
-      if(ConvertScene(&scene_data, outNameBin, dliStream, binStream))
-      {
-          result = env->NewStringUTF(dliStream.str().c_str());
-      }
-      return result;
+    std::ostringstream dliStream;
+    jstring result = nullptr;
+    if(ConvertScene(&scene_data, outNameBin, dliStream, binStream))
+    {
+      result = env->NewStringUTF(dliStream.str().c_str());
+    }
+    return result;
   }
   else
   {
-      s_errorMessage = "Failed to open '" + outNameBin + "' for writing.";
-      return nullptr;
+    s_errorMessage = "Failed to open '" + outNameBin + "' for writing.";
+    return nullptr;
   }
 }
 
 jstring Java_com_samsung_dali_modelExporter_ModelExporter_nativeGetErrorMessage(JNIEnv* env, jclass clazz)
 {
-    jstring result = nullptr;
-    if(!s_errorMessage.empty())
-    {
-        result = env->NewStringUTF(s_errorMessage.c_str());
-        std::string().swap(s_errorMessage);
-    }
-    return result;
+  jstring result = nullptr;
+  if(!s_errorMessage.empty())
+  {
+    result = env->NewStringUTF(s_errorMessage.c_str());
+    std::string().swap(s_errorMessage);
+  }
+  return result;
 }
 
 jstring Java_com_samsung_dali_modelExporter_ModelExporter_nativeGetDliPath(JNIEnv* env, jclass clazz)
 {
-    jstring result = nullptr;
-    if(!s_dliPath.empty())
-    {
-        result = env->NewStringUTF(s_dliPath.c_str());
-    }
-    return result;
+  jstring result = nullptr;
+  if(!s_dliPath.empty())
+  {
+    result = env->NewStringUTF(s_dliPath.c_str());
+  }
+  return result;
 }

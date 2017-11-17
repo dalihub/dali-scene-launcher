@@ -24,32 +24,35 @@ import org.eclipse.e4.ui.workbench.IWorkbench;
 import org.eclipse.swt.widgets.FileDialog;
 import org.eclipse.swt.widgets.Shell;
 
-import com.samsung.dali.modelConverter.LoggingProcessRunner;
+import com.samsung.dali.modelConverter.parts.OutputPart;
+import com.samsung.dali.modelConverter.process.LoggingProcessRunner;
 
 public class DeployAppHandler {
 
-	@Execute
-	public void execute(IWorkbench workbench, Shell shell) {
+  @Execute
+  public void execute(IWorkbench workbench, Shell shell) {
 
-		FileDialog dialog = new FileDialog(shell);
-		String[] filterExtensions = new String[] { "*.rpm;*.tpk" };
-		dialog.setFilterExtensions(filterExtensions);
-		String pkgPath = dialog.open();
-		if(pkgPath != null)
-		{
-			LoggingProcessRunner lpr = LoggingProcessRunner.create();
-			if(pkgPath.endsWith(".rpm"))
-			{
-				lpr.addCommand("sdb root on")
-					.addCommand("sdb shell change-booting-mode.sh --update")
-					.addCommand("sdb shell push " + pkgPath + " /tmp/")
-					.addCommand("sdb shell rpm --force -U /tmp/" + new File(pkgPath).getName());
-			}
-			else if(pkgPath.endsWith(".tpk"))
-			{
-				lpr.addCommand("sdb install " + pkgPath);
-			}
-			lpr.run();
-		}
-	}
+    FileDialog dialog = new FileDialog(shell);
+    String[] filterExtensions = new String[] { "*.rpm;*.tpk" };
+    dialog.setFilterExtensions(filterExtensions);
+    String pkgPath = dialog.open();
+    if(pkgPath != null)
+    {
+      LoggingProcessRunner lpr =
+          LoggingProcessRunner.create(shell.getDisplay(),
+                        OutputPart.sActiveInstance.getOutputPanel());
+      if(pkgPath.endsWith(".rpm"))
+      {
+        lpr.addCommand("sdb root on")
+          .addCommand("sdb shell change-booting-mode.sh --update")
+          .addCommand("sdb shell push " + pkgPath + " /tmp/")
+          .addCommand("sdb shell rpm --force -U /tmp/" + new File(pkgPath).getName());
+      }
+      else if(pkgPath.endsWith(".tpk"))
+      {
+        lpr.addCommand("sdb install " + pkgPath);
+      }
+      lpr.run();
+    }
+  }
 }
