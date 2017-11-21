@@ -1,7 +1,7 @@
 Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
-Bundle-Name: ModelConverter
-Bundle-SymbolicName: com.samsung.dali.modelConverter;singleton:=true
+Bundle-Name: Modelconverter
+Bundle-SymbolicName: com.samsung.dali.modelconverter;singleton:=true
 Bundle-Version: 1.0.0.qualifier
 Bundle-Vendor: SAMSUNG
 Require-Bundle: javax.inject;bundle-version="0.0.0",
@@ -15,4 +15,10 @@ Require-Bundle: javax.inject;bundle-version="0.0.0",
   org.eclipse.e4.ui.di;bundle-version="0.0.0",
   org.eclipse.e4.core.contexts;bundle-version="0.0.0"
 Bundle-RequiredExecutionEnvironment: JavaSE-1.8
-Bundle-NativeCode: /model-exporter-jni.dll; osname=Win32; processor=x86, /libmodel-exporter-jni.so; osname=Linux; processor=x86_64, /model-exporter-jni.dll; osname=Win32; processor=x86_64
+Bundle-NativeCode: /libmodel-exporter-jni.so; osname=Linux; processor=x86_64,
+  /model-exporter-jni.dll; osname=Win32; processor=x86,
+  /model-exporter-jni.dll; osname=Win32; processor=x86_64
+Bundle-ClassPath: .,
+ lib/jackson-annotations-2.9.2.jar,
+ lib/jackson-core-2.9.2.jar,
+ lib/jackson-databind-2.9.2.jar
