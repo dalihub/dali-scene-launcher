@@ -27,14 +27,10 @@ import org.eclipse.swt.layout.FormLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Tree;
 
-import com.samsung.dali.modelconverter.controller.TizenPathDialogController;
-import com.samsung.dali.modelconverter.data.GlobalData;
-
 public class SceneGraphPart {
 
   public SceneGraphPart() {
-    GlobalData.initialize(); // TODO: Move this to controller or data.
-    TizenPathDialogController.verifyTizenPath(null, true);
+
   }
 
   @PostConstruct

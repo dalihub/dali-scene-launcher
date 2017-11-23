@@ -16,6 +16,10 @@
                name="appName"
                value="com.samsung.dali.modelconverter">
          </property>
+         <property
+               name="lifeCycleURI"
+               value="bundleclass://com.samsung.dali.modelconverter/com.samsung.dali.modelconverter.controller.StartUp">
+         </property>
       </product>
    </extension>
 
