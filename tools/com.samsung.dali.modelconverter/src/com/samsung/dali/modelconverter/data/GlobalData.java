@@ -30,9 +30,8 @@ public class GlobalData {
     {
       sData.mIsWindows = true;
     }
-    sData.getRootTizenPath();
-    sData.mTizenPath = sData.mRootTizenPath + "tools" + File.separator + "ide" + File.separator + "bin" + File.separator;
-    sData.mSdbPath = sData.mRootTizenPath + "tools" + File.separator;
+
+    sData.setRootTizenPath(sData.getRootTizenPath());
   }
 
   static public GlobalData get() {
@@ -50,7 +49,7 @@ public class GlobalData {
     mIsWindows = isWindows;
   }
 
-  public String setSdbPath() {
+  public String getSdbPath() {
     return mSdbPath;
   }
 
@@ -66,7 +65,7 @@ public class GlobalData {
     mInstallPackagePath = installPackagePath;
   }
 
-  public String setTizenPath() {
+  public String getTizenPath() {
     return mTizenPath;
   }
 
@@ -78,20 +77,26 @@ public class GlobalData {
    * Registry values
    * */
   public String getRootTizenPath() {
-    sData.mRootTizenPath = Settings.Get().getString( Settings.TIZEN_CLI_ROOT_PATH );
-    return mRootTizenPath;
+    return Settings.Get().getString( Settings.TIZEN_CLI_ROOT_PATH );
   }
 
-  public void setRootTizenPath(String mRootTizenPath) {
-    Settings.Get().setString(Settings.TIZEN_CLI_ROOT_PATH, mRootTizenPath);
-    this.mRootTizenPath = mRootTizenPath;
+  public void setRootTizenPath(String rootTizenPath) {
+    Settings.Get().setString(Settings.TIZEN_CLI_ROOT_PATH, rootTizenPath);
+
+    mTizenPath = rootTizenPath + File.separator + "tools" + File.separator + "ide" + File.separator + "bin" + File.separator + "tizen";
+    mSdbPath = rootTizenPath + File.separator + "tools" + File.separator + "sdb";
+
+    if(sData.isWindows())
+    {
+      mTizenPath += ".bat";
+      mSdbPath += ".exe";
+    }
   }
 
-  static GlobalData sData;
+  private static GlobalData sData;
 
-  boolean mIsWindows = false;
-  String mRootTizenPath = "";
-  String mTizenPath = "";
-  String mSdbPath = "";
-  String mInstallPackagePath = "";
+  private boolean mIsWindows = false;
+  private String mTizenPath = "";
+  private String mSdbPath = "";
+  private String mInstallPackagePath = "";
 }
