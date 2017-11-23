@@ -153,8 +153,8 @@ public class CreateProjectDialog extends Dialog {
   private Text mTxtProjectID;
   private Text mTxtProjectPath;
 
-  private String mProjectName;
-  private String mProjectID;
-  private String mProjectPath;
+  private String mProjectName = "";
+  private String mProjectID = "";
+  private String mProjectPath = "";
 
 }

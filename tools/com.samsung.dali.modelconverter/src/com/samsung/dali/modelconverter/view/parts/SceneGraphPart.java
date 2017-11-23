@@ -29,10 +29,6 @@ import org.eclipse.swt.widgets.Tree;
 
 public class SceneGraphPart {
 
-  public SceneGraphPart() {
-
-  }
-
   @PostConstruct
   public void createComposite(Composite parent) {
     parent.setLayout(new FormLayout());
