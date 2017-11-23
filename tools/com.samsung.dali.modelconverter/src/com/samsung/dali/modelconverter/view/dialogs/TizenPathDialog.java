@@ -17,12 +17,9 @@ package com.samsung.dali.modelconverter.view.dialogs;
  *
  */
 
-import java.io.File;
-
 import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
-import org.eclipse.swt.widgets.DirectoryDialog;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.layout.FormLayout;
 import org.eclipse.swt.widgets.Label;
@@ -31,26 +28,17 @@ import org.eclipse.swt.layout.FormData;
 import org.eclipse.swt.layout.FormAttachment;
 import org.eclipse.swt.widgets.Text;
 
-import com.samsung.dali.modelconverter.data.GlobalData;
+import com.samsung.dali.modelconverter.controller.TizenPathDialogController;
 
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 
 public class TizenPathDialog extends Dialog {
-  private Text mPath;
-  
-  static public void VerifyTizenPath(Shell shell, boolean force) {
-    String cliPath = GlobalData.Get().getRootTizenPath();
-    if(cliPath.isEmpty() || force)
-    {
-      TizenPathDialog pathTizen = new TizenPathDialog(shell);
-      pathTizen.open();
-    }
-  }
 
   public TizenPathDialog(Shell parentShell) {
     super(parentShell);
+    controller = new TizenPathDialogController(this);
   }
 
   @Override
@@ -80,16 +68,14 @@ public class TizenPathDialog extends Dialog {
 
     Button mbtnBrowse = new Button(area, SWT.NONE);
     fd_mPath.right = new FormAttachment(mbtnBrowse, -6);
+
     mbtnBrowse.addSelectionListener(new SelectionAdapter() {
       @Override
       public void widgetSelected(SelectionEvent e) {
-        String path;
-        DirectoryDialog dialog = new DirectoryDialog( parent.getShell() );
-        dialog.open();
-        path = dialog.getFilterPath();
-        mPath.setText(path);
+        controller.onBrowse();
       }
     });
+
     FormData fd_mbtnBrowse = new FormData();
     fd_mbtnBrowse.top = new FormAttachment(0, 56);
     fd_mbtnBrowse.right = new FormAttachment(100, -10);
@@ -99,10 +85,19 @@ public class TizenPathDialog extends Dialog {
   }
 
   @Override
-  protected void okPressed() {
-    String cliPath = mPath.getText() + File.separator;
-    GlobalData.Get().setRootTizenPath(cliPath);
+  public void okPressed() {
+    controller.okPressed();
     super.okPressed();
   }
 
+  public Text getPath() {
+    return mPath;
+  }
+
+  public void setPath(Text mPath) {
+    this.mPath = mPath;
+  }
+
+  Text mPath;
+  TizenPathDialogController controller;
 }
