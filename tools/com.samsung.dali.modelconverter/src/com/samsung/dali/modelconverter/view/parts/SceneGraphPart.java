@@ -27,14 +27,14 @@ import org.eclipse.swt.layout.FormLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Tree;
 
+import com.samsung.dali.modelconverter.view.dialogs.TizenPathDialog;
+
 public class SceneGraphPart {
-
-  public SceneGraphPart() {
-
-  }
 
   @PostConstruct
   public void createComposite(Composite parent) {
+    TizenPathDialog.VerifyTizenPath(parent.getShell(), false);
+
     parent.setLayout(new FormLayout());
 
     TreeViewer treeViewer = new TreeViewer(parent, SWT.BORDER);
