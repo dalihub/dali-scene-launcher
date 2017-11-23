@@ -18,27 +18,28 @@ package com.samsung.dali.modelconverter.view.dialogs;
  */
 
 import org.eclipse.jface.dialogs.Dialog;
+import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.ModifyEvent;
+import org.eclipse.swt.events.ModifyListener;
+import org.eclipse.swt.events.SelectionEvent;
+import org.eclipse.swt.events.SelectionListener;
+import org.eclipse.swt.layout.FormAttachment;
+import org.eclipse.swt.layout.FormData;
+import org.eclipse.swt.layout.FormLayout;
+import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
-import org.eclipse.swt.widgets.Shell;
-import org.eclipse.swt.layout.FormLayout;
+import org.eclipse.swt.widgets.DirectoryDialog;
 import org.eclipse.swt.widgets.Label;
-import org.eclipse.swt.SWT;
-import org.eclipse.swt.layout.FormData;
-import org.eclipse.swt.layout.FormAttachment;
+import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Text;
 
-import com.samsung.dali.modelconverter.controller.TizenPathDialogController;
-
-import org.eclipse.swt.widgets.Button;
-import org.eclipse.swt.events.SelectionAdapter;
-import org.eclipse.swt.events.SelectionEvent;
+import com.samsung.dali.modelconverter.view.widgets.PathSelectionWidget;
 
 public class TizenPathDialog extends Dialog {
 
   public TizenPathDialog(Shell parentShell) {
     super(parentShell);
-    controller = new TizenPathDialogController(this);
   }
 
   @Override
@@ -65,14 +66,28 @@ public class TizenPathDialog extends Dialog {
     fd_mPath.top = new FormAttachment(0, 56);
     fd_mPath.left = new FormAttachment(0, 10);
     mPath.setLayoutData(fd_mPath);
-
+    mPath.addModifyListener(new ModifyListener() {
+      public void modifyText(ModifyEvent e) {
+        mResult = ((Text)e.widget).getText();
+      }
+    });
+    
     Button mbtnBrowse = new Button(area, SWT.NONE);
     fd_mPath.right = new FormAttachment(mbtnBrowse, -6);
 
-    mbtnBrowse.addSelectionListener(new SelectionAdapter() {
+    mbtnBrowse.addSelectionListener(new SelectionListener() {
       @Override
       public void widgetSelected(SelectionEvent e) {
-        controller.onBrowse();
+        DirectoryDialog dd = new DirectoryDialog(parent.getShell());
+        String path = dd.open();
+        if(!path.isEmpty())
+        {
+          mPath.setText(path);
+        }
+      }
+
+      @Override
+      public void widgetDefaultSelected(SelectionEvent e) {
       }
     });
 
@@ -81,23 +96,15 @@ public class TizenPathDialog extends Dialog {
     fd_mbtnBrowse.right = new FormAttachment(100, -10);
     mbtnBrowse.setLayoutData(fd_mbtnBrowse);
     mbtnBrowse.setText("Browse");
+    
     return area;
   }
 
-  @Override
-  public void okPressed() {
-    controller.okPressed();
-    super.okPressed();
+  public String getResult()
+  {
+    return mResult;
   }
-
-  public Text getPath() {
-    return mPath;
-  }
-
-  public void setPath(Text mPath) {
-    this.mPath = mPath;
-  }
-
-  Text mPath;
-  TizenPathDialogController controller;
+  
+  private Text mPath;
+  private String mResult;
 }
