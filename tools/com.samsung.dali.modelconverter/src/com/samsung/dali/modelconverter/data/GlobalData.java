@@ -41,6 +41,14 @@ public class GlobalData {
     return sData;
   }
 
+  public Project getProject() {
+    return mProject;
+  }
+
+  public void setProject(Project project){
+    mProject = project;
+  }
+
   public boolean isWindows() {
     return mIsWindows;
   }
@@ -99,4 +107,5 @@ public class GlobalData {
   private String mTizenPath = "";
   private String mSdbPath = "";
   private String mInstallPackagePath = "";
+  private Project mProject = null;
 }
