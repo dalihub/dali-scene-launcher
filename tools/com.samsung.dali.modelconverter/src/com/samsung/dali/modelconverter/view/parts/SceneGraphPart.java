@@ -11,15 +11,9 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Tree;
 
 import com.samsung.dali.modelconverter.data.GlobalData;
-import com.samsung.dali.modelconverter.view.GlobalParts;
 import com.samsung.dali.modelconverter.view.dialogs.TizenPathDialog;
 
 public class SceneGraphPart {
-
-  public SceneGraphPart() {
-    GlobalData.Initialize();
-    GlobalParts.Get().setSceneGraphPart(this);
-  }
 
   @PostConstruct
   public void createComposite(Composite parent) {
@@ -36,8 +30,9 @@ public class SceneGraphPart {
     fd_tree.left = new FormAttachment(0, 5);
     tree.setLayoutData(fd_tree);
 
+    sActiveInstance = this;
   }
 
-
+  static SceneGraphPart sActiveInstance;
 
 }
