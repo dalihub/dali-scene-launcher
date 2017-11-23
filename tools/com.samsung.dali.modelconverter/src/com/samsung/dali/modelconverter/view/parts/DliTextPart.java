@@ -9,14 +9,7 @@ import org.eclipse.swt.layout.FormLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Text;
 
-import com.samsung.dali.modelconverter.view.GlobalParts;
-
 public class DliTextPart {
-  private Text text;
-
-  public DliTextPart() {
-    GlobalParts.Get().setDliTextPart(this);
-  }
 
   @PostConstruct
   public void createComposite(Composite parent) {
@@ -30,5 +23,10 @@ public class DliTextPart {
     fd_text.left = new FormAttachment(0, 5);
     text.setLayoutData(fd_text);
 
+    sActiveInstance = this;
   }
+
+  static DliTextPart sActiveInstance;
+
+  private Text text;
 }
