@@ -1,0 +1,8 @@
+#Build information
+#Wed Nov 08 18:00:05 GMT 2017
+toolchain=GCC-4.9
+architecture=armel
+config=Release
+type=app
+profile=Wearable
+profile-version=3.0
