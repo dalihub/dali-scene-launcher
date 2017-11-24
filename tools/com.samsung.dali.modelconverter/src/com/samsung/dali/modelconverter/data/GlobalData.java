@@ -1,18 +1,27 @@
 package com.samsung.dali.modelconverter.data;
 
+/*
+ * Copyright (c) 2017 Samsung Electronics Co., Ltd.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ */
+
 import java.io.File;
 
 public class GlobalData {
-  static GlobalData sData;
 
-  boolean mIsWindows = false;
-  String mRootTizenPath = "";
-  String mTizenPath = "";
-  String mSdbPath = "";
-  String mInstallPackagePath = "";
-
-
-  static public void Initialize() {
+  static public void initialize() {
     if( sData == null) {
       sData = new GlobalData();
     }
@@ -21,47 +30,46 @@ public class GlobalData {
     {
       sData.mIsWindows = true;
     }
-    sData.getRootTizenPath();
-    sData.mTizenPath = sData.mRootTizenPath + "tools" + File.separator + "ide" + File.separator + "bin" + File.separator;
-    sData.mSdbPath = sData.mRootTizenPath + "tools" + File.separator;
+
+    sData.setRootTizenPath(sData.getRootTizenPath());
   }
 
-  static public GlobalData Get() {
+  static public GlobalData get() {
     if( sData == null) {
       sData = new GlobalData();
     }
     return sData;
   }
 
-  public boolean IsWindows() {
+  public boolean isWindows() {
     return mIsWindows;
   }
-  
-  public void SetIsWindows(boolean isWindows) {
+
+  public void setIsWindows(boolean isWindows) {
     mIsWindows = isWindows;
   }
-  
-  public String GetSdbPath() {
+
+  public String getSdbPath() {
     return mSdbPath;
   }
 
-  public void SetSdbPath(String sdbPath) {
+  public void setSdbPath(String sdbPath) {
     mSdbPath = sdbPath;
   }
-  
-  public String GetInstallPackagePath() {
+
+  public String setInstallPackagePath() {
     return mInstallPackagePath;
   }
-  
-  public void SetInstallPackagePath(String installPackagePath) {
+
+  public void setInstallPackagePath(String installPackagePath) {
     mInstallPackagePath = installPackagePath;
   }
-  
-  public String GetTizenPath() {
+
+  public String getTizenPath() {
     return mTizenPath;
   }
 
-  public void SetTizenPath(String tizenPath) {
+  public void setTizenPath(String tizenPath) {
     mTizenPath = tizenPath;
   }
 
@@ -69,13 +77,26 @@ public class GlobalData {
    * Registry values
    * */
   public String getRootTizenPath() {
-    sData.mRootTizenPath = SettingsClass.Get().GetString( SettingsClass.TIZEN_CLI_ROOT_PATH );
-    return mRootTizenPath;
+    return Settings.Get().getString( Settings.TIZEN_CLI_ROOT_PATH );
   }
 
-  public void setRootTizenPath(String mRootTizenPath) {
-    SettingsClass.Get().SetString(SettingsClass.TIZEN_CLI_ROOT_PATH, mRootTizenPath);
-    this.mRootTizenPath = mRootTizenPath;
+  public void setRootTizenPath(String rootTizenPath) {
+    Settings.Get().setString(Settings.TIZEN_CLI_ROOT_PATH, rootTizenPath);
+
+    mTizenPath = rootTizenPath + File.separator + "tools" + File.separator + "ide" + File.separator + "bin" + File.separator + "tizen";
+    mSdbPath = rootTizenPath + File.separator + "tools" + File.separator + "sdb";
+
+    if(sData.isWindows())
+    {
+      mTizenPath += ".bat";
+      mSdbPath += ".exe";
+    }
   }
 
+  private static GlobalData sData;
+
+  private boolean mIsWindows = false;
+  private String mTizenPath = "";
+  private String mSdbPath = "";
+  private String mInstallPackagePath = "";
 }

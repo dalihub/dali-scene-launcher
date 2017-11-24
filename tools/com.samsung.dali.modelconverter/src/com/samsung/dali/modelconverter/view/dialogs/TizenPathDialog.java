@@ -17,37 +17,24 @@ package com.samsung.dali.modelconverter.view.dialogs;
  *
  */
 
-import java.io.File;
-
 import org.eclipse.jface.dialogs.Dialog;
+import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.ModifyEvent;
+import org.eclipse.swt.events.ModifyListener;
+import org.eclipse.swt.events.SelectionEvent;
+import org.eclipse.swt.events.SelectionListener;
+import org.eclipse.swt.layout.FormAttachment;
+import org.eclipse.swt.layout.FormData;
+import org.eclipse.swt.layout.FormLayout;
+import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.DirectoryDialog;
-import org.eclipse.swt.widgets.Shell;
-import org.eclipse.swt.layout.FormLayout;
 import org.eclipse.swt.widgets.Label;
-import org.eclipse.swt.SWT;
-import org.eclipse.swt.layout.FormData;
-import org.eclipse.swt.layout.FormAttachment;
+import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Text;
 
-import com.samsung.dali.modelconverter.data.GlobalData;
-
-import org.eclipse.swt.widgets.Button;
-import org.eclipse.swt.events.SelectionAdapter;
-import org.eclipse.swt.events.SelectionEvent;
-
 public class TizenPathDialog extends Dialog {
-  private Text mPath;
-  
-  static public void VerifyTizenPath(Shell shell, boolean force) {
-    String cliPath = GlobalData.Get().getRootTizenPath();
-    if(cliPath.isEmpty() || force)
-    {
-      TizenPathDialog pathTizen = new TizenPathDialog(shell);
-      pathTizen.open();
-    }
-  }
 
   public TizenPathDialog(Shell parentShell) {
     super(parentShell);
@@ -77,32 +64,45 @@ public class TizenPathDialog extends Dialog {
     fd_mPath.top = new FormAttachment(0, 56);
     fd_mPath.left = new FormAttachment(0, 10);
     mPath.setLayoutData(fd_mPath);
+    mPath.addModifyListener(new ModifyListener() {
+      public void modifyText(ModifyEvent e) {
+        mResult = ((Text)e.widget).getText();
+      }
+    });
 
     Button mbtnBrowse = new Button(area, SWT.NONE);
     fd_mPath.right = new FormAttachment(mbtnBrowse, -6);
-    mbtnBrowse.addSelectionListener(new SelectionAdapter() {
+
+    mbtnBrowse.addSelectionListener(new SelectionListener() {
       @Override
       public void widgetSelected(SelectionEvent e) {
-        String path;
-        DirectoryDialog dialog = new DirectoryDialog( parent.getShell() );
-        dialog.open();
-        path = dialog.getFilterPath();
-        mPath.setText(path);
+        DirectoryDialog dd = new DirectoryDialog(parent.getShell());
+        String path = dd.open();
+        if(!path.isEmpty())
+        {
+          mPath.setText(path);
+        }
+      }
+
+      @Override
+      public void widgetDefaultSelected(SelectionEvent e) {
       }
     });
+
     FormData fd_mbtnBrowse = new FormData();
     fd_mbtnBrowse.top = new FormAttachment(0, 56);
     fd_mbtnBrowse.right = new FormAttachment(100, -10);
     mbtnBrowse.setLayoutData(fd_mbtnBrowse);
     mbtnBrowse.setText("Browse");
+
     return area;
   }
 
-  @Override
-  protected void okPressed() {
-    String cliPath = mPath.getText() + File.separator;
-    GlobalData.Get().setRootTizenPath(cliPath);
-    super.okPressed();
+  public String getResult()
+  {
+    return mResult;
   }
 
+  private Text mPath;
+  private String mResult;
 }
