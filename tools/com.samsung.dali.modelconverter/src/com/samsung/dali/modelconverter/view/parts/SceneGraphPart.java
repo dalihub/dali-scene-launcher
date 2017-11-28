@@ -27,24 +27,36 @@ import org.eclipse.swt.layout.FormLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Tree;
 
+import com.samsung.dali.modelconverter.controller.SceneGraphContentProvider;
+
 public class SceneGraphPart {
 
   @PostConstruct
   public void createComposite(Composite parent) {
     parent.setLayout(new FormLayout());
 
-    TreeViewer treeViewer = new TreeViewer(parent, SWT.BORDER);
-    Tree tree = treeViewer.getTree();
+    mTreeViewer = new TreeViewer(parent, SWT.BORDER);
+    mTree = mTreeViewer.getTree();
     FormData fd_tree = new FormData();
     fd_tree.bottom = new FormAttachment(100, -10);
     fd_tree.right = new FormAttachment(100, -5);
     fd_tree.top = new FormAttachment(0, 5);
     fd_tree.left = new FormAttachment(0, 5);
-    tree.setLayoutData(fd_tree);
+    mTree.setLayoutData(fd_tree);
 
     sActiveInstance = this;
   }
 
+  public void populate(SceneGraphContentProvider provider) {
+    mTree.removeAll();
+
+    mTreeViewer.setContentProvider(provider);
+    mTreeViewer.setInput(provider.getDocument());
+    mTreeViewer.refresh();
+  }
+
   static SceneGraphPart sActiveInstance;
 
+  private TreeViewer mTreeViewer;
+  private Tree mTree;
 }
