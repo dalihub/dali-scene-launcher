@@ -29,9 +29,11 @@ import org.eclipse.swt.widgets.Shell;
 
 import com.samsung.dali.modelconverter.controller.FileUtils;
 import com.samsung.dali.modelconverter.controller.ProjectSwitchConfirmationWorkflow;
+import com.samsung.dali.modelconverter.controller.SceneGraphContentProvider;
 import com.samsung.dali.modelconverter.data.GlobalData;
 import com.samsung.dali.modelconverter.data.Project;
 import com.samsung.dali.modelconverter.view.dialogs.CreateProjectDialog;
+import com.samsung.dali.modelconverter.view.parts.GlobalParts;
 
 public class CreateProjectHandler {
 
@@ -55,6 +57,9 @@ public class CreateProjectHandler {
 
           Project project = new Project(path, name, id);
           GlobalData.get().setProject(project);
+          
+          SceneGraphContentProvider provider = new SceneGraphContentProvider(project.getDocument());
+          GlobalParts.getSceneGraphPart().populate(provider);
         }
         catch (IOException e) {
           MessageDialog.openError(shell, "Project creation failed.", e.getMessage());
