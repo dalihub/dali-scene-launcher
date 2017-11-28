@@ -29,9 +29,11 @@ import org.eclipse.swt.widgets.Shell;
 
 import com.samsung.dali.modelconverter.controller.FileUtils;
 import com.samsung.dali.modelconverter.controller.ProjectSwitchConfirmationWorkflow;
+import com.samsung.dali.modelconverter.controller.SceneGraphContentProvider;
 import com.samsung.dali.modelconverter.data.GlobalData;
 import com.samsung.dali.modelconverter.data.Project;
 import com.samsung.dali.modelconverter.view.dialogs.CreateProjectDialog;
+import com.samsung.dali.modelconverter.view.parts.GlobalParts;
 
 public class CreateProjectHandler {
 
@@ -42,7 +44,7 @@ public class CreateProjectHandler {
 
       CreateProjectDialog dialog = new CreateProjectDialog(shell);
 
-      if (dialog.open() == 0)	// OK -- not SWT.OK.
+      if (dialog.open() == 0) // OK -- not SWT.OK.
       {
         String name = dialog.getProjectName();
         String id = dialog.getProjectID();
@@ -55,6 +57,9 @@ public class CreateProjectHandler {
 
           Project project = new Project(path, name, id);
           GlobalData.get().setProject(project);
+
+          SceneGraphContentProvider provider = new SceneGraphContentProvider(project.getDocument());
+          GlobalParts.getSceneGraphPart().populate(provider);
         }
         catch (IOException e) {
           MessageDialog.openError(shell, "Project creation failed.", e.getMessage());
@@ -68,12 +73,12 @@ public class CreateProjectHandler {
 
   private void ensureProjectDirectoryExists(String path) throws IOException {
     File directory = new File(path);
-    if(!directory.exists() && !directory.mkdirs()) {
+    if (!directory.exists() && !directory.mkdirs()) {
       throw new IOException("Failed to create project directory.");
     }
     else {
       File[] content = directory.listFiles();
-      if(content != null && content.length > 0) {
+      if (content != null && content.length > 0) {
         throw new IOException("Project directory exists and isn't empty.");
       }
     }
@@ -92,13 +97,13 @@ public class CreateProjectHandler {
     try (FileInputStream fis = new FileInputStream(source)) {
       byte[] data = new byte[(int) source.length()];
       fis.read(data);
-      manifestContents = new String (data, "UTF-8");
+      manifestContents = new String(data, "UTF-8");
     }
 
     manifestContents = manifestContents.replace("$(AppLabel)", name).replace("$(AppId)", id);
 
     File manifest = new File(path + File.separator + Project.TIZEN_MANIFEST);
-    try (FileWriter writer = new FileWriter(manifest)){
+    try (FileWriter writer = new FileWriter(manifest)) {
       writer.write(manifestContents);
     }
   }
