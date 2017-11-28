@@ -25,6 +25,7 @@ import java.net.URISyntaxException;
 
 import org.eclipse.e4.core.di.annotations.Execute;
 import org.eclipse.jface.dialogs.MessageDialog;
+import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.DirectoryDialog;
 import org.eclipse.swt.widgets.Shell;
 
@@ -32,6 +33,7 @@ import com.samsung.dali.modelconverter.controller.FileUtils;
 import com.samsung.dali.modelconverter.controller.ProjectSwitchConfirmationWorkflow;
 import com.samsung.dali.modelconverter.data.GlobalData;
 import com.samsung.dali.modelconverter.data.Project;
+import com.samsung.dali.modelconverter.view.dialogs.CreateProjectDialog;
 
 public class CreateProjectHandler {
 
@@ -39,14 +41,14 @@ public class CreateProjectHandler {
   public void execute(Shell shell) {
 
     if (ProjectSwitchConfirmationWorkflow.execute(shell)) {
-      // TODO: Replace with CreateProjectDialog
-      DirectoryDialog dialog = new DirectoryDialog(shell);
-      String path = dialog.open();
-
-      if (path != null && !path.isEmpty())
+    	
+      CreateProjectDialog dialog = new CreateProjectDialog(shell);
+      
+      if (dialog.open() == 0)	// OK -- not SWT.OK.
       {
-        String name = "testName"; // TODO: Get name from CreateProjectDialog
-        String id = "org.test.name";  // TODO: Get id from CreateProjectDialog
+        String name = dialog.getProjectName();
+        String id = dialog.getProjectID();
+        String path = dialog.getProjectPath();
 
         try {
           ensureProjectDirectoryExists(path);
