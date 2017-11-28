@@ -29,6 +29,13 @@ import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 
+import com.fasterxml.jackson.core.JsonParseException;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.JsonMappingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.samsung.dali.modelconverter.data.document.Document;
+
 public class Project {
 
   public static Project open(String path) throws ParserConfigurationException, SAXException, IOException
@@ -70,14 +77,21 @@ public class Project {
   }
 
   public static final String TIZEN_MANIFEST = "tizen-manifest.xml";
+  public static final String SCENE_DLI = "res" + File.separator + "models" + File.separator + "scenes" + File.separator
+      + "scene.dli";
 
   public Project(String path, String name, String id) {
     assert path != null;
     assert !path.isEmpty();
 
+    if (!path.endsWith(File.separator)) {
+      path += File.separator;
+    }
+
     mPath = path;
     mName = name;
     mId = id;
+    mDocument = new Document();
   }
 
   public String getPath() {
@@ -92,7 +106,21 @@ public class Project {
     return mId;
   }
 
+  public String getDliPath() {
+    // path already ends with File.separator
+    return mPath + SCENE_DLI;
+  }
+
+  public Document getDocument() {
+    return mDocument;
+  }
+
+  public void setDocument(Document doc) {
+    mDocument = doc;
+  }
+
   private String mPath;
   private String mName;
   private String mId;
+  private Document mDocument;
 }
