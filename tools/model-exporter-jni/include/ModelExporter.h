@@ -25,11 +25,23 @@ extern "C"
 {
 #endif
 
-JNIEXPORT jint JNICALL Java_com_samsung_dali_modelExporter_ModelExporter_nativeExport(JNIEnv* env, jclass clazz, jstring inputFile, jstring outputFile);
+JNIEXPORT jint JNICALL Java_com_samsung_dali_modelexporter_ModelExporter_nativeExport(
+    JNIEnv* env, jclass clazz, jstring inputFile, jstring outputFile);
 
-JNIEXPORT jstring JNICALL Java_com_samsung_dali_modelExporter_ModelExporter_nativeGetErrorMessage(JNIEnv* env, jclass clazz);
+JNIEXPORT jint JNICALL Java_com_samsung_dali_modelexporter_ModelExporter_nativeConvert(
+    JNIEnv* env, jclass clazz, jstring inputFile, jstring binaryOutputFile);
 
-JNIEXPORT jstring JNICALL Java_com_samsung_dali_modelExporter_ModelExporter_nativeGetDliPath(JNIEnv* env, jclass clazz);
+JNIEXPORT jstring JNICALL Java_com_samsung_dali_modelexporter_ModelExporter_nativeGetErrorMessage(
+    JNIEnv* env, jclass clazz);
+
+JNIEXPORT jstring JNICALL Java_com_samsung_dali_modelexporter_ModelExporter_nativeGetDliPath(
+    JNIEnv* env, jclass clazz);
+
+JNIEXPORT jstring JNICALL Java_com_samsung_dali_modelexporter_ModelExporter_nativeGetDliContents(
+    JNIEnv* env, jclass clazz);
+
+JNIEXPORT jbyteArray JNICALL Java_com_samsung_dali_modelexporter_ModelExporter_nativeGetBinContents(
+    JNIEnv* env, jclass clazz);
 
 #ifdef __cplusplus
 }
