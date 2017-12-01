@@ -2,7 +2,6 @@ package com.samsung.dali.modelconverter.data.document;
 
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
-import java.util.Map;
 
 import com.fasterxml.jackson.annotation.JsonGetter;
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -84,7 +83,7 @@ public class Node {
 
   @JsonSetter("matrix")
   public void setMatrix(double[] data) {
-    if(data != null) {
+    if (data != null) {
       mMatrix = MatrixHelper.createMatrix(data);
     }
     else {

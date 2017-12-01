@@ -19,21 +19,16 @@ package com.samsung.dali.modelconverter.view.dialogs;
 
 import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.jface.dialogs.IDialogConstants;
+import org.eclipse.swt.SWT;
+import org.eclipse.swt.custom.StyledText;
+import org.eclipse.swt.layout.FormAttachment;
+import org.eclipse.swt.layout.FormData;
+import org.eclipse.swt.layout.FormLayout;
+import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
-import org.eclipse.swt.widgets.Shell;
-import org.eclipse.swt.layout.FormLayout;
-import org.eclipse.swt.widgets.Text;
-
-
-import org.eclipse.swt.SWT;
-import org.eclipse.swt.layout.FormData;
-import org.eclipse.swt.layout.FormAttachment;
-import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Label;
-import org.eclipse.swt.events.SelectionAdapter;
-import org.eclipse.swt.events.SelectionEvent;
-import org.eclipse.swt.custom.StyledText;
+import org.eclipse.swt.widgets.Shell;
 
 public class PackageAppDialog extends Dialog {
 
@@ -101,7 +96,7 @@ public class PackageAppDialog extends Dialog {
     mLabelPath.setText(mPath);
     mChkPackage.setSelection(mBoolPackage);
     mChkInstall.setSelection(mBoolInstall);
-    
+
     return area;
   }
 
@@ -113,8 +108,8 @@ public class PackageAppDialog extends Dialog {
 
   @Override
   protected void createButtonsForButtonBar(Composite parent) {
-    createButton(parent, IDialogConstants.OK_ID, "Install", true );
-    createButton(parent, IDialogConstants.CANCEL_ID, "Close", false );
+    createButton(parent, IDialogConstants.OK_ID, "Install", true);
+    createButton(parent, IDialogConstants.CANCEL_ID, "Close", false);
   }
 
   public String getPath() {
@@ -149,7 +144,7 @@ public class PackageAppDialog extends Dialog {
   private StyledText mConsole;
   private Button mChkPackage;
   private Button mChkInstall;
-  
+
   private String mPath;
   private boolean mBoolPackage;
   private boolean mBoolInstall;
