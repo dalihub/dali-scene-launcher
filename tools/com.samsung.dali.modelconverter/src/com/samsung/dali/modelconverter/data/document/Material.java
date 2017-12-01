@@ -18,6 +18,7 @@ public class Material {
     mTextures[id] = path;
   }
 
+  @JsonIgnore
   public Integer getEnvironmentId() {
     return mEnvironmentId;
   }
