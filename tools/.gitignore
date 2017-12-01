@@ -1,6 +1,11 @@
 /.metadata/
 /.recommenders/
-**.o
 
+**.prefs
 **.depend
 **.layout
+
+**.bak
+
+**.o
+**.class
