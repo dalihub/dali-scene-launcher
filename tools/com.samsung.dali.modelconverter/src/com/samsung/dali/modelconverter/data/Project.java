@@ -19,6 +19,7 @@ package com.samsung.dali.modelconverter.data;
 
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.FileWriter;
 import java.io.IOException;
 
 import javax.xml.parsers.DocumentBuilder;
@@ -69,8 +70,16 @@ public class Project {
   }
 
   public static final String TIZEN_MANIFEST = "tizen-manifest.xml";
-  public static final String SCENE_DLI = "res" + File.separator + "models" + File.separator + "scenes" + File.separator
-      + "scene.dli";
+
+  public static final String MODELS_PATH = "res" + File.separator + "models" + File.separator + "scenes"
+      + File.separator;
+  public static final String IMAGES_PATH = "res" + File.separator + "images" + File.separator + "scenes"
+      + File.separator;
+  public static final String SHADERS_PATH = "res" + File.separator + "shaders" + File.separator + "scenes"
+      + File.separator;
+
+  public static final String SCENE_DLI = "scene.dli";
+  public static final String SCENE_BIN = "scene.bin";
 
   public Project(String path, String name, String id) {
     assert path != null;
@@ -98,9 +107,24 @@ public class Project {
     return mId;
   }
 
-  public String getDliPath() {
-    // path already ends with File.separator
-    return mPath + SCENE_DLI;
+  public String getModelsPath() {
+    return mPath + MODELS_PATH;
+  }
+
+  public String getImagesPath() {
+    return mPath + IMAGES_PATH;
+  }
+
+  public String getShadersPath() {
+    return mPath + SHADERS_PATH;
+  }
+
+  public String getSceneDliPath() {
+    return getModelsPath() + SCENE_DLI;
+  }
+
+  public String getSceneBinPath() {
+    return getModelsPath() + SCENE_BIN;
   }
 
   public Document getDocument() {
@@ -109,6 +133,12 @@ public class Project {
 
   public void setDocument(Document doc) {
     mDocument = doc;
+  }
+
+  public void writeDocument() throws IOException {
+    try (FileWriter fw = new FileWriter(getSceneDliPath())) {
+      fw.write(mDocument.toDliString());
+    }
   }
 
   private String mPath;

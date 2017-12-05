@@ -3,11 +3,11 @@ package com.samsung.dali.modelconverter.view.parts;
 import javax.annotation.PostConstruct;
 
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.custom.StyledText;
 import org.eclipse.swt.layout.FormAttachment;
 import org.eclipse.swt.layout.FormData;
 import org.eclipse.swt.layout.FormLayout;
 import org.eclipse.swt.widgets.Composite;
-import org.eclipse.swt.widgets.Text;
 
 public class DliTextPart {
 
@@ -15,7 +15,7 @@ public class DliTextPart {
   public void createComposite(Composite parent) {
     parent.setLayout(new FormLayout());
 
-    text = new Text(parent, SWT.BORDER | SWT.MULTI);
+    text = new StyledText(parent, SWT.BORDER | SWT.MULTI);
     FormData fd_text = new FormData();
     fd_text.bottom = new FormAttachment(100, -10);
     fd_text.right = new FormAttachment(100, -5);
@@ -26,7 +26,11 @@ public class DliTextPart {
     sActiveInstance = this;
   }
 
+  public void populate(String dli) {
+    text.setText(dli);
+  }
+
   static DliTextPart sActiveInstance;
 
-  private Text text;
+  private StyledText text;
 }
