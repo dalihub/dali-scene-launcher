@@ -25,20 +25,20 @@ public class StartUp {
 
     GlobalData globalData = GlobalData.get();
     String cliPath = globalData.getRootTizenPath();
-    if(!checkToolsError(shell)) {
+    if (!checkToolsError(shell)) {
       cliPath = ""; // Discard what we have [for now] if we know it doesn't work.
     }
 
-    while(cliPath.isEmpty()) {
+    while (cliPath.isEmpty()) {
       TizenPathDialog pathTizen = new TizenPathDialog(shell);
 
       int result = pathTizen.open();
-      switch(result) {
+      switch (result) {
       case 0: // OK
         cliPath = pathTizen.getResult();
         globalData.setRootTizenPath(cliPath);
 
-        if(!checkToolsError(shell)) {
+        if (!checkToolsError(shell)) {
           cliPath = ""; // discard what we have as it doesn't work.
         }
         break;
@@ -55,36 +55,33 @@ public class StartUp {
     globalData.setRootTizenPath(cliPath);
   }
 
-  private boolean checkToolsError(Shell shell)
-  {
+  private boolean checkToolsError(Shell shell) {
     String error = validateTools();
     boolean isValid = error == null;
-    if(!isValid)
-    {
+    if (!isValid) {
       MessageDialog.openError(shell, "Invalid path", error);
     }
     return isValid;
   }
 
-  private String validateTools()
-  {
+  private String validateTools() {
     GlobalData globalData = GlobalData.get();
     File sdb = new File(globalData.getSdbPath());
     File tizen = new File(globalData.getTizenPath());
     String error = null;
-    if(!sdb.exists()) {
+    if (!sdb.exists()) {
       error = "Failed to find " + globalData.getSdbPath() + ".";
     }
 
-    if(!tizen.exists()) {
+    if (!tizen.exists()) {
       error = "Failed to find " + globalData.getTizenPath() + ".";
     }
 
-    if(!sdb.canExecute()) {
+    if (!sdb.canExecute()) {
       error = "Lacking execute permission on " + globalData.getSdbPath() + ".";
     }
 
-    if(!tizen.exists()) {
+    if (!tizen.exists()) {
       error = "Lacking execute permission on " + globalData.getTizenPath() + ".";
     }
 

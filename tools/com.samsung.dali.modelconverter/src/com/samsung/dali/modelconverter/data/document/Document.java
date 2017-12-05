@@ -24,8 +24,10 @@ public class Document {
     mapper.disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
 
     Document d = mapper.readValue(dli, Document.class);
+    // TODO: the following could perhaps be on an option to fromDli().
     d.setNodeParents();
     d.setIds();
+    d.organizeOrphans();
     return d;
   }
 
