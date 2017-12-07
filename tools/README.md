@@ -18,29 +18,27 @@
 
   * **model-exporter-jni**: shared library that exposes model-exporter-core's functionality to Java with a few minor additions. Eclipse and Codeblocks projects are provided, for Windows and Linux.
 
-  * **com.samsung.dali.modelConverter**: Eclipse Rich Client Platform application project which provides a GUI to model-exporter-core. Eclipse project is provided for both platforms.
+  * **com.samsung.dali.modelconverter**: Eclipse Rich Client Platform application project which provides a GUI to model-exporter-core. An Eclipse project is provided for both platforms.
 
 # Build Instructions
 
 ## 1. Minimum Requirements
 
+ * All platforms:
+   * 64-bit JDK v1.8
+   * 64-bits [Eclipse v4.7.1. RCP & RAP](http://www.eclipse.org/downloads/packages/eclipse-rcp-and-rap-developers/oxygen1a)
+   * 'C++ Development Tools' for Eclipse. ('Help' -> 'Install New Software...')
+   * 64-bit [Tizen Studio](https://developer.tizen.org/development/tizen-studio/download - CLI is sufficient)
+
  * Windows: Windows 8 or later
    * MinGW 64-bits. Note that while 32-bit Windows builds are currently supported, this might not continue.
-   * 64=bit JDK v1.8
-   * 64-bits Eclipse v4.7.1. RCP & RAP
-   * CodeBlocks > 13.12
+   * CodeBlocks > 13.12 (optional)
 
    WARNING: the linking of model-exporter-jni is known to be problematic on Windows with GCC latest at the time of writing (6.3.0).
 
  * Linux: Ubuntu 14.04 or later.
    * GCC >= v4.9.0
-   * 64-bit JDK v1.8
-   * 64-bit Eclipse v4.7.1. RCP & RAP
-   * CodeBlocks > 13.12
-
- * Both platforms: install the' C++ Development Tools' for Eclipse. ('Help' -> 'Install New Software...')
-
- * modelConverter offers a few tools - currently in development - that facilitate the use of the Smart Development Bridge and Tizen build tools that come with [Tizen Studio](https://developer.tizen.org/development/tizen-studio/download). To be able to use these, make sure that SDB and tizen.bat are in your PATH.
+   * CodeBlocks > 13.12 (optional)
 
 ## 2. Building with Eclipse
 
