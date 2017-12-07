@@ -10,6 +10,20 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class Material {
 
+  @Override
+  public String toString() {
+    String name = "";
+    for (int i = 0; i < mTextures.length; ++i) {
+      if (mTextures[i] != null) {
+        if (!name.isEmpty()) {
+          name += "^";
+        }
+        name += mTextures[i];
+      }
+    }
+    return name;
+  }
+
   public String getTexture(int id) {
     return mTextures[id];
   }

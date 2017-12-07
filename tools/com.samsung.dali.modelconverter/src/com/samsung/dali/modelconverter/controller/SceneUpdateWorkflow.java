@@ -8,6 +8,7 @@ import com.samsung.dali.modelconverter.data.GlobalData;
 import com.samsung.dali.modelconverter.data.Project;
 import com.samsung.dali.modelconverter.data.document.Document;
 import com.samsung.dali.modelconverter.view.parts.GlobalParts;
+import com.samsung.dali.modelconverter.view.parts.NodePropertiesPart;
 
 /*
  * Gets the document from the current project and updates the SceneGraph & Dli views.
@@ -19,9 +20,13 @@ public class SceneUpdateWorkflow {
     GlobalData globalData = GlobalData.get();
     Project project = globalData.getProject();
     Document doc = project.getDocument();
-
     SceneGraphContentProvider provider = new SceneGraphContentProvider(doc);
-    GlobalParts.getSceneGraphPart().populate(provider);
+
+    NodePropertiesPart npp = GlobalParts.getNodePropertiesPart();
+    NodePropertyReceiver receiver = new NodePropertyReceiver(npp);
+    SceneGraphSelectionChangedListener selectionChangedListener = new SceneGraphSelectionChangedListener(doc, receiver);
+
+    GlobalParts.getSceneGraphPart().populate(provider, selectionChangedListener);
 
     String dli = "<ERROR>";
     try {

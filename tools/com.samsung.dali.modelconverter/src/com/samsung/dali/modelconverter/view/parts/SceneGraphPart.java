@@ -19,6 +19,7 @@ package com.samsung.dali.modelconverter.view.parts;
 
 import javax.annotation.PostConstruct;
 
+import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.TreeViewer;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.FormAttachment;
@@ -28,6 +29,7 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Tree;
 
 import com.samsung.dali.modelconverter.controller.SceneGraphContentProvider;
+import com.samsung.dali.modelconverter.controller.SceneGraphSelectionChangedListener;
 
 public class SceneGraphPart {
 
@@ -47,9 +49,15 @@ public class SceneGraphPart {
     sActiveInstance = this;
   }
 
-  public void populate(SceneGraphContentProvider provider) {
+  public void populate(SceneGraphContentProvider provider, SceneGraphSelectionChangedListener selectionChangedListener) {
     mTree.removeAll();
 
+    if(mSelectionChangedListener != null)
+    {
+      mTreeViewer.removeSelectionChangedListener(mSelectionChangedListener);
+    }
+    mTreeViewer.addSelectionChangedListener(selectionChangedListener);
+    
     mTreeViewer.setContentProvider(provider);
     mTreeViewer.setInput(provider.getDocument());
     mTreeViewer.refresh();
@@ -59,4 +67,5 @@ public class SceneGraphPart {
 
   private TreeViewer mTreeViewer;
   private Tree mTree;
+  private ISelectionChangedListener mSelectionChangedListener;
 }

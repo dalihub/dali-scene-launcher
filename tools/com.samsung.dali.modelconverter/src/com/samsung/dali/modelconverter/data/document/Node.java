@@ -7,8 +7,11 @@ import com.fasterxml.jackson.annotation.JsonGetter;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonSetter;
+import com.samsung.dali.modelconverter.data.document.property.IdList;
+import com.samsung.dali.modelconverter.data.document.property.NullOffsetter;
+import com.samsung.dali.modelconverter.data.document.property.Property;
 
-public class Node {
+public class Node implements Property.Provider {
 
   @Override
   public String toString() {
@@ -29,7 +32,7 @@ public class Node {
     return mMaterialId;
   }
 
-  public void setMaterialId(int id) {
+  public void setMaterialId(Integer id) {
     mMaterialId = id;
   }
 
@@ -42,7 +45,7 @@ public class Node {
     return mShaderId;
   }
 
-  public void setShaderId(int id) {
+  public void setShaderId(Integer id) {
     mShaderId = id;
   }
 
@@ -55,7 +58,7 @@ public class Node {
     return mMeshId;
   }
 
-  public void setMeshId(int id) {
+  public void setMeshId(Integer id) {
     mMeshId = id;
   }
 
@@ -95,6 +98,24 @@ public class Node {
   @JsonGetter("matrix")
   public double[] getMatrix() {
     return mMatrix;
+  }
+
+  @Override
+  public void provideProperties(Document context, Property.Receiver receiver) {
+    try {
+      receiver.register("Name", new Property(this, "Name", Property.Type.String, true));
+      receiver.register("Transform", new Property(this, "Matrix", Property.Type.Transform, false));
+      receiver.register("Mesh", new Property(this, "MeshId", Property.Type.Id, true,
+          new IdList<Mesh>(context.getMeshes(), true), new NullOffsetter()));
+      receiver.register("Material", new Property(this, "MaterialId", Property.Type.Id, true,
+          new IdList<Material>(context.getMaterials(), true), new NullOffsetter()));
+      receiver.register("Shader", new Property(this, "ShaderId", Property.Type.Id, true,
+          new IdList<Shader>(context.getShaders(), true), new NullOffsetter()));
+    }
+    catch (NoSuchFieldException | NoSuchMethodException e) {
+      // TODO Auto-generated catch block
+      e.printStackTrace();
+    }
   }
 
   @JsonProperty("name")

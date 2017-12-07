@@ -24,8 +24,10 @@ public class Shader {
     mRenderMode = renderMode;
   }
 
-  public Shader()
-  {}
+  @Override
+  public String toString() {
+    return mVertexPath + "^" + mFragmentPath + "^" + mRenderMode;
+  }
 
   public String getVertexPath() {
     return mVertexPath;

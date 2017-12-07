@@ -31,6 +31,36 @@ public class Mesh {
     sPrimitiveNames.put("POINTS", Primitive.POINTS);
   }
 
+  @Override
+  public String toString() {
+    String name = mBinUri;
+    if (mPositions != null) {
+      name += " @" + mPositions.mByteOffset + "[" + mPositions.mByteLength + "]";
+    }
+
+    String flags = "";
+    if (mIndices != null) {
+      flags += "I";
+    }
+    if (mUvs != null) {
+      flags += "U";
+    }
+    if (mNormals != null) {
+      flags += "N";
+    }
+    if (mTangents != null) {
+      flags += "T";
+    }
+    if (mBitangents != null) {
+      flags += "B";
+    }
+    if (flags.length() > 0) {
+      name += " " + flags;
+    }
+
+    return name;
+  }
+
   public Primitive getPrimitive() {
     return mPrimitive;
   }

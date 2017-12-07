@@ -5,8 +5,9 @@ import java.util.ArrayList;
 import com.fasterxml.jackson.annotation.JsonGetter;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonSetter;
+import com.samsung.dali.modelconverter.data.document.property.Property;
 
-public class Scene {
+public class Scene implements Property.Provider {
 
   @Override
   public String toString() {
@@ -57,6 +58,11 @@ public class Scene {
     ArrayList<Integer> nodes = new ArrayList<Integer>();
     nodes.add(new Integer(mRootId));
     return nodes;
+  }
+
+  @Override
+  public void provideProperties(Document context, Property.Receiver receiver) {
+    // nothing.
   }
 
   private int mId = -1;
