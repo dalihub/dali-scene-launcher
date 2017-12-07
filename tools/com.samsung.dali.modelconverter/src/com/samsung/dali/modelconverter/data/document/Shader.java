@@ -9,9 +9,10 @@ import com.fasterxml.jackson.annotation.JsonAnyGetter;
 import com.fasterxml.jackson.annotation.JsonAnySetter;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.samsung.dali.modelconverter.data.document.uniforms.FloatUniform;
 import com.samsung.dali.modelconverter.data.document.uniforms.IntUniform;
 import com.samsung.dali.modelconverter.data.document.uniforms.MatrixUniform;
-import com.samsung.dali.modelconverter.data.document.uniforms.Vec4Uniform;
+import com.samsung.dali.modelconverter.data.document.uniforms.VectorUniform;
 
 public class Shader {
 
@@ -62,7 +63,10 @@ public class Shader {
   public void add(String key, Object value) {
     // Attempt to add the right type of uniform.
     if (value instanceof Integer) {
-      mUniforms.put(key, new IntUniform(((Integer) value).intValue()));
+      mUniforms.put(key, new IntUniform((Integer) value));
+    }
+    else if (value instanceof Number) {
+      mUniforms.put(key, new FloatUniform((Number) value));
     }
     else if (value instanceof ArrayList<?>) {
       ArrayList<?> arrayList = (ArrayList<?>) value;
@@ -79,10 +83,14 @@ public class Shader {
       }
 
       switch (arrayList.size()) {
+      case 1:
+      case 2:
+      case 3:
       case 4:
-        mUniforms.put(key, new Vec4Uniform(arrayList.toArray(new Number[0])));
+        mUniforms.put(key, new VectorUniform(arrayList.toArray(new Number[0])));
         break;
 
+      case 9:
       case 16:
         mUniforms.put(key, new MatrixUniform(arrayList.toArray(new Number[0])));
         break;
