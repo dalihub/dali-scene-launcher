@@ -19,7 +19,6 @@ package com.samsung.dali.modelconverter.controller.handlers;
 
 import java.io.IOException;
 import java.nio.file.Files;
-import java.nio.file.NoSuchFileException;
 import java.nio.file.Paths;
 
 import javax.xml.parsers.ParserConfigurationException;
@@ -31,11 +30,10 @@ import org.eclipse.swt.widgets.Shell;
 import org.xml.sax.SAXException;
 
 import com.samsung.dali.modelconverter.controller.ProjectSwitchConfirmationWorkflow;
-import com.samsung.dali.modelconverter.controller.SceneGraphContentProvider;
+import com.samsung.dali.modelconverter.controller.SceneUpdateWorkflow;
 import com.samsung.dali.modelconverter.data.GlobalData;
 import com.samsung.dali.modelconverter.data.Project;
 import com.samsung.dali.modelconverter.data.document.Document;
-import com.samsung.dali.modelconverter.view.parts.GlobalParts;
 
 public class OpenProjectHandler {
 
@@ -67,20 +65,14 @@ public class OpenProjectHandler {
 
         Project project = globalData.getProject();
         try {
-          String dli = new String(Files.readAllBytes(Paths.get(project.getDliPath())));
-          Document doc = Document.fromDli(dli);
-          doc.organizeOrphans();
-          project.setDocument(doc);
-        }
-        catch (NoSuchFileException e) {
-          // Ignore missing dli at this point.
+          String dli = new String(Files.readAllBytes(Paths.get(project.getSceneDliPath())));
+          project.setDocument(Document.fromDli(dli));
+
+          SceneUpdateWorkflow.execute(shell);
         }
         catch (IOException e) {
           MessageDialog.openWarning(shell, "Failed to open project scene.", e.getMessage());
         }
-
-        SceneGraphContentProvider provider = new SceneGraphContentProvider(project.getDocument());
-        GlobalParts.getSceneGraphPart().populate(provider);
       }
     }
   }
