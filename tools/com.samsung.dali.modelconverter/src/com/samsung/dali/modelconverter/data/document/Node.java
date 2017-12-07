@@ -65,11 +65,11 @@ public class Node {
 
   @JsonIgnore
   public Node getParent() {
-    return mParent.get();
+    return (mParent == null) ? null : mParent.get();
   }
 
   public void setParent(Node n) {
-    mParent = new WeakReference<Node>(n);
+    mParent = ((n == null) ? null : new WeakReference<Node>(n));
   }
 
   @JsonIgnore
