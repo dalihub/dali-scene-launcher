@@ -1,5 +1,22 @@
 package com.samsung.dali.modelconverter.data.document;
 
+/*
+ * Copyright (c) 2017 Samsung Electronics Co., Ltd.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ */
+
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 
@@ -8,9 +25,12 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.fasterxml.jackson.annotation.JsonSetter;
+import com.samsung.dali.modelconverter.data.document.property.IdList;
+import com.samsung.dali.modelconverter.data.document.property.NullOffsetter;
+import com.samsung.dali.modelconverter.data.document.property.Property;
 
+public class Node implements Property.IProvider {
 @JsonPropertyOrder({ "name", "matrix", "mesh", "material", "shader", "children" })
-public class Node {
 
   @Override
   public String toString() {
@@ -30,7 +50,7 @@ public class Node {
     return mMaterialId;
   }
 
-  public void setMaterialId(int id) {
+  public void setMaterialId(Integer id) {
     mMaterialId = id;
   }
 
@@ -43,7 +63,7 @@ public class Node {
     return mShaderId;
   }
 
-  public void setShaderId(int id) {
+  public void setShaderId(Integer id) {
     mShaderId = id;
   }
 
@@ -56,7 +76,7 @@ public class Node {
     return mMeshId;
   }
 
-  public void setMeshId(int id) {
+  public void setMeshId(Integer id) {
     mMeshId = id;
   }
 
@@ -96,6 +116,24 @@ public class Node {
   @JsonGetter("matrix")
   public double[] getMatrix() {
     return mMatrix;
+  }
+
+  @Override
+  public void provideProperties(Document context, Property.IReceiver receiver) {
+    try {
+      receiver.register("Name", new Property(this, "Name", Property.Type.String, true));
+      receiver.register("Transform", new Property(this, "Matrix", Property.Type.Transform, false));
+      receiver.register("Mesh", new Property(this, "MeshId", Property.Type.Id, true,
+          new IdList<Mesh>(context.getMeshes(), true), new NullOffsetter()));
+      receiver.register("Material", new Property(this, "MaterialId", Property.Type.Id, true,
+          new IdList<Material>(context.getMaterials(), true), new NullOffsetter()));
+      receiver.register("Shader", new Property(this, "ShaderId", Property.Type.Id, true,
+          new IdList<Shader>(context.getShaders(), true), new NullOffsetter()));
+    }
+    catch (NoSuchFieldException | NoSuchMethodException e) {
+      // TODO Auto-generated catch block
+      e.printStackTrace();
+    }
   }
 
   private String mName = "NAME_MISSING";

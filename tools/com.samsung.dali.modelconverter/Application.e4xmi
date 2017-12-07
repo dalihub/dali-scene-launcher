@@ -2,8 +2,13 @@
 <application:Application xmi:version="2.0" xmlns:xmi="http://www.omg.org/XMI" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:application="http://www.eclipse.org/ui/2010/UIModel/application" xmlns:basic="http://www.eclipse.org/ui/2010/UIModel/application/ui/basic" xmlns:menu="http://www.eclipse.org/ui/2010/UIModel/application/ui/menu" xmi:id="_6wlLcMgZEeSyMNYR5xypkQ" elementId="com.samsung.dali.modelconverter.application" bindingContexts="_6wlLecgZEeSyMNYR5xypkQ">
   <children xsi:type="basic:TrimmedWindow" xmi:id="_6wlLccgZEeSyMNYR5xypkQ" elementId="com.samsung.dali.modelconverter.window.main" label="DALi Model Converter" width="500" height="400">
     <children xsi:type="basic:PartSashContainer" xmi:id="_fgvYIM7ZEeeonJuP1aAf8A" elementId="com.samsung.dali.modelconverter.partsashcontainer.0" horizontal="true">
-      <children xsi:type="basic:Part" xmi:id="_hfXA8M7ZEeeonJuP1aAf8A" elementId="com.samsung.dali.modelconverter.part.nodetreepart" containerData="500" contributionURI="bundleclass://com.samsung.dali.modelconverter/com.samsung.dali.modelconverter.view.parts.SceneGraphPart" label="NodeTree"/>
-      <children xsi:type="basic:Part" xmi:id="_jNYB8M7ZEeeonJuP1aAf8A" elementId="com.samsung.dali.modelconverter.part.dlitextpart" containerData="1000" contributionURI="bundleclass://com.samsung.dali.modelconverter/com.samsung.dali.modelconverter.view.parts.DliTextPart" label="DLi Text"/>
+      <children xsi:type="basic:PartStack" xmi:id="_brJugNnNEeeMspb_0lfJFQ" elementId="com.samsung.dali.modelconverter.partstack.0">
+        <children xsi:type="basic:Part" xmi:id="_hfXA8M7ZEeeonJuP1aAf8A" elementId="com.samsung.dali.modelconverter.part.scenegraph" containerData="500" contributionURI="bundleclass://com.samsung.dali.modelconverter/com.samsung.dali.modelconverter.view.parts.SceneGraphPart" label="Scene Graph"/>
+      </children>
+      <children xsi:type="basic:PartStack" xmi:id="_c_ttsNnNEeeMspb_0lfJFQ" elementId="com.samsung.dali.modelconverter.partstack.1">
+        <children xsi:type="basic:Part" xmi:id="_jNYB8M7ZEeeonJuP1aAf8A" elementId="com.samsung.dali.modelconverter.part.dlitextpart" containerData="1000" contributionURI="bundleclass://com.samsung.dali.modelconverter/com.samsung.dali.modelconverter.view.parts.DliTextPart" label="DLI Text"/>
+        <children xsi:type="basic:Part" xmi:id="_d9MCkNnNEeeMspb_0lfJFQ" elementId="com.samsung.dali.modelconverter.part.properties" contributionURI="bundleclass://com.samsung.dali.modelconverter/com.samsung.dali.modelconverter.view.parts.PropertiesPart" label="Properties"/>
+      </children>
     </children>
     <mainMenu xmi:id="_6wlLicgZEeSyMNYR5xypkQ" elementId="org.eclipse.ui.main.menu">
       <children xsi:type="menu:Menu" xmi:id="_6wlLisgZEeSyMNYR5xypkQ" elementId="file" label="File">
