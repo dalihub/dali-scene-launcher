@@ -2,11 +2,10 @@ package com.samsung.dali.modelconverter.data.document.uniforms;
 
 import com.samsung.dali.modelconverter.data.document.Uniform;
 
-public class Vec4Uniform extends Uniform {
+public class FloatUniform extends Uniform {
 
-  public Vec4Uniform(Number[] numbers) {
-    assert numbers.length == 4;
-    mValue = numbers;
+  public FloatUniform(Number i) {
+    mValue = i;
   }
 
   @Override
@@ -15,6 +14,5 @@ public class Vec4Uniform extends Uniform {
     return mValue;
   }
 
-  private Number[] mValue;
-
+  private Number mValue;
 }
