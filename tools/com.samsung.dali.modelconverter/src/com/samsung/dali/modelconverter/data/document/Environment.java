@@ -1,23 +1,26 @@
 package com.samsung.dali.modelconverter.data.document;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonGetter;
+import com.fasterxml.jackson.annotation.JsonSetter;
 
 public class Environment {
 
-  @JsonProperty("cubeSpecular")
+  @JsonGetter("cubeSpecular")
   public String getSpecularPath() {
     return mSpecularPath;
   }
 
+  @JsonSetter("cubeSpecular")
   public void setSpecularPath(String path) {
     mSpecularPath = path;
   }
 
-  @JsonProperty("cubeDiffuse")
+  @JsonGetter("cubeDiffuse")
   public String getDiffusePath() {
     return mDiffusePath;
   }
 
+  @JsonSetter("cubeDiffuse")
   public void setDiffusePath(String path) {
     mDiffusePath = path;
   }

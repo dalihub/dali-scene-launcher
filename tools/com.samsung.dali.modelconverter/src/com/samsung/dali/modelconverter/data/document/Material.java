@@ -1,7 +1,7 @@
 package com.samsung.dali.modelconverter.data.document;
 
-import java.util.ArrayList;
 import java.util.Map;
+import java.util.TreeMap;
 
 import com.fasterxml.jackson.annotation.JsonAnyGetter;
 import com.fasterxml.jackson.annotation.JsonAnySetter;
@@ -14,7 +14,7 @@ public class Material {
     return mTextures[id];
   }
 
-  public void setTextures(int id, String path) {
+  public void setTexture(int id, String path) {
     mTextures[id] = path;
   }
 
@@ -35,21 +35,22 @@ public class Material {
   public void setTexture(String key, String value) {
     if (key.startsWith("texture")) {
       int i = Integer.parseInt(key.substring("texture".length()));
-      if (i >= 0 && i < mTextures.length) {
-        mTextures[i] = value;
+      // NOTE: sneaky conversion from 1-based to 0-based.
+      if (i > 0 && i <= mTextures.length) {
+        mTextures[i - 1] = value;
       }
     }
   }
 
   @JsonAnyGetter
   public Map<String, String> getTextures() {
-    ArrayList<String[]> keyValues = new ArrayList<String[]>();
+    Map<String, String> keyValues = new TreeMap<String, String>();
     for (int i = 0; i < mTextures.length; ++i) {
       if (mTextures[i] != null) {
-        keyValues.add(new String[] { "texture" + (i + 1), mTextures[i] });
+        keyValues.put("texture" + (i + 1), mTextures[i]);
       }
     }
-    return null;
+    return keyValues;
   }
 
   @JsonIgnore // custom JsonAnySetter / Getter.

@@ -6,8 +6,10 @@ import java.util.ArrayList;
 import com.fasterxml.jackson.annotation.JsonGetter;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.fasterxml.jackson.annotation.JsonSetter;
 
+@JsonPropertyOrder({ "name", "matrix", "mesh", "material", "shader", "children" })
 public class Node {
 
   @Override
@@ -15,7 +17,6 @@ public class Node {
     return mName;
   }
 
-  @JsonIgnore
   public String getName() {
     return mName;
   }
@@ -97,7 +98,6 @@ public class Node {
     return mMatrix;
   }
 
-  @JsonProperty("name")
   private String mName = "NAME_MISSING";
 
   private double[] mMatrix = MatrixHelper.createMatrix();

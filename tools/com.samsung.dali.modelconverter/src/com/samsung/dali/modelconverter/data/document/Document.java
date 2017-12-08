@@ -6,8 +6,11 @@ import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.util.DefaultIndenter;
+import com.fasterxml.jackson.core.util.DefaultPrettyPrinter;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -15,6 +18,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 /*
  * @brief A dli document, serialisable to / from JSON (glTF).
  */
+@JsonPropertyOrder({ "asset", "scene", "scenes", "nodes", "meshes", "materials", "shaders", "environment", "cameras" })
 public class Document {
 
   static public Document fromDli(String dli) throws JsonParseException, JsonMappingException, IOException {
@@ -31,7 +35,12 @@ public class Document {
 
   public String toDliString() throws JsonProcessingException {
     ObjectMapper mapper = new ObjectMapper();
-    return mapper.writerWithDefaultPrettyPrinter().writeValueAsString(this);
+    
+    DefaultPrettyPrinter.Indenter indenter = new DefaultIndenter("  ", DefaultIndenter.SYS_LF);
+    DefaultPrettyPrinter printer = new DefaultPrettyPrinter();
+    printer.indentObjectsWith(indenter);
+    
+    return mapper.writer(printer).writeValueAsString(this);
   }
 
   public Asset getAsset() {
