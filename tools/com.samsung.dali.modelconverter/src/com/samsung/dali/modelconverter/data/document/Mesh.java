@@ -3,9 +3,13 @@ package com.samsung.dali.modelconverter.data.document;
 import java.util.Map;
 import java.util.TreeMap;
 
+import com.fasterxml.jackson.annotation.JsonGetter;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import com.fasterxml.jackson.annotation.JsonSetter;
 
+@JsonPropertyOrder({ "uri", "attributes", "primitive", "positions", "normals", "textures", "tangents", "bitangents" })
 public class Mesh {
 
   public enum Primitive {
@@ -48,29 +52,58 @@ public class Mesh {
     return mAttributes;
   }
 
+  public void setAttributes(int a) {
+    mAttributes = a;
+  }
+
   public BufferRef getIndices() {
     return mIndices;
+  }
+
+  public void setIndices(BufferRef br) {
+    mIndices = br;
   }
 
   public BufferRef getPositions() {
     return mPositions;
   }
 
+  public void setPositions(BufferRef br) {
+    mIndices = br;
+  }
+
   public BufferRef getNormals() {
     return mNormals;
   }
 
-  @JsonProperty("textures")
+  public void setNormals(BufferRef br) {
+    mIndices = br;
+  }
+
+  @JsonGetter("textures")
   public BufferRef getUvs() {
     return mUvs;
+  }
+
+  @JsonSetter("textures")
+  public void setUvs(BufferRef br) {
+    mUvs = br;
   }
 
   public BufferRef getTangents() {
     return mTangents;
   }
 
+  public void setTangents(BufferRef br) {
+    mTangents = br;
+  }
+
   public BufferRef getBitangents() {
     return mBitangents;
+  }
+
+  public void setBitangents(BufferRef br) {
+    mBitangents = br;
   }
 
   @JsonProperty("uri")

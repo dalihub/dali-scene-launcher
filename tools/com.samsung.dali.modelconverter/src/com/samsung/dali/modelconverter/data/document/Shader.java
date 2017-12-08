@@ -8,7 +8,9 @@ import java.util.TreeMap;
 import com.fasterxml.jackson.annotation.JsonAnyGetter;
 import com.fasterxml.jackson.annotation.JsonAnySetter;
 import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonGetter;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonSetter;
 import com.samsung.dali.modelconverter.data.document.uniforms.FloatUniform;
 import com.samsung.dali.modelconverter.data.document.uniforms.IntUniform;
 import com.samsung.dali.modelconverter.data.document.uniforms.MatrixUniform;
@@ -24,21 +26,22 @@ public class Shader {
     mRenderMode = renderMode;
   }
 
-  public Shader()
-  {}
-
+  @JsonGetter("vertex")
   public String getVertexPath() {
     return mVertexPath;
   }
 
+  @JsonSetter("vertex")
   public void setVertexPath(String mVertexPath) {
     this.mVertexPath = mVertexPath;
   }
 
+  @JsonGetter("fragment")
   public String getFragmentPath() {
     return mFragmentPath;
   }
 
+  @JsonSetter("fragment")
   public void setFragmentPath(String mFragmentPath) {
     this.mFragmentPath = mFragmentPath;
   }
