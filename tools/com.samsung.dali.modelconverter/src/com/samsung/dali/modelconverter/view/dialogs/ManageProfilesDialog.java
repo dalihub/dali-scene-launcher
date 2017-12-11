@@ -1,7 +1,5 @@
 package com.samsung.dali.modelconverter.view.dialogs;
 
-import java.util.List;
-
 /*
  * Copyright (c) 2017 Samsung Electronics Co., Ltd.
  *
@@ -19,27 +17,25 @@ import java.util.List;
  *
  */
 
+import java.util.List;
+
 import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
+import org.eclipse.swt.layout.FormAttachment;
+import org.eclipse.swt.layout.FormData;
+import org.eclipse.swt.layout.FormLayout;
 import org.eclipse.swt.widgets.Button;
+import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Shell;
 
+public class ManageProfilesDialog extends Dialog {
 
-import org.eclipse.swt.widgets.Combo;
-import org.eclipse.swt.layout.FormLayout;
-import org.eclipse.swt.layout.FormData;
-import org.eclipse.swt.layout.FormAttachment;
-
-public class SelectCertificateDialog extends Dialog {
-
-
-
-  public SelectCertificateDialog(Shell parentShell) {
+  public ManageProfilesDialog(Shell parentShell) {
     super(parentShell);
   }
 
@@ -54,16 +50,18 @@ public class SelectCertificateDialog extends Dialog {
     fd_lblNewLabel_1.top = new FormAttachment(0, 5);
     fd_lblNewLabel_1.left = new FormAttachment(0, 5);
     lblNewLabel_1.setLayoutData(fd_lblNewLabel_1);
-    lblNewLabel_1.setText("Select certificate");
+    lblNewLabel_1.setText("Select profile");
 
-    mCmbCertificate = new Combo(area, SWT.NONE);
+    mCmbProfiles = new Combo(area, SWT.NONE);
     FormData fd_mCmbCertificate = new FormData();
     fd_mCmbCertificate.right = new FormAttachment(0, 248);
     fd_mCmbCertificate.top = new FormAttachment(0, 27);
     fd_mCmbCertificate.left = new FormAttachment(0, 5);
-    mCmbCertificate.setLayoutData(fd_mCmbCertificate);
+    mCmbProfiles.setLayoutData(fd_mCmbCertificate);
 
     Button mBtnNewCert = new Button(area, SWT.NONE);
+    mBtnNewCert.setEnabled(false); // TODO: remove when the functionality is implemented.
+
     FormData fd_mBtnNewCert = new FormData();
     fd_mBtnNewCert.right = new FormAttachment(100, -5);
     fd_mBtnNewCert.top = new FormAttachment(0, 27);
@@ -74,45 +72,44 @@ public class SelectCertificateDialog extends Dialog {
 
       }
     });
-    mBtnNewCert.setText("Create certificate");
+    mBtnNewCert.setText("Create profile");
 
-    mCmbCertificate.setItems( (String []) mCertificates.toArray() );
+    for (String certificate : mProfiles) {
+
+      mCmbProfiles.add(certificate);
+    }
+    mCmbProfiles.select(mSelectedProfile);
     return area;
   }
 
   @Override
   protected void okPressed() {
-    int index = mCmbCertificate.getSelectionIndex();
-    if(index >= 0)
-    {
-      mCurrentCertificate = mCmbCertificate.getItem(mCmbCertificate.getSelectionIndex());
-    }
+    mSelectedProfile = mCmbProfiles.getSelectionIndex();
+    mResult = mCmbProfiles.getItem(mSelectedProfile);
     super.okPressed();
   }
 
   @Override
   protected void configureShell(Shell newShell) {
     super.configureShell(newShell);
-    newShell.setText("Select certificate");
+    newShell.setText("Select profile");
   }
 
-  public List<String> getCmbCertificate() {
-    return mCertificates;
+  public void setProfiles(List<String> profiles) {
+    mProfiles = profiles;
   }
 
-  public void setCmbCertificate(List<String> mCmbCertificate) {
-    this.mCertificates = mCmbCertificate;
-  }
-  
-  public String getCurrentCertificate() {
-    return mCurrentCertificate;
+  public String getResult() {
+    return mResult;
   }
 
-  public void setCurrentCertificate(String mCurrentCertificate) {
-    this.mCurrentCertificate = mCurrentCertificate;
+  public void selectProfile(int i) {
+    mSelectedProfile = i;
   }
 
-  private Combo mCmbCertificate;
-  private List<String> mCertificates;
-  private String mCurrentCertificate;
+  private List<String> mProfiles;
+  private int mSelectedProfile;
+
+  private Combo mCmbProfiles;
+  private String mResult;
 }
