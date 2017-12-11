@@ -51,6 +51,14 @@ public class GlobalParts {
     return PropertiesPart.sActiveInstance;
   }
 
+  public static OutputPart getOutputPart() {
+    if (OutputPart.sActiveInstance == null) {
+      createPart("com.samsung.dali.modelconverter.part.output");
+      assert OutputPart.sActiveInstance != null;
+    }
+    return OutputPart.sActiveInstance;
+  }
+
   static void createPart(String id) {
     Bundle bundle = FrameworkUtil.getBundle(EPartService.class);
     BundleContext bundleContext = bundle.getBundleContext();
