@@ -59,6 +59,7 @@ public class ListProfilesWorkflow {
       private boolean mCare = false;
     };
 
-    lpr.addCommand(GlobalData.get().getTizenPath() + " security-profiles list", parser).run();
+    lpr.addCommand(GlobalData.get().getTizenPath() + " security-profiles list", parser)
+      .run(false);
   }
 }

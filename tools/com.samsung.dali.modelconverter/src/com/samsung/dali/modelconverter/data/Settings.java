@@ -67,6 +67,7 @@ public class Settings {
   public static final String TIZEN_CLI_ROOT_PATH = "TIZEN_CLI_ROOT_PATH";
   public static final String TIZEN_CURRENT_PROFILE = "TIZEN_CURRENT_PROFILE";
   public static final String TIZEN_CURRENT_WORKPATH = "TIZEN_CURRENT_WORKPATH";
+  public static final String ACTIVE_PROFILE = "ACTIVE_PROFILE";
 
   static private Settings settings;
   private Preferences preferences;

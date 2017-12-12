@@ -40,7 +40,7 @@ public class ManageProfilesHandler {
     ManageProfilesDialog manageDialog = new ManageProfilesDialog(shell);
     manageDialog.setProfiles(securityProfiles);
 
-    String activeProfile = Settings.Get().getString(ACTIVE_PROFILE);
+    String activeProfile = Settings.Get().getString(Settings.ACTIVE_PROFILE);
     int selection = securityProfiles.indexOf(activeProfile);
     if (selection == -1) {
       selection = 0;
@@ -49,9 +49,7 @@ public class ManageProfilesHandler {
 
     // Get user input.
     if (manageDialog.open() == IDialogConstants.OK_ID) {
-      Settings.Get().setString(ACTIVE_PROFILE, manageDialog.getResult());
+      Settings.Get().setString(Settings.ACTIVE_PROFILE, manageDialog.getResult());
     }
   }
-
-  private static final String ACTIVE_PROFILE = "ACTIVE_PROFILE";
 }
