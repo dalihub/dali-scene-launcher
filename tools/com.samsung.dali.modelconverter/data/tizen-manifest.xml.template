@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<manifest xmlns="http://tizen.org/ns/packages" api-version="3.0" package="$(AppId)" version="1.0.0">
+<manifest xmlns="http://tizen.org/ns/packages" api-version="3.0" package="$(AppId)" version="$(Version)">
 	<profile name="wearable"/>
 	<watch-application ambient-support="true" appid="$(AppId)" exec="watchloader" mainapp="true">
     	<label>$(AppLabel)</label>
