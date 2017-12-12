@@ -6,6 +6,8 @@
 **.layout
 
 **.bak
+**.orig
+**.log
 
 **.o
 **.class
