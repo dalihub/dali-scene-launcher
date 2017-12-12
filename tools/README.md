@@ -28,7 +28,7 @@
    * 64-bit JDK v1.8
    * 64-bits [Eclipse v4.7.1. RCP & RAP](http://www.eclipse.org/downloads/packages/eclipse-rcp-and-rap-developers/oxygen1a)
    * 'C++ Development Tools' for Eclipse. ('Help' -> 'Install New Software...')
-   * 64-bit [Tizen Studio](https://developer.tizen.org/development/tizen-studio/download - CLI is sufficient)
+   * 64-bit [Tizen Studio](https://developer.tizen.org/development/tizen-studio/download) (CLI is sufficient)
 
  * Windows: Windows 8 or later
    * MinGW 64-bits. Note that while 32-bit Windows builds are currently supported, this might not continue.
