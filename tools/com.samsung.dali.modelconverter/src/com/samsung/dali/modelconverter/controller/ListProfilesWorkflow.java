@@ -19,18 +19,18 @@ package com.samsung.dali.modelconverter.controller;
 
 import java.util.List;
 
+import org.eclipse.e4.ui.workbench.modeling.EPartService;
 import org.eclipse.swt.widgets.Shell;
 
 import com.samsung.dali.modelconverter.data.GlobalData;
-import com.samsung.dali.modelconverter.view.parts.GlobalParts;
 import com.samsung.dali.modelconverter.view.parts.OutputPart;
 
 public class ListProfilesWorkflow {
 
-  public static void execute(Shell shell, List<String> outProfiles) {
+  public static void execute(Shell shell, List<String> outProfiles, EPartService parts) {
     assert outProfiles != null;
 
-    OutputPart op = GlobalParts.getOutputPart();
+    OutputPart op = PartsHelper.getPart(parts, OutputPart.class);
     LoggingProcessRunner lpr = LoggingProcessRunner.create(shell.getDisplay(), op.getText());
 
     LoggingProcessRunner.Parser parser = new LoggingProcessRunner.Parser() {

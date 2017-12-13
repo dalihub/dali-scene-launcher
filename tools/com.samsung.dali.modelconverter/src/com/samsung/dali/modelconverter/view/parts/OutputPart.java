@@ -26,6 +26,8 @@ import org.eclipse.swt.widgets.Composite;
 
 public class OutputPart {
 
+  public static final String sId = "com.samsung.dali.modelconverter.part.output";
+
   @PostConstruct
   public void createComposite(Composite parent) {
 
@@ -33,15 +35,11 @@ public class OutputPart {
     mText.setFont(JFaceResources.getFont(JFaceResources.TEXT_FONT));
     mText.setAlwaysShowScrollBars(false);
     mText.setWordWrap(true);
-
-    sActiveInstance = this;
   }
 
   public StyledText getText() {
     return mText;
   }
-
-  static OutputPart sActiveInstance;
 
   private StyledText mText;
 }

@@ -30,13 +30,13 @@ import com.samsung.dali.modelconverter.controller.SceneGraphContentProvider;
 
 public class SceneGraphPart {
 
+  public static final String sId = "com.samsung.dali.modelconverter.part.scenegraph";
+
   @PostConstruct
   public void createComposite(Composite parent) {
 
     mTreeViewer = new TreeViewer(parent, SWT.BORDER);
     mTree = mTreeViewer.getTree();
-
-    sActiveInstance = this;
   }
 
   public void populate(SceneGraphContentProvider provider, PropertyProviderSelectionChangedListener listener) {
@@ -51,8 +51,6 @@ public class SceneGraphPart {
     mTreeViewer.setInput(provider.getDocument());
     mTreeViewer.refresh();
   }
-
-  static SceneGraphPart sActiveInstance;
 
   private TreeViewer mTreeViewer;
   private Tree mTree;

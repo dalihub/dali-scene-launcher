@@ -20,6 +20,7 @@ package com.samsung.dali.modelconverter.controller.handlers;
 import java.util.ArrayList;
 
 import org.eclipse.e4.core.di.annotations.Execute;
+import org.eclipse.e4.ui.workbench.modeling.EPartService;
 import org.eclipse.jface.dialogs.IDialogConstants;
 import org.eclipse.swt.widgets.Shell;
 
@@ -30,11 +31,11 @@ import com.samsung.dali.modelconverter.view.dialogs.ManageProfilesDialog;
 public class ManageProfilesHandler {
 
   @Execute
-  void execute(Shell shell) {
+  void execute(Shell shell, EPartService parts) {
 
     // Get list of security profiles.
     ArrayList<String> securityProfiles = new ArrayList<String>();
-    ListProfilesWorkflow.execute(shell, securityProfiles);
+    ListProfilesWorkflow.execute(shell, securityProfiles, parts);
 
     // Create and populate dialog.
     ManageProfilesDialog manageDialog = new ManageProfilesDialog(shell);

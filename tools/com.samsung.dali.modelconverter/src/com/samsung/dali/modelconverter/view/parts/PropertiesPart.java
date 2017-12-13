@@ -26,14 +26,14 @@ import org.eclipse.swt.widgets.Composite;
 
 public class PropertiesPart {
 
+  public static final String sId = "com.samsung.dali.modelconverter.part.properties";
+
   @PostConstruct
   public void createComposite(Composite parent) {
     parent.setLayout(new GridLayout(1, false));
 
     mParent = parent;
     resetProperties();
-
-    sActiveInstance = this;
   }
 
   public void resetProperties() {
@@ -50,8 +50,6 @@ public class PropertiesPart {
   public Composite getComposite() {
     return mProperties;
   }
-
-  static PropertiesPart sActiveInstance;
 
   private Composite mParent;
   private Composite mProperties;

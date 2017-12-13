@@ -24,6 +24,7 @@ import java.nio.file.Paths;
 import javax.xml.parsers.ParserConfigurationException;
 
 import org.eclipse.e4.core.di.annotations.Execute;
+import org.eclipse.e4.ui.workbench.modeling.EPartService;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.swt.widgets.DirectoryDialog;
 import org.eclipse.swt.widgets.Shell;
@@ -38,7 +39,7 @@ import com.samsung.dali.modelconverter.data.document.Document;
 public class OpenProjectHandler {
 
   @Execute
-  public void execute(Shell shell) {
+  public void execute(Shell shell, EPartService parts) {
 
     if (ProjectSwitchConfirmationWorkflow.execute(shell)) {
       DirectoryDialog dialog = new DirectoryDialog(shell);
@@ -68,7 +69,7 @@ public class OpenProjectHandler {
           String dli = new String(Files.readAllBytes(Paths.get(project.getSceneDliPath())));
           project.setDocument(Document.fromDli(dli));
 
-          SceneUpdateWorkflow.execute(shell);
+          SceneUpdateWorkflow.execute(shell, parts);
         }
         catch (IOException e) {
           MessageDialog.openWarning(shell, "Failed to open project scene.", e.getMessage());

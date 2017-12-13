@@ -26,21 +26,19 @@ import org.eclipse.swt.widgets.Composite;
 
 public class DliTextPart {
 
+  public static final String sId = "com.samsung.dali.modelconverter.part.dlitext";
+
   @PostConstruct
   public void createComposite(Composite parent) {
 
     text = new StyledText(parent, SWT.BORDER | SWT.MULTI | SWT.V_SCROLL);
     text.setFont(JFaceResources.getFont(JFaceResources.TEXT_FONT));
     text.setAlwaysShowScrollBars(false);
-
-    sActiveInstance = this;
   }
 
   public void populate(String dli) {
     text.setText(dli);
   }
-
-  static DliTextPart sActiveInstance;
 
   private StyledText text;
 }

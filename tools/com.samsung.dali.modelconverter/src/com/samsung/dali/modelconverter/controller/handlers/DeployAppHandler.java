@@ -7,17 +7,18 @@ import java.nio.file.StandardCopyOption;
 
 import org.eclipse.e4.core.di.annotations.CanExecute;
 import org.eclipse.e4.core.di.annotations.Execute;
+import org.eclipse.e4.ui.workbench.modeling.EPartService;
 import org.eclipse.jface.dialogs.IDialogConstants;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.swt.widgets.Shell;
 
 import com.samsung.dali.modelconverter.controller.FileUtils;
 import com.samsung.dali.modelconverter.controller.LoggingProcessRunner;
+import com.samsung.dali.modelconverter.controller.PartsHelper;
 import com.samsung.dali.modelconverter.data.GlobalData;
 import com.samsung.dali.modelconverter.data.Project;
 import com.samsung.dali.modelconverter.data.Settings;
 import com.samsung.dali.modelconverter.view.dialogs.DeployAppDialog;
-import com.samsung.dali.modelconverter.view.parts.GlobalParts;
 import com.samsung.dali.modelconverter.view.parts.OutputPart;
 
 public class DeployAppHandler {
@@ -30,7 +31,7 @@ public class DeployAppHandler {
   }
 
   @Execute
-  public void execute(Shell shell) {
+  public void execute(Shell shell, EPartService parts) {
     final String activeProfile = Settings.Get().getString(Settings.ACTIVE_PROFILE);
     final GlobalData gd = GlobalData.get();
     final Project project = gd.getProject();
@@ -51,7 +52,7 @@ public class DeployAppHandler {
         FileUtils.copyFile(loader, target, StandardCopyOption.REPLACE_EXISTING);
 
         // Execute packaging command
-        OutputPart op = GlobalParts.getOutputPart();
+        OutputPart op = PartsHelper.getPart(parts, OutputPart.class);
         LoggingProcessRunner lpr = LoggingProcessRunner.create(shell.getDisplay(), op.getText());
 
         if (performPackaging) {

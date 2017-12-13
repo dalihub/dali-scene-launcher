@@ -17,6 +17,7 @@ package com.samsung.dali.modelconverter.controller;
  *
  */
 
+import org.eclipse.e4.ui.workbench.modeling.EPartService;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.swt.widgets.Shell;
 
@@ -24,21 +25,22 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.samsung.dali.modelconverter.data.GlobalData;
 import com.samsung.dali.modelconverter.data.Project;
 import com.samsung.dali.modelconverter.data.document.Document;
-import com.samsung.dali.modelconverter.view.parts.GlobalParts;
+import com.samsung.dali.modelconverter.view.parts.DliTextPart;
 import com.samsung.dali.modelconverter.view.parts.PropertiesPart;
+import com.samsung.dali.modelconverter.view.parts.SceneGraphPart;
 
 /*
  * Gets the document from the current project and updates the SceneGraph & Dli views.
  */
 public class SceneUpdateWorkflow {
 
-  public static void execute(Shell shell) {
+  public static void execute(Shell shell, EPartService parts) {
 
     GlobalData globalData = GlobalData.get();
     Project project = globalData.getProject();
     Document doc = project.getDocument();
 
-    updateSceneGraph(doc);
+    updateSceneGraph(doc, parts);
 
     String dli = "<ERROR>";
     try {
@@ -48,17 +50,17 @@ public class SceneUpdateWorkflow {
       MessageDialog.openError(shell, "Error opening scene.", e.getMessage());
     }
 
-    GlobalParts.getDliTextPart().populate(dli);
+    PartsHelper.getPart(parts, DliTextPart.class).populate(dli);
   }
 
-  private static void updateSceneGraph(Document doc) {
+  private static void updateSceneGraph(Document doc, EPartService parts) {
     SceneGraphContentProvider provider = new SceneGraphContentProvider(doc);
 
-    PropertiesPart npp = GlobalParts.getPropertiesPart();
+    PropertiesPart npp = PartsHelper.getPart(parts, PropertiesPart.class);
     PropertiesPresenter receiver = new PropertiesPresenter(npp);
     PropertyProviderSelectionChangedListener listener = new PropertyProviderSelectionChangedListener(doc, receiver);
 
-    GlobalParts.getSceneGraphPart().populate(provider, listener);
+    PartsHelper.getPart(parts, SceneGraphPart.class).populate(provider, listener);
   }
 
 }

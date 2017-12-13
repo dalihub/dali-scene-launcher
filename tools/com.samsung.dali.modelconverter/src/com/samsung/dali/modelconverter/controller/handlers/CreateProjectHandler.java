@@ -23,7 +23,12 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.net.URISyntaxException;
 
+import javax.inject.Named;
+
 import org.eclipse.e4.core.di.annotations.Execute;
+import org.eclipse.e4.ui.model.application.ui.basic.MPart;
+import org.eclipse.e4.ui.services.IServiceConstants;
+import org.eclipse.e4.ui.workbench.modeling.EPartService;
 import org.eclipse.jface.dialogs.IDialogConstants;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.swt.widgets.Shell;
@@ -37,14 +42,16 @@ import com.samsung.dali.modelconverter.view.dialogs.CreateProjectDialog;
 
 public class CreateProjectHandler {
 
+  @Named(IServiceConstants.ACTIVE_PART)
+  MPart activePart;
+
   @Execute
-  public void execute(Shell shell) {
+  public void execute(Shell shell, EPartService partService) {
 
     if (ProjectSwitchConfirmationWorkflow.execute(shell)) {
 
       CreateProjectDialog dialog = new CreateProjectDialog(shell);
-      if (dialog.open() == IDialogConstants.OK_ID)
-      {
+      if (dialog.open() == IDialogConstants.OK_ID) {
         String name = dialog.getProjectName();
         String id = dialog.getProjectID();
         String path = dialog.getProjectPath();
@@ -57,12 +64,10 @@ public class CreateProjectHandler {
           Project project = new Project(path, name, id);
           GlobalData.get().setProject(project);
 
-          SceneUpdateWorkflow.execute(shell);
-        }
-        catch (IOException e) {
+          SceneUpdateWorkflow.execute(shell, partService);
+        } catch (IOException e) {
           MessageDialog.openError(shell, "Project creation failed.", e.getMessage());
-        }
-        catch (URISyntaxException e) {
+        } catch (URISyntaxException e) {
           MessageDialog.openError(shell, "Internal error.", e.getMessage());
         }
       }
@@ -73,8 +78,7 @@ public class CreateProjectHandler {
     File directory = new File(path);
     if (!directory.exists() && !directory.mkdirs()) {
       throw new IOException("Failed to create project directory.");
-    }
-    else {
+    } else {
       File[] content = directory.listFiles();
       if (content != null && content.length > 0) {
         throw new IOException("Project directory exists and isn't empty.");
@@ -88,7 +92,8 @@ public class CreateProjectHandler {
     FileUtils.extractZip(source, new File(path));
   }
 
-  private void instantiateManifestTemplate(String path, String name, String id, String version) throws IOException, URISyntaxException {
+  private void instantiateManifestTemplate(String path, String name, String id, String version)
+      throws IOException, URISyntaxException {
     File source = FileUtils.getBundleFile(DATA_PATH + Project.TIZEN_MANIFEST + ".template");
 
     String manifestContents = null;
@@ -98,7 +103,8 @@ public class CreateProjectHandler {
       manifestContents = new String(data, "UTF-8");
     }
 
-    manifestContents = manifestContents.replace("$(AppLabel)", name).replace("$(AppId)", id).replace("$(Version)", version);
+    manifestContents = manifestContents.replace("$(AppLabel)", name).replace("$(AppId)", id).replace("$(Version)",
+        version);
 
     File manifest = new File(path + File.separator + Project.TIZEN_MANIFEST);
     try (FileWriter writer = new FileWriter(manifest)) {
