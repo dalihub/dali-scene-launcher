@@ -17,8 +17,14 @@ package com.samsung.dali.modelconverter.view.dialogs;
  *
  */
 
+import java.io.File;
+import java.util.TreeMap;
+
 import org.eclipse.jface.dialogs.Dialog;
+import org.eclipse.jface.dialogs.IDialogConstants;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.ModifyEvent;
+import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.layout.FormAttachment;
@@ -56,12 +62,12 @@ public class CreateProjectDialog extends Dialog {
     FormData fd_mTxtProjectName = new FormData();
     fd_mTxtProjectName.top = new FormAttachment(lbProjectName, -5, SWT.TOP);
     fd_mTxtProjectName.left = new FormAttachment(lbProjectName, 15);
-    fd_mTxtProjectName.right = new FormAttachment(100, -96);
+    fd_mTxtProjectName.right = new FormAttachment(100, -10);
     mTxtProjectName.setLayoutData(fd_mTxtProjectName);
 
     Label lbProjectId = new Label(area, SWT.NONE);
     FormData fd_lbProjectId = new FormData();
-    fd_lbProjectId.top = new FormAttachment(lbProjectName, 15);
+    fd_lbProjectId.top = new FormAttachment(lbProjectName, 16);
     fd_lbProjectId.left = new FormAttachment(0, 10);
     lbProjectId.setLayoutData(fd_lbProjectId);
     lbProjectId.setText("Project ID:");
@@ -73,16 +79,16 @@ public class CreateProjectDialog extends Dialog {
     fd_mTxtProjectId.right = new FormAttachment(100, -10);
     mTxtProjectId.setLayoutData(fd_mTxtProjectId);
 
-    Label lbProjectDirectory = new Label(area, SWT.NONE);
-    FormData fd_lbProjectDirectory = new FormData();
-    fd_lbProjectDirectory.left = new FormAttachment(0, 10);
-    fd_lbProjectDirectory.top = new FormAttachment(lbProjectId, 15);
-    lbProjectDirectory.setLayoutData(fd_lbProjectDirectory);
-    lbProjectDirectory.setText("Project Directory:");
+    Label lbProjectPath = new Label(area, SWT.NONE);
+    FormData fd_lbProjectPath = new FormData();
+    fd_lbProjectPath.top = new FormAttachment(lbProjectId, 16);
+    fd_lbProjectPath.left = new FormAttachment(0, 10);
+    lbProjectPath.setLayoutData(fd_lbProjectPath);
+    lbProjectPath.setText("Project Directory:");
 
     mTxtProjectPath = new Text(area, SWT.BORDER);
     FormData fd_mTxtProjectPath = new FormData();
-    fd_mTxtProjectPath.top = new FormAttachment(lbProjectDirectory, 8);
+    fd_mTxtProjectPath.top = new FormAttachment(lbProjectPath, 8);
     fd_mTxtProjectPath.left = new FormAttachment(lbProjectId, -2, SWT.LEFT);
     mTxtProjectPath.setLayoutData(fd_mTxtProjectPath);
 
@@ -91,12 +97,14 @@ public class CreateProjectDialog extends Dialog {
       @Override
       public void widgetSelected(SelectionEvent e) {
         DirectoryDialog dd = new DirectoryDialog(parent.getShell());
+        dd.setFilterPath(mProjectPath);
         String path = dd.open();
-        if (!path.isEmpty()) {
+        if (path != null) {
           mTxtProjectPath.setText(path);
         }
       }
     });
+
     fd_mTxtProjectPath.right = new FormAttachment(btnBrowse, -6);
     FormData fd_mBtnBrowse = new FormData();
     fd_mBtnBrowse.top = new FormAttachment(mTxtProjectPath, 0, SWT.TOP);
@@ -104,10 +112,88 @@ public class CreateProjectDialog extends Dialog {
     btnBrowse.setLayoutData(fd_mBtnBrowse);
     btnBrowse.setText("Browse");
 
+    mLbError = new Label(area, SWT.NONE);
+    mLbError.setAlignment(SWT.RIGHT);
+    FormData fd_lbProjectPathError = new FormData();
+    fd_lbProjectPathError.right = new FormAttachment(btnBrowse, 0, SWT.RIGHT);
+    fd_lbProjectPathError.top = new FormAttachment(mTxtProjectPath, 16);
+    fd_lbProjectPathError.left = new FormAttachment(0, 10);
+    mLbError.setLayoutData(fd_lbProjectPathError);
+
+    mTxtProjectName.addModifyListener(new ModifyListener() {
+
+      @Override
+      public void modifyText(ModifyEvent e) {
+        String name = ((Text) e.getSource()).getText();
+        if (name.isEmpty()) {
+          mErrors.put(Item.Name, "Please enter project name.");
+        } else if (!name.matches("[\\p{L}0-9\\-_ ]*")) {
+          mErrors.put(Item.Name, "Project name contains invalid characters.");
+        } else {
+          mErrors.remove(Item.Name);
+        }
+
+        updateState();
+      }
+    });
+
+    mTxtProjectId.addModifyListener(new ModifyListener() {
+
+      @Override
+      public void modifyText(ModifyEvent e) {
+        String id = ((Text) e.getSource()).getText();
+        if (id.isEmpty()) {
+          mErrors.put(Item.Id, "Please specify project ID.");
+        } else if (!id.matches("[a-z_][a-z0-9_]*(\\.[a-z_][a-z0-9_]*)*")) {
+          mErrors.put(Item.Id, "Project ID format is invalid.");
+        } else {
+          mErrors.remove(Item.Id);
+        }
+
+        updateState();
+      }
+    });
+
+    mTxtProjectPath.addModifyListener(new ModifyListener() {
+
+      @Override
+      public void modifyText(ModifyEvent e) {
+        String path = ((Text) e.getSource()).getText();
+        if (path.isEmpty()) {
+          mErrors.put(Item.Path, "Please set project path.");
+        } else {
+          File f = new File(path).getAbsoluteFile();
+          if (!f.exists()) {
+            mErrors.put(Item.Path, "Project path doesn't exist.");
+          } else if (!f.isDirectory()) {
+            mErrors.put(Item.Path, "Project path is not a directory.");
+          } else if (f.list().length != 0) {
+            mErrors.put(Item.Path, "Project directory must be empty.");
+          } else if (!f.canWrite()) {
+            mErrors.put(Item.Path, "Cannot write project directory.");
+          } else {
+            mErrors.remove(Item.Path);
+          }
+        }
+
+        updateState();
+      }
+    });
+
     mTxtProjectName.setText(mProjectName);
     mTxtProjectId.setText(mProjectId);
     mTxtProjectPath.setText(mProjectPath);
+
     return area;
+
+  }
+
+  @Override
+  protected void createButtonsForButtonBar(Composite parent) {
+    mBtnOk = createButton(parent, IDialogConstants.OK_ID, "Create", true);
+    updateOkButtonState();
+
+    createButton(parent, IDialogConstants.CANCEL_ID, IDialogConstants.CANCEL_LABEL, false);
   }
 
   @Override
@@ -148,12 +234,36 @@ public class CreateProjectDialog extends Dialog {
     mProjectPath = projectPath;
   }
 
+  private enum Item {
+    Name, Id, Path
+  };
+
+  private void updateState() {
+    if (mErrors.isEmpty()) {
+      mLbError.setText("");
+    } else {
+      mLbError.setText(mErrors.firstEntry().getValue());
+    }
+
+    if (mBtnOk != null) {
+      updateOkButtonState();
+    }
+  }
+
+  private void updateOkButtonState() {
+    mBtnOk.setEnabled(mErrors.isEmpty());
+  }
+
   private Text mTxtProjectName;
   private Text mTxtProjectId;
   private Text mTxtProjectPath;
+  private Label mLbError;
+
+  private Button mBtnOk;
+
+  private TreeMap<Item, String> mErrors = new TreeMap<Item, String>();
 
   private String mProjectName = "";
   private String mProjectId = "";
   private String mProjectPath = "";
-
 }
