@@ -18,25 +18,25 @@ package com.samsung.dali.modelconverter.view.dialogs;
  */
 
 import org.eclipse.jface.dialogs.Dialog;
+import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.SelectionAdapter;
+import org.eclipse.swt.events.SelectionEvent;
+import org.eclipse.swt.layout.FormAttachment;
+import org.eclipse.swt.layout.FormData;
+import org.eclipse.swt.layout.FormLayout;
+import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.DirectoryDialog;
-import org.eclipse.swt.widgets.Shell;
-import org.eclipse.swt.layout.FormLayout;
 import org.eclipse.swt.widgets.Label;
-import org.eclipse.swt.SWT;
-import org.eclipse.swt.layout.FormData;
-import org.eclipse.swt.layout.FormAttachment;
+import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Text;
-import org.eclipse.swt.widgets.Button;
-import org.eclipse.swt.events.SelectionAdapter;
-import org.eclipse.swt.events.SelectionEvent;
 
 public class CreateProjectDialog extends Dialog {
 
   public CreateProjectDialog(Shell parentShell) {
     super(parentShell);
-    setShellStyle(SWT.BORDER | SWT.CLOSE | SWT.RESIZE);
+    setShellStyle(SWT.APPLICATION_MODAL | SWT.TITLE);
   }
 
   @Override
@@ -45,68 +45,67 @@ public class CreateProjectDialog extends Dialog {
     Composite area = (Composite) super.createDialogArea(parent);
     area.setLayout(new FormLayout());
 
-    Label mLb2 = new Label(area, SWT.NONE);
-    FormData fd_mLb2 = new FormData();
-    mLb2.setLayoutData(fd_mLb2);
-    mLb2.setText("Project ID:");
-
-    mTxtProjectID = new Text(area, SWT.BORDER);
-    fd_mLb2.top = new FormAttachment(mTxtProjectID, 5, SWT.TOP);
-    FormData fd_mTxtProjectID = new FormData();
-    fd_mTxtProjectID.right = new FormAttachment(100, -10);
-    fd_mTxtProjectID.left = new FormAttachment(mLb2, 6);
-    mTxtProjectID.setLayoutData(fd_mTxtProjectID);
-
-    Label mLb1 = new Label(area, SWT.NONE);
-    fd_mLb2.left = new FormAttachment(mLb1, 0, SWT.LEFT);
-    FormData fd_mLb1 = new FormData();
-    fd_mLb1.top = new FormAttachment(0, 15);
-    fd_mLb1.left = new FormAttachment(0, 10);
-    mLb1.setLayoutData(fd_mLb1);
-    mLb1.setText("Project name:");
+    Label lbProjectName = new Label(area, SWT.NONE);
+    FormData fd_lbProjectName = new FormData();
+    fd_lbProjectName.top = new FormAttachment(0, 15);
+    fd_lbProjectName.left = new FormAttachment(0, 10);
+    lbProjectName.setLayoutData(fd_lbProjectName);
+    lbProjectName.setText("Project Name:");
 
     mTxtProjectName = new Text(area, SWT.BORDER);
-    fd_mTxtProjectID.top = new FormAttachment(mTxtProjectName, 9);
     FormData fd_mTxtProjectName = new FormData();
-    fd_mTxtProjectName.top = new FormAttachment(mLb1, -5, SWT.TOP);
-    fd_mTxtProjectName.left = new FormAttachment(mLb1, 15);
+    fd_mTxtProjectName.top = new FormAttachment(lbProjectName, -5, SWT.TOP);
+    fd_mTxtProjectName.left = new FormAttachment(lbProjectName, 15);
     fd_mTxtProjectName.right = new FormAttachment(100, -96);
     mTxtProjectName.setLayoutData(fd_mTxtProjectName);
 
-    Label mLb3 = new Label(area, SWT.NONE);
-    FormData fd_mLb3 = new FormData();
-    fd_mLb3.left = new FormAttachment(0, 8);
-    fd_mLb3.top = new FormAttachment(0, 90);
-    mLb3.setLayoutData(fd_mLb3);
-    mLb3.setText("Project Directory Path:");
+    Label lbProjectId = new Label(area, SWT.NONE);
+    FormData fd_lbProjectId = new FormData();
+    fd_lbProjectId.top = new FormAttachment(lbProjectName, 15);
+    fd_lbProjectId.left = new FormAttachment(0, 10);
+    lbProjectId.setLayoutData(fd_lbProjectId);
+    lbProjectId.setText("Project ID:");
+
+    mTxtProjectId = new Text(area, SWT.BORDER);
+    FormData fd_mTxtProjectId = new FormData();
+    fd_mTxtProjectId.left = new FormAttachment(lbProjectId, 6);
+    fd_mTxtProjectId.top = new FormAttachment(lbProjectId, -5, SWT.TOP);
+    fd_mTxtProjectId.right = new FormAttachment(100, -10);
+    mTxtProjectId.setLayoutData(fd_mTxtProjectId);
+
+    Label lbProjectDirectory = new Label(area, SWT.NONE);
+    FormData fd_lbProjectDirectory = new FormData();
+    fd_lbProjectDirectory.left = new FormAttachment(0, 10);
+    fd_lbProjectDirectory.top = new FormAttachment(lbProjectId, 15);
+    lbProjectDirectory.setLayoutData(fd_lbProjectDirectory);
+    lbProjectDirectory.setText("Project Directory:");
 
     mTxtProjectPath = new Text(area, SWT.BORDER);
     FormData fd_mTxtProjectPath = new FormData();
-    fd_mTxtProjectPath.top = new FormAttachment(mTxtProjectID, 50);
-    fd_mTxtProjectPath.left = new FormAttachment(mLb2, -2, SWT.LEFT);
+    fd_mTxtProjectPath.top = new FormAttachment(lbProjectDirectory, 8);
+    fd_mTxtProjectPath.left = new FormAttachment(lbProjectId, -2, SWT.LEFT);
     mTxtProjectPath.setLayoutData(fd_mTxtProjectPath);
 
-    Button mBtnBrowse = new Button(area, SWT.NONE);
-    mBtnBrowse.addSelectionListener(new SelectionAdapter() {
+    Button btnBrowse = new Button(area, SWT.NONE);
+    btnBrowse.addSelectionListener(new SelectionAdapter() {
       @Override
       public void widgetSelected(SelectionEvent e) {
         DirectoryDialog dd = new DirectoryDialog(parent.getShell());
         String path = dd.open();
-        if(!path.isEmpty())
-        {
+        if (!path.isEmpty()) {
           mTxtProjectPath.setText(path);
         }
       }
     });
-    fd_mTxtProjectPath.right = new FormAttachment(mBtnBrowse, -6);
+    fd_mTxtProjectPath.right = new FormAttachment(btnBrowse, -6);
     FormData fd_mBtnBrowse = new FormData();
-    fd_mBtnBrowse.top = new FormAttachment(mTxtProjectID, 50);
+    fd_mBtnBrowse.top = new FormAttachment(mTxtProjectPath, 0, SWT.TOP);
     fd_mBtnBrowse.right = new FormAttachment(100, -7);
-    mBtnBrowse.setLayoutData(fd_mBtnBrowse);
-    mBtnBrowse.setText("Browse");
+    btnBrowse.setLayoutData(fd_mBtnBrowse);
+    btnBrowse.setText("Browse");
 
     mTxtProjectName.setText(mProjectName);
-    mTxtProjectID.setText(mProjectID);
+    mTxtProjectId.setText(mProjectId);
     mTxtProjectPath.setText(mProjectPath);
     return area;
   }
@@ -114,14 +113,14 @@ public class CreateProjectDialog extends Dialog {
   @Override
   protected void okPressed() {
     mProjectName = mTxtProjectName.getText();
-    mProjectID = mTxtProjectID.getText();
+    mProjectId = mTxtProjectId.getText();
     mProjectPath = mTxtProjectPath.getText();
     super.okPressed();
   }
 
   @Override
   protected void configureShell(Shell newShell) {
-    newShell.setText( "Create project" );
+    newShell.setText("Create project");
     super.configureShell(newShell);
   }
 
@@ -129,32 +128,32 @@ public class CreateProjectDialog extends Dialog {
     return mProjectName;
   }
 
-  public void setProjectName(String mProjectName) {
-    this.mProjectName = mProjectName;
+  public void setProjectName(String projectName) {
+    mProjectName = projectName;
   }
 
   public String getProjectID() {
-    return mProjectID;
+    return mProjectId;
   }
 
-  public void setProjectID(String mProjectID) {
-    this.mProjectID = mProjectID;
+  public void setProjectID(String projectID) {
+    mProjectId = projectID;
   }
 
   public String getProjectPath() {
     return mProjectPath;
   }
 
-  public void setProjectPath(String mProjectPath) {
-    this.mProjectPath = mProjectPath;
+  public void setProjectPath(String projectPath) {
+    mProjectPath = projectPath;
   }
 
   private Text mTxtProjectName;
-  private Text mTxtProjectID;
+  private Text mTxtProjectId;
   private Text mTxtProjectPath;
 
   private String mProjectName = "";
-  private String mProjectID = "";
+  private String mProjectId = "";
   private String mProjectPath = "";
 
 }
