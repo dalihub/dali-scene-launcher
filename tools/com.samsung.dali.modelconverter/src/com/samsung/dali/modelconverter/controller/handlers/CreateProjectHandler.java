@@ -24,6 +24,7 @@ import java.io.IOException;
 import java.net.URISyntaxException;
 
 import org.eclipse.e4.core.di.annotations.Execute;
+import org.eclipse.jface.dialogs.IDialogConstants;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.swt.widgets.Shell;
 
@@ -42,8 +43,7 @@ public class CreateProjectHandler {
     if (ProjectSwitchConfirmationWorkflow.execute(shell)) {
 
       CreateProjectDialog dialog = new CreateProjectDialog(shell);
-
-      if (dialog.open() == 0) // OK -- not SWT.OK.
+      if (dialog.open() == IDialogConstants.OK_ID)
       {
         String name = dialog.getProjectName();
         String id = dialog.getProjectID();
@@ -52,7 +52,7 @@ public class CreateProjectHandler {
         try {
           ensureProjectDirectoryExists(path);
           extractProjectTemplate(path);
-          instantiateManifestTemplate(path, name, id);
+          instantiateManifestTemplate(path, name, id, Project.DEFAULT_VERSION);
 
           Project project = new Project(path, name, id);
           GlobalData.get().setProject(project);
@@ -88,7 +88,7 @@ public class CreateProjectHandler {
     FileUtils.extractZip(source, new File(path));
   }
 
-  private void instantiateManifestTemplate(String path, String name, String id) throws IOException, URISyntaxException {
+  private void instantiateManifestTemplate(String path, String name, String id, String version) throws IOException, URISyntaxException {
     File source = FileUtils.getBundleFile(DATA_PATH + Project.TIZEN_MANIFEST + ".template");
 
     String manifestContents = null;
@@ -98,7 +98,7 @@ public class CreateProjectHandler {
       manifestContents = new String(data, "UTF-8");
     }
 
-    manifestContents = manifestContents.replace("$(AppLabel)", name).replace("$(AppId)", id);
+    manifestContents = manifestContents.replace("$(AppLabel)", name).replace("$(AppId)", id).replace("$(Version)", version);
 
     File manifest = new File(path + File.separator + Project.TIZEN_MANIFEST);
     try (FileWriter writer = new FileWriter(manifest)) {

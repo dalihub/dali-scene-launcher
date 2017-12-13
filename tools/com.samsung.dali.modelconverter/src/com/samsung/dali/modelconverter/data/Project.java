@@ -51,6 +51,8 @@ public class Project {
     Element elem = xmlDoc.getDocumentElement();
     elem.normalize();
 
+    String version = elem.getAttribute("version");
+
     NodeList elems = elem.getElementsByTagName("watch-application");
     assert elems.getLength() == 1;
 
@@ -64,13 +66,14 @@ public class Project {
     Element labelElem = (Element) elems.item(0);
     String name = labelElem.getTextContent();
 
-    project = new Project(path, name, id);
+    project = new Project(path, name, id, version);
 
     return project;
   }
 
   public static final String TIZEN_MANIFEST = "tizen-manifest.xml";
 
+  public static final String BIN_PATH = "bin" + File.separator;
   public static final String MODELS_PATH = "res" + File.separator + "models" + File.separator + "scenes"
       + File.separator;
   public static final String IMAGES_PATH = "res" + File.separator + "images" + File.separator + "scenes"
@@ -81,7 +84,13 @@ public class Project {
   public static final String SCENE_DLI = "scene.dli";
   public static final String SCENE_BIN = "scene.bin";
 
+  public static final String DEFAULT_VERSION = "0.0.1";
+
   public Project(String path, String name, String id) {
+    this(path, name, id, DEFAULT_VERSION);
+  }
+
+  public Project(String path, String name, String id, String version) {
     assert path != null;
     assert !path.isEmpty();
 
@@ -92,6 +101,7 @@ public class Project {
     mPath = path;
     mName = name;
     mId = id;
+    mVersion = version;
     mDocument = new Document();
   }
 
@@ -105,6 +115,14 @@ public class Project {
 
   public String getId() {
     return mId;
+  }
+
+  public String getVersion() {
+    return mVersion;
+  }
+
+  public String getBinPath() {
+    return mPath + BIN_PATH;
   }
 
   public String getModelsPath() {
@@ -144,5 +162,6 @@ public class Project {
   private String mPath;
   private String mName;
   private String mId;
+  private String mVersion;
   private Document mDocument;
 }

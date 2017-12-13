@@ -48,7 +48,7 @@ public class LoggingProcessRunner {
     return addCommand(cmd, null);
   }
 
-  public void run() {
+  public void run(boolean async) {
     if (mText != null) {
       mText.clearText();
     }
@@ -72,8 +72,10 @@ public class LoggingProcessRunner {
         List<Job> jobs = mCommands; // consume commands
         mCommands = null;
 
+        int result = 0;
         for (Job job : jobs) {
           setBusy(true);
+
           try {
             if (mText != null) {
               mText.appendText(job.mCommand + "\n", SWT.COLOR_BLUE);
@@ -98,18 +100,20 @@ public class LoggingProcessRunner {
             }
 
             // Get process result.
-            int result = proc.waitFor();
-            if (mText != null) {
-              if (result == 0) {
-                mText.appendText("OK.\n", SWT.COLOR_DARK_GREEN);
+            result = proc.waitFor();
+            if (result != 0) {
+              if (mText != null) {
+                mText.appendText("'" + job.mCommand + "' failed.\n", SWT.COLOR_RED);
               }
               else {
-                mText.appendText("'" + job + "' failed.\n", SWT.COLOR_RED);
-                break;
+                MessageDialog.openError(mDisplay.getActiveShell(), "Error", "'" + job.mCommand + "' failed.");
               }
+              break;
             }
-            else if (result != 0) {
-              MessageDialog.openError(mDisplay.getActiveShell(), "Error", "'" + job + "' failed.\n");
+            else {
+              if (mText != null) {
+                mText.appendText("OK.\n", SWT.COLOR_DARK_GREEN);
+              }
             }
           }
           catch (IOException | InterruptedException e) {
@@ -130,10 +134,24 @@ public class LoggingProcessRunner {
             setBusy(false);
           }
         }
+
+        synchronized (this) {
+          mResult = result;
+        }
       }
     };
 
-    r.run();
+    if (async) {
+      Thread t = new Thread(r);
+      t.start();
+    }
+    else {
+      r.run();
+    }
+  }
+
+  public synchronized Integer getResult() {
+    return mResult;
   }
 
   // private
@@ -153,8 +171,11 @@ public class LoggingProcessRunner {
 
   private LinkedList<Job> mCommands = new LinkedList<Job>();
 
+  private Integer mResult;
+
   private LoggingProcessRunner(Display display, StyledText text) {
     mDisplay = display;
+
     if (text != null) {
       mText = new TextAppendHelper(text);
     }
