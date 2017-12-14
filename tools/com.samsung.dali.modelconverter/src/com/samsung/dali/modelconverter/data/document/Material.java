@@ -27,6 +27,16 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class Material {
 
+  public void setId( int id )
+  {
+    mId = id;
+  }
+
+  public int getId()
+  {
+    return mId;
+  }
+
   @Override
   public String toString() {
     String name = "";
@@ -38,7 +48,7 @@ public class Material {
         name += mTextures[i];
       }
     }
-    return name;
+    return mId + " " + name;
   }
 
   public String getTexture(int id) {
@@ -83,6 +93,8 @@ public class Material {
     }
     return keyValues;
   }
+
+  private int mId = 0;
 
   @JsonIgnore // custom JsonAnySetter / Getter.
   private String[] mTextures = new String[4];
