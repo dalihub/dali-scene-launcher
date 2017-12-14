@@ -155,6 +155,12 @@ public class Document {
       m.setId(id);
       ++id;
     }
+
+    id = 1;
+    for (Material m : mMaterials) {
+      m.setId(id);
+      ++id;
+    }
   }
 
   public void organizeOrphans() {
