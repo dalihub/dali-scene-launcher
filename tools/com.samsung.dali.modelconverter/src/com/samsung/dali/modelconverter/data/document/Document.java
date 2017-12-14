@@ -149,6 +149,12 @@ public class Document {
       c.setId(id);
       ++id;
     }
+
+    id = 1;
+    for (Mesh m : mMeshes) {
+      m.setId(id);
+      ++id;
+    }
   }
 
   public void organizeOrphans() {

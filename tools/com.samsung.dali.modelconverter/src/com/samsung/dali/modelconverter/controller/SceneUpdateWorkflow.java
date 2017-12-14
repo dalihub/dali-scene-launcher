@@ -28,6 +28,9 @@ import com.samsung.dali.modelconverter.data.document.Document;
 import com.samsung.dali.modelconverter.view.parts.DliTextPart;
 import com.samsung.dali.modelconverter.view.parts.PropertiesPart;
 import com.samsung.dali.modelconverter.view.parts.SceneGraphPart;
+import com.samsung.dali.modelconverter.view.parts.MeshPart;
+
+import com.samsung.dali.modelconverter.data.document.Mesh;
 
 /*
  * Gets the document from the current project and updates the SceneGraph & Dli views.
@@ -41,6 +44,7 @@ public class SceneUpdateWorkflow {
     Document doc = project.getDocument();
 
     updateSceneGraph(doc, parts);
+    updateMeshes(doc, parts);
 
     String dli = "<ERROR>";
     try {
@@ -63,4 +67,14 @@ public class SceneUpdateWorkflow {
     PartsHelper.getPart(parts, SceneGraphPart.class).populate(provider, listener);
   }
 
+  private static void updateMeshes(Document doc, EPartService parts)
+  {
+    ResourceContentProvider<Mesh> provider = new ResourceContentProvider<Mesh>( doc.getMeshes() );
+
+    PropertiesPart npp = PartsHelper.getPart(parts, PropertiesPart.class);
+    PropertiesPresenter receiver = new PropertiesPresenter(npp);
+    PropertyProviderSelectionChangedListener listener = new PropertyProviderSelectionChangedListener(doc, receiver);
+
+    PartsHelper.getPart(parts, MeshPart.class).populate(provider, listener);
+  }
 }

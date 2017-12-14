@@ -52,9 +52,19 @@ public class Mesh {
     sPrimitiveNames.put("POINTS", Primitive.POINTS);
   }
 
+  public void setId( int id )
+  {
+    mId = id;
+  }
+
+  public int getId()
+  {
+    return mId;
+  }
+
   @Override
   public String toString() {
-    String name = mBinUri;
+    String name = mId + " " + mBinUri;
     if (mPositions != null) {
       name += " @" + mPositions.mByteOffset + "[" + mPositions.mByteLength + "]";
     }
@@ -152,6 +162,8 @@ public class Mesh {
   public void setBitangents(BufferRef br) {
     mBitangents = br;
   }
+
+  private int mId = 0;
 
   @JsonProperty("uri")
   private String mBinUri;
