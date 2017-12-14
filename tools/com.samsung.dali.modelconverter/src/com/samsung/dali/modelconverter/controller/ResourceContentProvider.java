@@ -18,13 +18,14 @@ package com.samsung.dali.modelconverter.controller;
  */
 
 import org.eclipse.jface.viewers.ITreeContentProvider;
+import java.util.ArrayList;
 
 /*
  * Provides descriptions of a given list of resources.
  */
 public class ResourceContentProvider<T> implements ITreeContentProvider {
 
-  public ResourceContentProvider(T[] resources) {
+  public ResourceContentProvider(ArrayList<T> resources) {
     mResources = resources;
   }
 
@@ -33,7 +34,7 @@ public class ResourceContentProvider<T> implements ITreeContentProvider {
    */
   @Override
   public Object[] getElements(Object inputElement) {
-    return mResources;
+    return mResources.toArray();
   }
 
   @Override
@@ -51,5 +52,5 @@ public class ResourceContentProvider<T> implements ITreeContentProvider {
     return false;
   }
 
-  private T[] mResources;
+  private ArrayList<T> mResources;
 }
