@@ -43,9 +43,19 @@ public class Shader {
     mRenderMode = renderMode;
   }
 
+  public void setId( int id )
+  {
+    mId = id;
+  }
+
+  public int getId()
+  {
+    return mId;
+  }
+
   @Override
   public String toString() {
-    return mVertexPath + "^" + mFragmentPath + "^" + mRenderMode;
+    return mId + " " + mVertexPath + "^" + mFragmentPath + "^" + mRenderMode;
   }
 
   @JsonGetter("vertex")
@@ -128,6 +138,8 @@ public class Shader {
       throw new IllegalArgumentException("Unknown type: " + value.getClass().getName());
     }
   }
+
+  private int mId = 0;
 
   @JsonAnyGetter
   public Map<String, Object> get() {

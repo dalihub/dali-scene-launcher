@@ -161,6 +161,12 @@ public class Document {
       m.setId(id);
       ++id;
     }
+
+    id = 1;
+    for (Shader s : mShaders) {
+      s.setId(id);
+      ++id;
+    }
   }
 
   public void organizeOrphans() {

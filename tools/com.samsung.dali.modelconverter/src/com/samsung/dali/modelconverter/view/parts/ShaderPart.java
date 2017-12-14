@@ -48,7 +48,7 @@ public class ShaderPart {
     mTreeViewer.addSelectionChangedListener(listener);
 
     mTreeViewer.setContentProvider(provider);
-    mTreeViewer.setInput(null);
+    mTreeViewer.setInput(provider);
     mTreeViewer.refresh();
   }
 
