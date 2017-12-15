@@ -19,15 +19,18 @@ package com.samsung.dali.modelconverter.controller;
 
 import java.lang.reflect.InvocationTargetException;
 import java.util.Collection;
+import java.util.TreeMap;
 
 import org.eclipse.swt.SWT;
 
 import com.samsung.dali.modelconverter.data.document.MatrixHelper;
+import com.samsung.dali.modelconverter.data.document.BufferRef;
 import com.samsung.dali.modelconverter.data.document.property.Property;
 import com.samsung.dali.modelconverter.view.parts.PropertiesPart;
 import com.samsung.dali.modelconverter.view.widgets.IdPropertyWidget;
 import com.samsung.dali.modelconverter.view.widgets.TextPropertyWidget;
 import com.samsung.dali.modelconverter.view.widgets.TransformPropertyWidget;
+import com.samsung.dali.modelconverter.view.widgets.BufferRefPropertyWidget;
 
 public class PropertiesPresenter implements Property.IReceiver {
 
@@ -73,6 +76,19 @@ public class PropertiesPresenter implements Property.IReceiver {
         // TODO: enable editing
         new IdPropertyWidget(mPart.getComposite(), style).setWritable(false).setRange(values)
             .setSelection((Integer) property.get()).setName(name);
+        break;
+      case BufferRef:
+        BufferRef bufferRef = (BufferRef)( property.get() );
+        new BufferRefPropertyWidget(mPart.getComposite(), style).setValue(bufferRef.mByteOffset, bufferRef.mByteLength).setWritable(false).setName(name);
+        break;
+      case StringArray:
+        Object[] textures = ((TreeMap<String,String>)(property.get())).values().toArray();
+        
+        for(Object o : textures) {
+          String texture = (String)o;
+          new TextPropertyWidget(mPart.getComposite(), style).setWritable(false).setValue( texture ).setName(name);
+        }
+        break;
       default:
         break;
       }
