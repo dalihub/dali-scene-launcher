@@ -17,6 +17,7 @@ package com.samsung.dali.modelconverter.data.document;
  *
  */
 
+import java.util.Arrays;
 import java.util.Map;
 import java.util.TreeMap;
 
@@ -25,9 +26,12 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.fasterxml.jackson.annotation.JsonSetter;
+import com.samsung.dali.modelconverter.data.document.property.EnumCaster;
+import com.samsung.dali.modelconverter.data.document.property.IdList;
+import com.samsung.dali.modelconverter.data.document.property.Property;
 
 @JsonPropertyOrder({ "uri", "attributes", "primitive", "positions", "normals", "textures", "tangents", "bitangents" })
-public class Mesh {
+public class Mesh implements Property.IProvider {
 
   public enum Primitive {
     TRIANGLES, LINES, POINTS
@@ -161,6 +165,18 @@ public class Mesh {
 
   public void setBitangents(BufferRef br) {
     mBitangents = br;
+  }
+
+  @Override
+  public void provideProperties(Document context, Property.IReceiver receiver) {
+    try {
+      receiver.register("Primitive", new Property(this, "Primitive", Property.Type.Id, true,
+          new IdList<Primitive>(Arrays.asList(Primitive.values())), new EnumCaster<Primitive>(),
+          Primitive.class));
+    } catch (NoSuchFieldException | NoSuchMethodException e) {
+      // TODO Auto-generated catch block
+      e.printStackTrace();
+    }
   }
 
   private int mId = 0;
