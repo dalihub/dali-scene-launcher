@@ -89,6 +89,11 @@ public class Property {
 
   public Property(Object object, String fieldName, Type type, boolean isWritable, IValueProvider valueProvider,
       IValueProcessor valueProcessor) throws NoSuchFieldException, NoSuchMethodException {
+    this(object, fieldName, type, isWritable, valueProvider, valueProcessor, null);
+  }
+
+  public Property(Object object, String fieldName, Type type, boolean isWritable, IValueProvider valueProvider,
+      IValueProcessor valueProcessor, Class<?> actualType) throws NoSuchFieldException, NoSuchMethodException {
 
     assert fieldName != null;
     assert !fieldName.isEmpty();
@@ -104,39 +109,37 @@ public class Property {
     Field field = null;
     try {
       field = clazz.getDeclaredField("m" + fieldName);
-    }
-    catch (NoSuchFieldException e) {
+    } catch (NoSuchFieldException e) {
       // Ignore this for now, we'll try getters / setters.
     }
 
     if (field != null && field.isAccessible()) {
       mAccessor = new DirectAccessor(object, field);
-    }
-    else {
+    } else {
       Method getter = clazz.getDeclaredMethod("get" + fieldName);
 
-      Class<?> paramClazz = null;
-      switch (type) {
-      case Id:
-      case Integer:
-        paramClazz = Integer.class;
-        break;
-      case Number:
-        paramClazz = Number.class;
-        break;
-      case String:
-        paramClazz = String.class;
-        break;
-      case Transform:
-        paramClazz = MatrixHelper.createMatrix().getClass();
-        break;
+      if (actualType == null) {
+        switch (type) {
+        case Id:
+        case Integer:
+          actualType = Integer.class;
+          break;
+        case Number:
+          actualType = Number.class;
+          break;
+        case String:
+          actualType = String.class;
+          break;
+        case Transform:
+          actualType = MatrixHelper.createMatrix().getClass();
+          break;
+        }
       }
 
       Method setter = null;
       try {
-        setter = clazz.getDeclaredMethod("set" + fieldName, paramClazz);
-      }
-      catch (NoSuchMethodException e) {
+        setter = clazz.getDeclaredMethod("set" + fieldName, actualType);
+      } catch (NoSuchMethodException e) {
         // It's ok if a class fails to expose a setter, but only for a read-only
         // property.
         if (isWritable) {
