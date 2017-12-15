@@ -28,12 +28,15 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonGetter;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonSetter;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.samsung.dali.modelconverter.data.document.property.Property;
 import com.samsung.dali.modelconverter.data.document.valueholders.FloatHolder;
 import com.samsung.dali.modelconverter.data.document.valueholders.IntHolder;
 import com.samsung.dali.modelconverter.data.document.valueholders.MatrixHolder;
 import com.samsung.dali.modelconverter.data.document.valueholders.VectorHolder;
+import com.samsung.dali.modelconverter.data.document.property.MapElementSetter;
 
-public class Shader {
+public class Shader implements Property.IProvider {
 
   @JsonCreator
   public Shader(@JsonProperty("vertex") String vertexPath, @JsonProperty("fragment") String fragmentPath,
@@ -78,11 +81,11 @@ public class Shader {
     this.mFragmentPath = mFragmentPath;
   }
 
-  public int getRenderMode() {
+  public Integer getRenderMode() {
     return mRenderMode;
   }
 
-  public void setRenderMode(int mRenderMode) {
+  public void setRenderMode(Integer mRenderMode) {
     this.mRenderMode = mRenderMode;
   }
 
@@ -139,6 +142,32 @@ public class Shader {
     }
   }
 
+   @JsonIgnore
+   public Map<String, ValueHolder> getUniformMap() {
+     return mUniforms;
+   }
+
+   @JsonIgnore
+   public void setUniformMap( Map<String, ValueHolder> uniforms ) {
+     mUniforms = uniforms;
+   }
+
+  @Override
+  public void provideProperties(Document context, Property.IReceiver receiver) {
+    try {
+      receiver.register("Vertex Shader", new Property(this, "VertexPath", Property.Type.String, true));
+      receiver.register("Fragment Shader", new Property(this, "FragmentPath", Property.Type.String, true));
+      receiver.register("Render Mode", new Property(this, "RenderMode", Property.Type.Integer, true));
+      receiver.register("Max LOD", new Property(this, "UniformMap", Property.Type.Integer, true, null, new MapElementSetter("uMaxLOD"), Map.class));
+      receiver.register("Enable Tilt", new Property(this, "UniformMap", Property.Type.Number, true, null, new MapElementSetter("uEnableTilt"), Map.class));
+      receiver.register("Diffuse Color", new Property(this, "UniformMap", Property.Type.Color, true, null, new MapElementSetter("uDiffuse"), Map.class));
+      receiver.register("Cube Matrix", new Property(this, "UniformMap", Property.Type.Transform, true, null, new MapElementSetter("uCubeMatrix"), Map.class));
+    } catch (NoSuchFieldException | NoSuchMethodException e) {
+      // TODO Auto-generated catch block
+      e.printStackTrace();
+    }
+  }
+
   private int mId = 0;
 
   @JsonAnyGetter
@@ -152,6 +181,8 @@ public class Shader {
 
   private String mVertexPath;
   private String mFragmentPath;
-  private int mRenderMode;
+  private Integer mRenderMode;
+
+  @JsonIgnore // custom JsonAnySetter / Getter.
   private Map<String, ValueHolder> mUniforms = new TreeMap<String, ValueHolder>();
 }
