@@ -30,7 +30,7 @@ import com.samsung.dali.modelconverter.data.document.property.EnumCaster;
 import com.samsung.dali.modelconverter.data.document.property.IdList;
 import com.samsung.dali.modelconverter.data.document.property.Property;
 
-@JsonPropertyOrder({ "uri", "attributes", "primitive", "positions", "normals", "textures", "tangents", "bitangents" })
+@JsonPropertyOrder({ "uri", "attributes", "primitive", "indices", "positions", "normals", "textures", "tangents", "bitangents" })
 public class Mesh implements Property.IProvider {
 
   public enum Primitive {
@@ -73,22 +73,7 @@ public class Mesh implements Property.IProvider {
       name += " @" + mPositions.mByteOffset + "[" + mPositions.mByteLength + "]";
     }
 
-    String flags = "";
-    if (mIndices != null) {
-      flags += "I";
-    }
-    if (mUvs != null) {
-      flags += "U";
-    }
-    if (mNormals != null) {
-      flags += "N";
-    }
-    if (mTangents != null) {
-      flags += "T";
-    }
-    if (mBitangents != null) {
-      flags += "B";
-    }
+    String flags = getAttributeFlags();
     if (flags.length() > 0) {
       name += " " + flags;
     }
@@ -117,28 +102,55 @@ public class Mesh implements Property.IProvider {
     mAttributes = a;
   }
 
+  public String getAttributeFlags() {
+    String flags = "";
+    if (mIndices != null) {
+      flags += "I";
+    }
+    if (mUvs != null) {
+      flags += "U";
+    }
+    if (mNormals != null) {
+      flags += "N";
+    }
+    if (mTangents != null) {
+      flags += "T";
+    }
+    if (mBitangents != null) {
+      flags += "B";
+    }
+
+    return flags;
+  }
+
+  @JsonGetter("indices")
   public BufferRef getIndices() {
     return mIndices;
   }
 
+  @JsonSetter("indices")
   public void setIndices(BufferRef br) {
     mIndices = br;
   }
 
+  @JsonGetter("positions")
   public BufferRef getPositions() {
     return mPositions;
   }
 
+  @JsonSetter("positions")
   public void setPositions(BufferRef br) {
-    mIndices = br;
+    mPositions = br;
   }
 
+  @JsonGetter("normals")
   public BufferRef getNormals() {
     return mNormals;
   }
 
+  @JsonSetter("normals")
   public void setNormals(BufferRef br) {
-    mIndices = br;
+    mNormals = br;
   }
 
   @JsonGetter("textures")
@@ -151,18 +163,22 @@ public class Mesh implements Property.IProvider {
     mUvs = br;
   }
 
+  @JsonGetter("tangents")
   public BufferRef getTangents() {
     return mTangents;
   }
 
+  @JsonSetter("tangents")
   public void setTangents(BufferRef br) {
     mTangents = br;
   }
 
+  @JsonGetter("bitangents")
   public BufferRef getBitangents() {
     return mBitangents;
   }
 
+  @JsonSetter("bitangents")
   public void setBitangents(BufferRef br) {
     mBitangents = br;
   }
@@ -173,6 +189,26 @@ public class Mesh implements Property.IProvider {
       receiver.register("Primitive", new Property(this, "Primitive", Property.Type.Id, true,
           new IdList<Primitive>(Arrays.asList(Primitive.values())), new EnumCaster<Primitive>(),
           Primitive.class));
+      receiver.register("Flags", new Property(this, "AttributeFlags", Property.Type.String, false));
+      if( null != mIndices) {
+        receiver.register("Indices", new Property(this, "Indices", Property.Type.BufferRef, false));
+      }
+      if( null != mPositions) {
+        receiver.register("Positions", new Property(this, "Positions", Property.Type.BufferRef, false));
+      }
+      if( null != mNormals) {
+        receiver.register("Normals", new Property(this, "Normals", Property.Type.BufferRef, false));
+      }
+      if( null != mUvs) {
+        receiver.register("Uvs", new Property(this, "Uvs", Property.Type.BufferRef, false));
+      }
+      if( null != mTangents) {
+        receiver.register("Tangents", new Property(this, "Tangents", Property.Type.BufferRef, false));
+      }
+      if( null != mBitangents) {
+        receiver.register("Bitangents", new Property(this, "Bitangents", Property.Type.BufferRef, false));
+      }
+
     } catch (NoSuchFieldException | NoSuchMethodException e) {
       // TODO Auto-generated catch block
       e.printStackTrace();

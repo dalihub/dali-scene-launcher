@@ -24,8 +24,9 @@ import com.fasterxml.jackson.annotation.JsonAnyGetter;
 import com.fasterxml.jackson.annotation.JsonAnySetter;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.samsung.dali.modelconverter.data.document.property.Property;
 
-public class Material {
+public class Material implements Property.IProvider {
 
   public void setId( int id )
   {
@@ -92,6 +93,18 @@ public class Material {
       }
     }
     return keyValues;
+  }
+
+  @Override
+  public void provideProperties(Document context, Property.IReceiver receiver) {
+    try {
+      if( null != mTextures) {
+        receiver.register("Textures", new Property(this, "Textures", Property.Type.StringArray, false));
+      }
+    } catch (NoSuchFieldException | NoSuchMethodException e) {
+      // TODO Auto-generated catch block
+      e.printStackTrace();
+    }
   }
 
   private int mId = 0;

@@ -28,12 +28,13 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonGetter;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonSetter;
+import com.samsung.dali.modelconverter.data.document.property.Property;
 import com.samsung.dali.modelconverter.data.document.uniforms.FloatUniform;
 import com.samsung.dali.modelconverter.data.document.uniforms.IntUniform;
 import com.samsung.dali.modelconverter.data.document.uniforms.MatrixUniform;
 import com.samsung.dali.modelconverter.data.document.uniforms.VectorUniform;
 
-public class Shader {
+public class Shader implements Property.IProvider {
 
   @JsonCreator
   public Shader(@JsonProperty("vertex") String vertexPath, @JsonProperty("fragment") String fragmentPath,
@@ -136,6 +137,21 @@ public class Shader {
     }
     else {
       throw new IllegalArgumentException("Unknown type: " + value.getClass().getName());
+    }
+  }
+
+  @Override
+  public void provideProperties(Document context, Property.IReceiver receiver) {
+    try {
+      if( null != mVertexPath) {
+        receiver.register("Vertex Shader", new Property(this, "VertexPath", Property.Type.String, false));
+      }
+      if( null != mFragmentPath) {
+        receiver.register("Fragment Shader", new Property(this, "FragmentPath", Property.Type.String, false));
+      }
+    } catch (NoSuchFieldException | NoSuchMethodException e) {
+      // TODO Auto-generated catch block
+      e.printStackTrace();
     }
   }
 
