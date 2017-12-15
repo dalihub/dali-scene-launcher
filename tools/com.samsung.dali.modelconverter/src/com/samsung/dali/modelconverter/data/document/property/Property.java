@@ -22,13 +22,14 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.Collection;
 
+import com.samsung.dali.modelconverter.data.document.BufferRef;
 import com.samsung.dali.modelconverter.data.document.Document;
 import com.samsung.dali.modelconverter.data.document.MatrixHelper;
 
 public class Property {
 
   public enum Type {
-    Id, String, Integer, Number, Transform,
+    Id, String, Integer, Number, Transform, BufferRef, Color
   }
 
   /*
@@ -132,6 +133,12 @@ public class Property {
           break;
         case Transform:
           actualType = MatrixHelper.createMatrix().getClass();
+          break;
+        case BufferRef:
+          actualType = BufferRef.class;
+          break;
+        case Color:
+          actualType = Number[].class;
           break;
         }
       }

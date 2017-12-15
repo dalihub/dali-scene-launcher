@@ -23,11 +23,14 @@ import java.util.Collection;
 import org.eclipse.swt.SWT;
 
 import com.samsung.dali.modelconverter.data.document.MatrixHelper;
+import com.samsung.dali.modelconverter.data.document.BufferRef;
 import com.samsung.dali.modelconverter.data.document.property.Property;
 import com.samsung.dali.modelconverter.view.parts.PropertiesPart;
 import com.samsung.dali.modelconverter.view.widgets.IdPropertyWidget;
 import com.samsung.dali.modelconverter.view.widgets.TextPropertyWidget;
 import com.samsung.dali.modelconverter.view.widgets.TransformPropertyWidget;
+import com.samsung.dali.modelconverter.view.widgets.BufferRefPropertyWidget;
+import com.samsung.dali.modelconverter.view.widgets.ColorPropertyWidget;
 
 public class PropertiesPresenter implements Property.IReceiver {
 
@@ -46,33 +49,92 @@ public class PropertiesPresenter implements Property.IReceiver {
     Collection<?> values = property.getRange();
     try {
       switch (property.getType()) {
-      case Integer:
+      case Integer: {
         // TODO: enable editing
+        String string = "";
+        
+        Object object = property.get();
+        if( null != object ) {
+          string = Integer.toString( (Integer)object );
+        }
         new TextPropertyWidget(mPart.getComposite(), style).setWritable(false)
-          .setValue(Integer.toString((Integer) property.get())).setName(name);
+          .setValue( string ).setName(name);
         break;
-      case Number:
+      }
+      case Number: {
         // TODO: enable editing
+        String string = "";
+
+        Object object = property.get();
+        if( null != object ) {
+          string = Double.toString( (Double)object );
+        }
         new TextPropertyWidget(mPart.getComposite(), style).setWritable(false)
-          .setValue(Double.toString((Double) property.get())).setName(name);
+          .setValue( string ).setName(name);
         break;
-      case String:
+      }
+      case String: {
         // TODO: enable editing
+        String string = "";
+        Object object = property.get();
+        if( null != object ) {
+          string = (String)object;
+        }
         new TextPropertyWidget(mPart.getComposite(), style).setWritable(false)
-            .setValue((String) property.get()).setName(name);
+            .setValue( string ).setName(name);
         break;
-      case Transform:
-        double[] value = (double[]) property.get();
-        double[] t = MatrixHelper.getTranslation(value);
-        double[] s = MatrixHelper.getScale(value);
-        double[] r = MatrixHelper.getRotation(value);
+      }
+      case Transform: {
+        double[] matrix = { 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0 };
+
+        Object object = property.get();
+
+        if( null != object) {
+          if( object instanceof double[] ) {
+            matrix = (double[])object;
+          }
+          else if( object instanceof Number[] ) {
+            Number[] numberArray = (Number[])object;
+
+            for( int index = 0; index < numberArray.length; index++ ) {
+              matrix[index] = (double)((int)(numberArray[index]));
+            }
+          }
+        }
+
+        double[] t = MatrixHelper.getTranslation(matrix);
+        double[] s = MatrixHelper.getScale(matrix);
+        double[] r = MatrixHelper.getRotation(matrix);
         // TODO: enable editing
         new TransformPropertyWidget(mPart.getComposite(), style).setValue(t, s, r).setWritable(false).setName(name);
         break;
-      case Id:
+      }
+      case Id: {
         // TODO: enable editing
         new IdPropertyWidget(mPart.getComposite(), style).setWritable(false).setRange(values)
             .setSelection((Integer) property.get()).setName(name);
+        break;
+      }
+      case BufferRef: {
+        BufferRef bufferRef = (BufferRef)( property.get() );
+        new BufferRefPropertyWidget(mPart.getComposite(), style).setValue(bufferRef.mByteOffset, bufferRef.mByteLength).setWritable(false).setName(name);
+        break;
+      }
+      case Color: {
+        double[] color = { 1.0, 1.0, 1.0, 1.0 };
+        Object object = property.get();
+        if( null != object ) {
+          Number[] numberArray = (Number[])object;
+          for( int index = 0; index < numberArray.length; index++ ) {
+            Number number = numberArray[index];
+            if( null != number ) {
+              color[index] = (double)number;
+            }
+          }
+        }
+        new ColorPropertyWidget(mPart.getComposite(), style).setValue( color ).setWritable(false).setName(name);
+        break;
+      }
       default:
         break;
       }
