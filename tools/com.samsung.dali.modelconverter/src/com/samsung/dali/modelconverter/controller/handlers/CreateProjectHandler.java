@@ -1,5 +1,3 @@
-package com.samsung.dali.modelconverter.controller.handlers;
-
 /*
  * Copyright (c) 2017 Samsung Electronics Co., Ltd.
  *
@@ -16,6 +14,7 @@ package com.samsung.dali.modelconverter.controller.handlers;
  * limitations under the License.
  *
  */
+package com.samsung.dali.modelconverter.controller.handlers;
 
 import java.io.File;
 import java.io.FileInputStream;

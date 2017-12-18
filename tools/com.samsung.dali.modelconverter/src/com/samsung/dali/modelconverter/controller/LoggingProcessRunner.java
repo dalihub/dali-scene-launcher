@@ -171,7 +171,7 @@ public class LoggingProcessRunner {
 
   private LinkedList<Job> mCommands = new LinkedList<Job>();
 
-  private Integer mResult;
+  private Integer mResult = 0;
 
   private LoggingProcessRunner(Display display, StyledText text) {
     mDisplay = display;
