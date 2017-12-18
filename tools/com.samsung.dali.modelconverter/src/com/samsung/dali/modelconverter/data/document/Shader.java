@@ -28,10 +28,10 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonGetter;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonSetter;
-import com.samsung.dali.modelconverter.data.document.uniforms.FloatUniform;
-import com.samsung.dali.modelconverter.data.document.uniforms.IntUniform;
-import com.samsung.dali.modelconverter.data.document.uniforms.MatrixUniform;
-import com.samsung.dali.modelconverter.data.document.uniforms.VectorUniform;
+import com.samsung.dali.modelconverter.data.document.valueholders.FloatHolder;
+import com.samsung.dali.modelconverter.data.document.valueholders.IntHolder;
+import com.samsung.dali.modelconverter.data.document.valueholders.MatrixHolder;
+import com.samsung.dali.modelconverter.data.document.valueholders.VectorHolder;
 
 public class Shader {
 
@@ -86,11 +86,11 @@ public class Shader {
     this.mRenderMode = mRenderMode;
   }
 
-  public Uniform getUniform(String name) {
-    return (Uniform) mUniforms.get(name);
+  public ValueHolder getUniform(String name) {
+    return (ValueHolder) mUniforms.get(name);
   }
 
-  public void setUniform(String name, Uniform u) {
+  public void setUniform(String name, ValueHolder u) {
     mUniforms.put(name, u);
   }
 
@@ -98,10 +98,10 @@ public class Shader {
   public void add(String key, Object value) {
     // Attempt to add the right type of uniform.
     if (value instanceof Integer) {
-      mUniforms.put(key, new IntUniform((Integer) value));
+      mUniforms.put(key, new IntHolder((Integer) value));
     }
     else if (value instanceof Number) {
-      mUniforms.put(key, new FloatUniform((Number) value));
+      mUniforms.put(key, new FloatHolder((Number) value));
     }
     else if (value instanceof ArrayList<?>) {
       ArrayList<?> arrayList = (ArrayList<?>) value;
@@ -122,12 +122,12 @@ public class Shader {
       case 2:
       case 3:
       case 4:
-        mUniforms.put(key, new VectorUniform(arrayList.toArray(new Number[0])));
+        mUniforms.put(key, new VectorHolder(arrayList.toArray(new Number[0])));
         break;
 
       case 9:
       case 16:
-        mUniforms.put(key, new MatrixUniform(arrayList.toArray(new Number[0])));
+        mUniforms.put(key, new MatrixHolder(arrayList.toArray(new Number[0])));
         break;
 
       default:
@@ -144,8 +144,8 @@ public class Shader {
   @JsonAnyGetter
   public Map<String, Object> get() {
     Map<String, Object> map = new TreeMap<String, Object>();
-    for (Entry<String, Uniform> e : mUniforms.entrySet()) {
-      map.put(e.getKey(), e.getValue().getValue());
+    for (Entry<String, ValueHolder> e : mUniforms.entrySet()) {
+      map.put(e.getKey(), e.getValue().get());
     }
     return map;
   }
@@ -153,5 +153,5 @@ public class Shader {
   private String mVertexPath;
   private String mFragmentPath;
   private int mRenderMode;
-  private Map<String, Uniform> mUniforms = new TreeMap<String, Uniform>();
+  private Map<String, ValueHolder> mUniforms = new TreeMap<String, ValueHolder>();
 }
