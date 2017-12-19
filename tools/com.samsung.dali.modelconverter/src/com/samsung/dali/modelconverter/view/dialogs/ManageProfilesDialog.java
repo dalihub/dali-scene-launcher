@@ -22,8 +22,6 @@ import java.util.List;
 import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.jface.dialogs.IDialogConstants;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.SelectionAdapter;
-import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.layout.FormAttachment;
 import org.eclipse.swt.layout.FormData;
@@ -70,12 +68,6 @@ public class ManageProfilesDialog extends Dialog {
     fd_mBtnCreateProfile.right = new FormAttachment(100, -5);
     fd_mBtnCreateProfile.top = new FormAttachment(0, 27);
     mBtnCreateProfile.setLayoutData(fd_mBtnCreateProfile);
-    mBtnCreateProfile.addSelectionListener(new SelectionAdapter() {
-      @Override
-      public void widgetSelected(SelectionEvent e) {
-
-      }
-    });
     mBtnCreateProfile.setText("Create profile");
 
     refreshProfiles();
@@ -86,10 +78,10 @@ public class ManageProfilesDialog extends Dialog {
 
   @Override
   protected void createButtonsForButtonBar(Composite parent) {
+    createButton(parent, IDialogConstants.CANCEL_ID, IDialogConstants.CANCEL_LABEL, false);
+
     mBtnOk = createButton(parent, IDialogConstants.OK_ID, "Select", true);
     updateOkButtonState();
-
-    createButton(parent, IDialogConstants.CANCEL_ID, IDialogConstants.CANCEL_LABEL, false);
   }
 
   @Override
@@ -115,7 +107,14 @@ public class ManageProfilesDialog extends Dialog {
   }
 
   public void selectProfile(int i) {
+    selectProfile(i, false);
+  }
+
+  public void selectProfile(int i, boolean updateUi) {
     mSelectedProfile = i;
+    if(updateUi) {
+      mCmbProfiles.select(i);
+    }
   }
 
   public void setCreateProfileListener(SelectionListener listener) {
