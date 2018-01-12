@@ -59,7 +59,7 @@ bool SaveScene(Scene3D *scene, std::string fileNamePath,
     }
   } files(fileNamePath, fileNameBinPath);
 
-  return ConvertScene(scene, fileNamePath, files.dliStream, files.binStream);
+  return ConvertScene(scene, fileNameBinPath, files.dliStream, files.binStream);
 }
 
 bool ConvertScene(Scene3D* scene, std::string fileNameBin, std::ostream& outDli,
