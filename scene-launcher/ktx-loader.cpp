@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017 Samsung Electronics Co., Ltd.
+ * Copyright (c) 2018 Samsung Electronics Co., Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,7 +19,7 @@
 #include "ktx-loader.h"
 
 // EXTERNAL INCLUDES
-#include <dali/devel-api/images/pixel-devel.h>
+#include <dali/public-api/images/pixel.h>
 #include <dali/devel-api/images/pixel-data-devel.h>
 #include <memory.h>
 #include <stdio.h>
@@ -49,103 +49,103 @@ struct KtxFileHeader
 /**
  * Convert KTX format to Dali::Pixel::Format
  */
-bool ConvertPixelFormat(const uint32_t ktxPixelFormat, Dali::DevelPixel::Format& format)
+bool ConvertPixelFormat(const uint32_t ktxPixelFormat, Dali::Pixel::Format& format)
 {
   switch( ktxPixelFormat )
   {
     case 0x93B0: // GL_COMPRESSED_RGBA_ASTC_4x4
     {
-      format = Dali::DevelPixel::COMPRESSED_RGBA_ASTC_4x4_KHR;
+      format = Dali::Pixel::COMPRESSED_RGBA_ASTC_4x4_KHR;
       break;
     }
     case 0x93B1: // GL_COMPRESSED_RGBA_ASTC_5x4
     {
-      format = Dali::DevelPixel::COMPRESSED_RGBA_ASTC_5x4_KHR;
+      format = Dali::Pixel::COMPRESSED_RGBA_ASTC_5x4_KHR;
       break;
     }
     case 0x93B2: // GL_COMPRESSED_RGBA_ASTC_5x5
     {
-      format = Dali::DevelPixel::COMPRESSED_RGBA_ASTC_5x5_KHR;
+      format = Dali::Pixel::COMPRESSED_RGBA_ASTC_5x5_KHR;
       break;
     }
     case 0x93B3: // GL_COMPRESSED_RGBA_ASTC_6x5
     {
-      format = Dali::DevelPixel::COMPRESSED_RGBA_ASTC_6x5_KHR;
+      format = Dali::Pixel::COMPRESSED_RGBA_ASTC_6x5_KHR;
       break;
     }
     case 0x93B4: // GL_COMPRESSED_RGBA_ASTC_6x6
     {
-      format = Dali::DevelPixel::COMPRESSED_RGBA_ASTC_6x6_KHR;
+      format = Dali::Pixel::COMPRESSED_RGBA_ASTC_6x6_KHR;
       break;
     }
     case 0x93B5: // GL_COMPRESSED_RGBA_ASTC_8x5
     {
-      format = Dali::DevelPixel::COMPRESSED_RGBA_ASTC_8x5_KHR;
+      format = Dali::Pixel::COMPRESSED_RGBA_ASTC_8x5_KHR;
       break;
     }
     case 0x93B6: // GL_COMPRESSED_RGBA_ASTC_8x6
     {
-      format = Dali::DevelPixel::COMPRESSED_RGBA_ASTC_8x6_KHR;
+      format = Dali::Pixel::COMPRESSED_RGBA_ASTC_8x6_KHR;
       break;
     }
     case 0x93B7: // GL_COMPRESSED_RGBA_ASTC_8x8
     {
-      format = Dali::DevelPixel::COMPRESSED_RGBA_ASTC_8x8_KHR;
+      format = Dali::Pixel::COMPRESSED_RGBA_ASTC_8x8_KHR;
       break;
     }
     case 0x93B8: // GL_COMPRESSED_RGBA_ASTC_10x5
     {
-      format = Dali::DevelPixel::COMPRESSED_RGBA_ASTC_10x5_KHR;
+      format = Dali::Pixel::COMPRESSED_RGBA_ASTC_10x5_KHR;
       break;
     }
     case 0x93B9: // GL_COMPRESSED_RGBA_ASTC_10x6
     {
-      format = Dali::DevelPixel::COMPRESSED_RGBA_ASTC_10x6_KHR;
+      format = Dali::Pixel::COMPRESSED_RGBA_ASTC_10x6_KHR;
       break;
     }
     case 0x93BA: // GL_COMPRESSED_RGBA_ASTC_10x8
     {
-      format = Dali::DevelPixel::COMPRESSED_RGBA_ASTC_10x8_KHR;
+      format = Dali::Pixel::COMPRESSED_RGBA_ASTC_10x8_KHR;
       break;
     }
     case 0x93BB: // GL_COMPRESSED_RGBA_ASTC_10x10
     {
-      format = Dali::DevelPixel::COMPRESSED_RGBA_ASTC_10x10_KHR;
+      format = Dali::Pixel::COMPRESSED_RGBA_ASTC_10x10_KHR;
       break;
     }
     case 0x93BC: // GL_COMPRESSED_RGBA_ASTC_12x10
     {
-      format = Dali::DevelPixel::COMPRESSED_RGBA_ASTC_12x10_KHR;
+      format = Dali::Pixel::COMPRESSED_RGBA_ASTC_12x10_KHR;
       break;
     }
     case 0x93BD: // GL_COMPRESSED_RGBA_ASTC_12x12
     {
-      format = Dali::DevelPixel::COMPRESSED_RGBA_ASTC_12x12_KHR;
+      format = Dali::Pixel::COMPRESSED_RGBA_ASTC_12x12_KHR;
       break;
     }
     case 0x881B: // GL_RGB16F
     {
-      format = Dali::DevelPixel::RGB16F;
+      format = Dali::Pixel::RGB16F;
       break;
     }
     case 0x8815: // GL_RGB32F
     {
-      format = Dali::DevelPixel::RGB32F;
+      format = Dali::Pixel::RGB32F;
       break;
     }
     case 0x8C3A: // GL_R11F_G11F_B10F
     {
-      format = Dali::DevelPixel::RGB32F;
+      format = Dali::Pixel::RGB32F;
       break;
     }
     case 0x8D7C: // GL_RGBA8UI
     {
-      format = Dali::DevelPixel::RGBA8888;
+      format = Dali::Pixel::RGBA8888;
       break;
     }
     case 0x8D7D: // GL_RGB8UI
     {
-      format = Dali::DevelPixel::RGB888;
+      format = Dali::Pixel::RGB888;
       break;
     }
     default:
@@ -227,7 +227,7 @@ bool LoadCubeMapFromKtxFile( const std::string& path, CubeData& cubedata )
     header.pixelHeight = 1u;
   }
 
-  Dali::DevelPixel::Format daliformat = DevelPixel::RGB888;
+  Dali::Pixel::Format daliformat = Pixel::RGB888;
 
   ConvertPixelFormat(header.glInternalFormat, daliformat);
 
@@ -250,7 +250,7 @@ bool LoadCubeMapFromKtxFile( const std::string& path, CubeData& cubedata )
         memcpy(img[face],imgPointer,byteSize);
         imgSize[face] = byteSize;
         imgPointer += byteSize;
-        cubedata.img[face][mipmapLevel] = DevelPixelData::New( img[face], imgSize[face], header.pixelWidth , header.pixelHeight , daliformat, PixelData::FREE );
+        cubedata.img[face][mipmapLevel] = PixelData::New( img[face], imgSize[face], header.pixelWidth , header.pixelHeight , daliformat, PixelData::FREE );
       }
     }
     header.pixelHeight/=2u;
