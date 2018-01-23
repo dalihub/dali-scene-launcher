@@ -333,9 +333,22 @@ public:
     CameraActor camera3d = stage.GetRenderTaskList().GetTask(0).GetCameraActor();
     camera3d.SetInvertYAxis( true );
     camera3d.SetPosition( mCameraPosition );
-    camera3d.SetNearClippingPlane( asset.cameraNear );
-    camera3d.SetFarClippingPlane( asset.cameraFar );
-    camera3d.SetFieldOfView( Radian( Degree( asset.cameraFov ) ) );
+    if(asset.enablePerspective)
+    {
+      camera3d.SetNearClippingPlane( asset.cameraNear );
+      camera3d.SetFarClippingPlane( asset.cameraFar );
+      camera3d.SetFieldOfView( Radian( Degree( asset.cameraFov ) ) );
+    }
+    else
+    {
+      camera3d.SetOrthographicProjection(
+          asset.cameraOrthographicSize.x,
+          asset.cameraOrthographicSize.y,
+          asset.cameraOrthographicSize.z,
+          asset.cameraOrthographicSize.w,
+          asset.cameraNear,
+          asset.cameraFar);
+    }
 
 
     // Setting camera parameters for 3D Scene
