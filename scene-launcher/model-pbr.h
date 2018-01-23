@@ -2,7 +2,7 @@
 #define DALI_SCENE_LAUNCHER_MODELPBR_H
 
 /*
- * Copyright (c) 2017 Samsung Electronics Co., Ltd.
+ * Copyright (c) 2018 Samsung Electronics Co., Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -31,6 +31,13 @@ using namespace Dali;
 
 namespace SceneLauncher
 {
+
+enum NodeType
+{
+  NONE = 0,
+  IMAGE,
+  MESH
+};
 
 class ModelPbr
 {
@@ -127,7 +134,7 @@ public:
    * @param[in] actorSize, used to set the boundary box for touch/click events for this node.
    * @param[in] name of the node.
    */
-  static Actor CreateNode( Shader shader, int blend, TextureSet textureSet, Geometry geometry, Vector3 actorSize, const std::string& name );
+  static Actor CreateNode( Shader shader, int blend, TextureSet textureSet, Geometry geometry, Vector3 actorSize, NodeType imageNode, const std::string& name );
 
 private:
 
