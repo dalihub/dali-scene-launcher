@@ -11,37 +11,64 @@ This format has a JSON structure,
     "name", name of node
     "children", the child nodes of this node
     "matrix", orientation and position of the node
+        If "matrix" is defined, "angle" and "position" tags are ignored.
+    "angle", Vector3: specify "Euler angles", rotate the matrix in X,Y,Z,
+             in that order (also works for 3D mesh)
+    "position", Vector3: set the position of node. (also works for 3D mesh)
+    "size"/"bounds": Vector3: set the size of image/node, can be used the tag "bounds"
+            with the same result.
     "mesh": is the index of the model used
+    "material", index of material used, default index 0
+    "shader", index shader used, default index 0
 
  "meshes", an array of "bin" files:
 
     "uri" "bin" filename
-    "material", index of material used, default index 0
-    "shader" index shader used, default index 0
+          Also accepts a special "uri" name named "quad" that create a geometry
+          without "bin" file and contains the quad vertices with texture UV
+          cordinates only. (Normals and tangents can be hardcoded in shader)
+
     "attributes" attributes used
-
             // bit0, indices
-
             // bit1, positions
-
             // bit2, normals
-
             // bit3, textures
-
             // bit4, tangents
-
             // bit5, bitangents
             indices/positions/normals/textures/tangents/bitangents
                 byteOffset, offset position of the binary file
                 byteLength, length in bytes of attribute
-    "environment", environment textures used for file.
+
 
 "materials", an array which contains the texture files(albedo-metal, normal-rough)
-
+    "texture1-4": texture files names.
+    "environment", environment textures used for file, default index 0.
+    "mipmap", the default value is "false", this flags set if the generation of mipmaps
+               levels is desired for this textures.
 "cameras", array of camera parameters, the default camera used is in index 0
+    "fov", field of view
+         If "orthographic" tag is set, "fov" parameter will be ignored.
+     "orthographic": Vector4: set the view area of an orthographic camera,
+                     [left, right, top, bottom]
+     "near": the closest value of scene
+     "far": the far value of scene
+     "matrix", orientation and position of camera
+
+"animations", it is an array of items, and each item is named, i.e."loaded"; and each item
+            is an array of animations structure.
+        animation structure:
+            "properties":[{
+                "actor": target actor.
+                "property": The actor property to animate
+                "value": value to animate
+                "alphaFunction": type of interpolation
+                "timePeriod": { "delay":<float>  "duration":<float> }
+                "relative": boolean, true/false
+            }]
+            "loop:" boolean, true/false
 
 
-EXAMPLE of DALi-format
+EXAMPLE of DALi-format 3D mesh
 /////////////////////////////////////
 {
     "asset" : { "version" : "1.0" },
@@ -99,19 +126,104 @@ EXAMPLE of DALi-format
     ],
     "materials" : [
         {
-            "albedo_metallic": "scenes/CityScape_Albedo_Metal.png",
-            "normal_rough": "scenes/CityScape_Normal_Rough.png"
+            "texture1": "scenes/CityScape_Albedo_Metal.png",
+            "texture2": "scenes/CityScape_Normal_Rough.png",
+            "mipmap": true
         }
     ],
     "environment" : {
         "cubeSpecular": "scenes/EnviromentTest_Radiance.ktx",
-        "cubeDiffuse": "scenes/EnviromentTest_Irradiance.ktx",
-        "MaxLOD" : 8
+        "cubeDiffuse": "scenes/EnviromentTest_Irradiance.ktx"
     },
     "shaders" : [
         {
             "vertex": "scenes/default_pbr_shader.vsh",
-            "fragment": "scenes/default_pbr_shader.fsh"
+            "fragment": "scenes/default_pbr_shader.fsh",
+            "MaxLOD" : 8
+        }
+    ]
+}
+
+EXAMPLE of DALi-format image based file
+///////////////////////////////////////////////////
+{
+    "asset" : { "version" : "1.0" },
+    "scene" : 0,
+    "scenes" : [ { "nodes" : [ 0 ] } ],
+    "nodes" : [
+        {
+            "name": "TextTest_001",
+            "matrix": [1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0],
+            "children": [ 3, 2, 1 ]
+        },
+        {
+            "material": 2,
+            "mesh": 0,
+            "position": [ 0.0, 0.0, -0.21]
+        },
+        {
+            "material": 1,
+            "mesh": 0,
+            "position": [ 0.0, 0.0, -0.235]
+        },
+        {
+            "material": 0,
+            "mesh": 0,
+            "position": [ 0.0, 0.0, -0.24]
+        }
+    ],
+    "meshes" : [
+        {
+            "uri": "quad"
+        }
+    ],
+    "cameras" : [
+        {
+            "fov": 59.9999,
+            "orthographic": [-0.5, 0.5, 0.5, -0.5],
+            "near": 0.1,
+            "far": 1000,
+            "matrix": [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1]
+        }
+    ],
+    "materials" : [
+        {
+            "texture1": "scenes/Layer_01_Albedo_L.png",
+            "texture2": "scenes/Layer_01_Metallic_Roughness.png",
+            "texture3": "scenes/Layer_01_Normal.png",
+            "environment": 1,
+            "mipmap": false
+        },
+        {
+            "texture1": "scenes/Layer_02_Albedo_L.png",
+            "texture2": "scenes/Layer_02_Metallic_Roughness.png",
+            "texture3": "scenes/Layer_02_Normal.png",
+            "environment": 1,
+            "mipmap": false
+        },
+        {
+            "texture1": "scenes/Layer_03_Albedo_L.png",
+            "texture2": "scenes/Layer_03_Metallic_Roughness.png",
+            "texture3": "scenes/Layer_03_Normal.png",
+            "environment": 1,
+            "mipmap": false
+        }
+    ],
+    "environment" : [
+        {
+        },
+        {
+          "cubeSpecular": "scenes/StudioLight_RAD_003_128_16L.ktx"
+        }
+    ],
+    "shaders" : [
+        {
+            "vertex": "scenes/default_pbr_3tex.vsh",
+            "fragment": "scenes/default_pbr_3tex.fsh",
+            "renderMode":1,
+            "uDiffuse": [ 0.2, 0.2, 0.2 ],
+            "uCubeMatrix": [ 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1 ],
+            "maxLOD": 7
         }
     ]
 }
