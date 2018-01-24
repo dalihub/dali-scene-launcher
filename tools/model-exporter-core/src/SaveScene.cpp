@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017 Samsung Electronics Co., Ltd.
+ * Copyright (c) 2018 Samsung Electronics Co., Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -134,6 +134,10 @@ void SaveNodes(Scene3D *scene, ostream &outDli)
       outDli << "            \"name\": \"" << node->m_Name << "\"";
       cflag = true;
     }
+    if (cflag)
+      outDli << ",\n";
+    outDli << "            \"type\": \"mesh\"";
+    cflag = true;
     if (!node->IsMatrixIdentity())
     {
       if (cflag)
@@ -309,8 +313,8 @@ void SaveMaterials(Scene3D *scene, ostream &outDli)
 {
   outDli << "        {\n";
   outDli << "            \"texture1\": \"scenes/Basic_albedo_metallic.png\",\n";
-  outDli
-      << "            \"texture2\": \"scenes/Basic_normal_roughness.png\",\n";
+  outDli << "            \"texture2\": \"scenes/Basic_normal_roughness.png\",\n";
+  outDli << "            \"mipmap\": \"true\",\n";
   outDli << "            \"environment\": 1\n";
   outDli << "        }\n";
 }

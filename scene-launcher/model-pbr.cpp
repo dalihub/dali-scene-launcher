@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017 Samsung Electronics Co., Ltd.
+ * Copyright (c) 2018 Samsung Electronics Co., Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -160,9 +160,54 @@ Texture ModelPbr::GetSkyboxTexture()
   return mSkyboxTexture;
 }
 
-Actor ModelPbr::CreateNode( Shader shader, int blend, TextureSet textureSet, Geometry geometry, Vector3 actorSize, const std::string& name )
+Actor ModelPbr::CreateNode( Shader shader, int blend, TextureSet textureSet, Geometry geometry, Vector3 actorSize, NodeType imageNode, const std::string& name )
 {
-  Renderer renderer = Renderer::New( geometry, shader );
+
+  Renderer renderer;
+
+  if( imageNode == NodeType::IMAGE )
+  {
+    struct Vertex
+    {
+      Vector3 aPosition;
+      Vector3 aNormal;
+      Vector2 aTexCoord;
+      Vector3 aTangent;
+    };
+    Vertex vertices[] = {
+          { Vector3( -0.5f,-0.5f, 0.0f ), Vector3( 0.0f, 0.0f, 1.0f ), Vector2( 0.0f, 1.0f ), Vector3( 1.0f, 0.0f, 0.0f )},
+          { Vector3(  0.5f,-0.5f, 0.0f ), Vector3( 0.0f, 0.0f, 1.0f ), Vector2( 1.0f, 1.0f ), Vector3( 1.0f, 0.0f, 0.0f )},
+          { Vector3( -0.5f, 0.5f, 0.0f ), Vector3( 0.0f, 0.0f, 1.0f ), Vector2( 0.0f, 0.0f ), Vector3( 1.0f, 0.0f, 0.0f )},
+          { Vector3(  0.5f, 0.5f, 0.0f ), Vector3( 0.0f, 0.0f, 1.0f ), Vector2( 1.0f, 0.0f ), Vector3( 1.0f, 0.0f, 0.0f )}
+        };
+
+    Property::Map property;
+    property.Insert( "aPosition", Property::VECTOR3 );
+    property.Insert( "aNormal", Property::VECTOR3 );
+    property.Insert( "aTexCoord", Property::VECTOR2 );
+    property.Insert( "aTangent", Property::VECTOR3 );
+
+    PropertyBuffer vertexBuffer = PropertyBuffer::New( property );
+
+    vertexBuffer.SetData( vertices, sizeof(vertices) / sizeof(Vertex) );
+
+    // create indices
+    const unsigned short INDEX_QUAD[] = {
+      0, 1, 2, 3
+    };
+    Geometry igeometry = Geometry::New();
+    igeometry.AddVertexBuffer( vertexBuffer );
+    igeometry.SetIndexBuffer( INDEX_QUAD,
+                              sizeof(INDEX_QUAD)/sizeof(INDEX_QUAD[0]));
+
+    igeometry.SetType( Geometry::TRIANGLE_STRIP );
+
+    renderer = Renderer::New( igeometry, shader );
+  }
+  else
+  {
+    renderer = Renderer::New( geometry, shader );
+  }
 
   if( textureSet )
   {
