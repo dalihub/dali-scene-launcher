@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017 Samsung Electronics Co., Ltd.
+ * Copyright (c) 2018 Samsung Electronics Co., Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -45,12 +45,14 @@ struct Asset
     cubeSpecular(),
     cubeDiffuse(),
     cameraMatrix( Matrix::IDENTITY ),
+    cameraOrthographicSize( -1.0f, 1.0f, 1.0f, -1.0 ),
     modelScaleFactor( Vector3::ONE ),
     cameraFov( 60.f ),
     cameraNear( 0.1f ),
     cameraFar( 1000.f ),
     MaxLOD( 8.f ),
-    objModel(true)
+    objModel(true),
+    enablePerspective(true)
   {}
 
   ~Asset()
@@ -68,12 +70,14 @@ struct Asset
   std::string cubeSpecular;
   std::string cubeDiffuse;
   Matrix cameraMatrix;
+  Vector4 cameraOrthographicSize;
   Vector3 modelScaleFactor;
   float cameraFov;
   float cameraNear;
   float cameraFar;
   float MaxLOD;
   bool objModel;
+  bool enablePerspective;
 };
 
 class SceneFileParser

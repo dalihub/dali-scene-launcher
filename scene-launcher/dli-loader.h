@@ -2,7 +2,7 @@
 #define DALI_SCENE_LAUNCHER_DLI_LOADER_H
 
 /*
- * Copyright (c) 2017 Samsung Electronics Co., Ltd.
+ * Copyright (c) 2018 Samsung Electronics Co., Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -47,18 +47,22 @@ struct DliCameraParameters
 {
   DliCameraParameters()
   : cameraMatrix( Matrix::IDENTITY ),
+    cameraOrthographicSize( -1.0f , 1.0f, 1.0f, -1.0f ),
     cameraFov( 60.f ),
     cameraNear( 0.1f ),
-    cameraFar( 1000.f )
+    cameraFar( 1000.f ),
+    enablePerspective(true)
   {}
 
   ~DliCameraParameters()
   {}
 
   Matrix cameraMatrix;
+  Vector4 cameraOrthographicSize;
   float cameraFov;
   float cameraNear;
   float cameraFar;
+  bool enablePerspective;
 };
 
 class DliLoader
@@ -79,11 +83,11 @@ public:
   bool LoadAnimation( Actor toActor, std::vector<Animation> *animArray, const std::string& animationName );
 
 private:
-
+  void ReadAnglePosition(const TreeNode* node, Actor &actor);
   void AddNode( Actor toActor, const TreeNode* addnode );
 
   bool LoadBuffer(const TreeNode* mesh, Geometry geometry, std::string& ebinFilename, unsigned char*& efileContent);
-  void CreateTextures( std::string strTexture[4], Texture eTexture[4] );
+  void CreateTextures( std::string strTexture[4], Texture eTexture[4], bool createMipmaps );
   void CreateEnvironmentTextures( const std::string& cubeDiffuse, const std::string& cubeSpecular, Texture& eDiffuseTexture, Texture& eSpecularTexture );
   void CreateSkyboxTexture( const std::string& skyBoxTexturePath, Texture& skyboxTexture );
 

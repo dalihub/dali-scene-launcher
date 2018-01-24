@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017 Samsung Electronics Co., Ltd.
+ * Copyright (c) 2018 Samsung Electronics Co., Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -376,6 +376,10 @@ void DliLoader::GetCameraParameters( unsigned int eidx, DliCameraParameters* cam
     ReadFloat(node->GetChild( "fov" ), camera->cameraFov );
     ReadFloat(node->GetChild( "near" ), camera->cameraNear );
     ReadFloat(node->GetChild( "far" ), camera->cameraFar );
+    if(ReadVector( node->GetChild( "orthographic" ), camera->cameraOrthographicSize.AsFloat(), 4u ))
+    {
+      camera->enablePerspective = false;
+    }
 
     if((parameter = node->GetChild( "matrix" )))
     {
@@ -463,7 +467,7 @@ void DliLoader::CreateSkyboxTexture( const std::string& skyBoxTexturePath, Textu
   }
 }
 
-void DliLoader::CreateTextures(std::string strTexture[4], Texture eTexture[4] )
+void DliLoader::CreateTextures(std::string strTexture[4], Texture eTexture[4], bool createMipmaps )
 {
   PixelData pixelData;
   for(int i = 0; i < 4; i++)
@@ -479,7 +483,10 @@ void DliLoader::CreateTextures(std::string strTexture[4], Texture eTexture[4] )
 
     eTexture[i] = Texture::New( TextureType::TEXTURE_2D, pixelData.GetPixelFormat(), pixelData.GetWidth(), pixelData.GetHeight() );
     eTexture[i].Upload( pixelData, 0, 0, 0, 0, pixelData.GetWidth(), pixelData.GetHeight() );
-    eTexture[i].GenerateMipmaps();
+    if( createMipmaps )
+    {
+      eTexture[i].GenerateMipmaps();
+    }
   }
 
 }
@@ -576,17 +583,22 @@ bool DliLoader::LoadTextureSetArray( Texture& skyboxTexture )
         }
       }
     }
-    CreateTextures( strTexture, texture );
+    bool createMipmap = false;
+    ReadBool( node->GetChild( "mipmap" ), createMipmap );
+
+    CreateTextures( strTexture, texture, createMipmap );
 
     TextureSet textureSet = TextureSet::New();
 
     Sampler samplerA = Sampler::New();
     samplerA.SetWrapMode( WrapMode::REPEAT, WrapMode::REPEAT );
-    samplerA.SetFilterMode( FilterMode::LINEAR_MIPMAP_LINEAR, FilterMode::LINEAR );
-
     Sampler sampler = Sampler::New();
     sampler.SetWrapMode( WrapMode::CLAMP_TO_EDGE,WrapMode::CLAMP_TO_EDGE, WrapMode::CLAMP_TO_EDGE );
-    sampler.SetFilterMode( FilterMode::LINEAR_MIPMAP_LINEAR, FilterMode::LINEAR );
+    if(createMipmap)
+    {
+      samplerA.SetFilterMode( FilterMode::LINEAR_MIPMAP_LINEAR, FilterMode::LINEAR );
+      sampler.SetFilterMode( FilterMode::LINEAR_MIPMAP_LINEAR, FilterMode::LINEAR );
+    }
 
     unsigned int i = 0u;
     for( ; i < 4u ; ++i )
@@ -692,8 +704,6 @@ bool DliLoader::LoadShaderArray(std::vector<Shader>& shaderArray)
       }
 
     }
-
-
 
 
     RendererOptions renderer;
@@ -987,6 +997,42 @@ bool DliLoader::LoadBuffer( const TreeNode* mesh, Geometry geometry, std::string
   if(!temp)
     return false;
 
+  std::string strQuad("quad");
+
+  if( !strQuad.compare( temp->GetString() ) )
+  {
+    struct Vertex
+    {
+      Vector3 aPosition;
+      Vector2 aTexCoord;
+    };
+    Vertex vertices[] = {
+          { Vector3( -0.5f,-0.5f, 0.0f ), Vector2( 0.0f, 1.0f )},
+          { Vector3(  0.5f,-0.5f, 0.0f ), Vector2( 1.0f, 1.0f )},
+          { Vector3( -0.5f, 0.5f, 0.0f ), Vector2( 0.0f, 0.0f )},
+          { Vector3(  0.5f, 0.5f, 0.0f ), Vector2( 1.0f, 0.0f )}
+        };
+
+    Property::Map property;
+    property.Insert( "aPosition", Property::VECTOR3 );
+    property.Insert( "aTexCoord", Property::VECTOR2 );
+
+    PropertyBuffer vertexBuffer = PropertyBuffer::New( property );
+
+    vertexBuffer.SetData( vertices, sizeof(vertices) / sizeof(Vertex) );
+
+    // create indices
+    const unsigned short INDEX_QUAD[] = {
+      0, 1, 2, 3
+    };
+    geometry.AddVertexBuffer( vertexBuffer );
+    geometry.SetIndexBuffer( INDEX_QUAD,
+                              sizeof(INDEX_QUAD)/sizeof(INDEX_QUAD[0]));
+
+    geometry.SetType( Geometry::TRIANGLE_STRIP );
+    return true;
+  }
+
   if( ebinFilename.compare( temp->GetString() ) )
   {
     ebinFilename = temp->GetString();
@@ -1083,6 +1129,33 @@ bool DliLoader::LoadBuffer( const TreeNode* mesh, Geometry geometry, std::string
   geometry.AddVertexBuffer( tangentBuffer );
 
   return true;
+
+}
+
+void DliLoader::ReadAnglePosition(const TreeNode* node, Actor &actor)
+{
+  float num[16];
+
+  if( ReadVector( node->GetChild( "matrix" ), num, 16 ) )
+  {
+    Dali::Quaternion quaternion( Vector3( num ), Vector3( num + 4 ), Vector3( num + 8 ) );
+    actor.SetOrientation( quaternion );
+    actor.SetPosition( Vector3( num + 12 ) );
+  }
+  else
+  {
+    if( ReadVector( node->GetChild( "angle" ), num, 3 ) )
+    {
+      Dali::Quaternion quaternion( Radian( Degree( (float) num[0] ) ), Radian( Degree( (float) num[1] ) ), Radian( Degree( (float)num[2] ) ) );
+      actor.SetOrientation( quaternion );
+    }
+
+    if( ReadVector( node->GetChild( "position" ), num, 3 ) )
+    {
+      actor.SetPosition( Vector3( num ) );
+    }
+  }
+
 }
 
 void DliLoader::AddNode( Actor toActor, const TreeNode *addnode )
@@ -1091,7 +1164,7 @@ void DliLoader::AddNode( Actor toActor, const TreeNode *addnode )
   Actor actor;
   Vector3 actorSize( Vector3::ONE );
   float floatVec[3];
-  if( ReadVector( addnode->GetChild( "bounds" ), floatVec, 3 ) )
+  if( ReadVector( addnode->GetChild( "bounds" ), floatVec, 3 ) || ReadVector( addnode->GetChild( "size" ), floatVec, 3 ) )
   {
     actorSize = Vector3( floatVec[0], floatVec[1], floatVec[2] );
   }
@@ -1128,18 +1201,7 @@ void DliLoader::AddNode( Actor toActor, const TreeNode *addnode )
                                   nodeName );
   }
 
-  {
-    float num[16];
-    if( ReadVector( addnode->GetChild( "matrix" ), num, 16 ) )
-    {
-      Dali::Quaternion quaternion( Vector3( num ), Vector3( num + 4 ), Vector3( num + 8 ) );
-      if( actor )
-      {
-        actor.SetOrientation( quaternion );
-        actor.SetPosition( Vector3( num + 12 ) );
-      }
-    }
-  }
+  ReadAnglePosition(addnode, actor );
 
   if( actor )
   {
