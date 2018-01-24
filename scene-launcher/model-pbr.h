@@ -2,7 +2,7 @@
 #define DALI_SCENE_LAUNCHER_MODELPBR_H
 
 /*
- * Copyright (c) 2017 Samsung Electronics Co., Ltd.
+ * Copyright (c) 2018 Samsung Electronics Co., Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -31,6 +31,13 @@ using namespace Dali;
 
 namespace SceneLauncher
 {
+
+enum NodeType
+{
+  NONE = 0,
+  IMAGE,
+  MESH
+};
 
 class ModelPbr
 {
