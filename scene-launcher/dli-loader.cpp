@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017 Samsung Electronics Co., Ltd.
+ * Copyright (c) 2018 Samsung Electronics Co., Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,10 +19,12 @@
 #include "dli-loader.h"
 #include "model-pbr.h"
 #include "ktx-loader.h"
+#include "utils.h"
 
 // EXTERNAL INCLUDES
 #include <fstream>
 #include <sstream>
+#include <dali-toolkit/public-api/image-loader/sync-image-loader.h>
 #include <dali/integration-api/debug.h>
 
 using namespace Dali;
@@ -308,57 +310,12 @@ bool ReadFile(unsigned char*& efileContent, std::string directory, std::string f
   return ( result >= 0 );
 }
 
-/**
-* @brief Load a shader source file
-* @param[in] The path of the source file
-* @param[out] The contents of file
-* @return True if the source was read successfully
-*/
-bool LoadShaderCode( const std::string& fullpath, std::vector<char>& output )
-{
-  FILE* f = fopen( fullpath.c_str(), "rb" );
-
-  if( NULL == f )
-  {
-    return false;
-  }
-
-  fseek( f, 0, SEEK_END );
-  size_t size = ftell( f );
-  fseek( f, 0, SEEK_SET );
-  output.resize( size + 1 );
-  std::fill( output.begin(), output.end(), 0 );
-  ssize_t result = fread( output.data(), size, 1, f );
-  fclose( f );
-  return ( result >= 0 );
-}
-
-/**
-* @brief Load vertex and fragment shader source
-* @param[in] shaderVertexFileName is the filepath of Vertex shader
-* @param[in] shaderFragFileName is the filepath of Fragment shader
-* @return the Dali::Shader object
-*/
-Shader LoadShaders( const std::string& shaderVertexFileName, const std::string& shaderFragFileName )
-{
-  Shader shader;
-  std::vector<char> bufV, bufF;
-
-  if( LoadShaderCode( shaderVertexFileName.c_str(), bufV ) )
-  {
-    if( LoadShaderCode( shaderFragFileName.c_str(), bufF ) )
-    {
-      shader = Shader::New( bufV.data() , bufF.data(), Shader::Hint::MODIFIES_GEOMETRY );
-    }
-  }
-  return shader;
-}
-
 }//namespace
 
 
 namespace SceneLauncher
 {
+
 
 void DliLoader::GetCameraParameters( unsigned int eidx, DliCameraParameters* camera )
 {
@@ -635,7 +592,7 @@ bool DliLoader::LoadShaderArray(std::vector<Shader>& shaderArray)
     std::string fragment;
     ReadString( node->GetChild( "vertex" ), vertex );
     ReadString( node->GetChild( "fragment" ), fragment );
-    Shader shader = LoadShaders( ASSET_SHADER_DIR + vertex, ASSET_SHADER_DIR + fragment );
+    Shader shader = CreateShader( ASSET_SHADER_DIR + vertex, ASSET_SHADER_DIR + fragment );
 
     if( !shader )
     {
@@ -1098,7 +1055,6 @@ void DliLoader::AddNode( Actor toActor, const TreeNode *addnode )
 
   if( !( itn = addnode->GetChild( "mesh" ) ) )
   {
-
     actor = Actor::New();
     actor.SetAnchorPoint( AnchorPoint::CENTER );
     actor.SetParentOrigin( ParentOrigin::CENTER );
