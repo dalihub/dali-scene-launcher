@@ -26,6 +26,15 @@
 #include "scene-file-parser.h"
 #include "model-skybox.h"
 
+//#define SHADOWMAPS_CAST // On its own it'll just render the scene with the shadow shader, with the main framebuffer
+//#define SHADOWMAPS_RECEIVE
+//#define SHADOWMAPS_DEBUG  // Enables rendering of the contents of the shadowmap into a quad at the bottom of the screen
+
+#if defined SHADOWMAPS_RECEIVE
+// Enable casting, since there's not a whole lot to receive without it.
+#define SHADOWMAPS_CAST
+#endif
+
 using namespace Dali;
 using namespace Toolkit;
 
@@ -76,6 +85,10 @@ public:
    */
   void InitPbrActor();
 
+#if defined SHADOWMAPS_RECEIVE
+  void InitShadowActor();
+#endif
+
   /**
    * @brief Creates scene actors and setup camera parameters
    */
@@ -98,18 +111,57 @@ public:
   void ApplicationQuit();
 
 private:
+#if defined SHADOWMAPS_CAST
+  void GatherShadowCasters(Actor actor);
+  void UpdateShadowCastersNearFar(CameraActor cam);
+#endif
+
+#if defined SHADOWMAPS_RECEIVE
+  void GatherShadowReceivers(Actor actor);
+  void UpdateShadowReceiversLightSpaceTransform();
+
+  static void CalculateOrthographicProjection(float left, float right, float top, float bottom, float near, float far, Matrix& matrixOut);
+
+  void SetShadowCameraOrthographicProjection(float left, float right,
+      float top, float bottom, float near, float far, bool flipY);
+  void SetShadowCameraPositionOrientation(Vector3 position, Quaternion orientation);
+#endif
+
+#if defined SHADOWMAPS_DEBUG
+  static Geometry NewUnitQuadWithWholeTexture(bool flipY);
+  static Actor CreateTexturedQuadActor(Shader shader, Texture texture, float size, bool flipY);
+#endif
+
   Application& mApplication;
 
   SceneLauncher::SceneFileParser mSceneParser;
+
 
   TextLabel mErrorMessage;
   Timer mDoubleTapTime;
 
   Actor m3dRoot;
   Actor mUiRoot;
+#if defined SHADOWMAPS_RECEIVE
+  Actor mShadowRoot;
+#endif
+
+  CameraActor mMainCamera;
+  CameraActor mUiCamera;
+#if defined SHADOWMAPS_RECEIVE
+  CameraActor mShadowCamera;
+
+  Matrix mShadowCameraWorld;
+  Matrix mShadowCameraProjection;
+#endif
 
   ModelSkybox mSkybox;
+
   SceneLauncher::ModelPbr mModel;
+#if defined SHADOWMAPS_RECEIVE
+  SceneLauncher::ModelPbr mShadowModel;
+#endif
+
   std::vector<std::vector<Animation>> mAnimations;
   std::vector<std::string> mAnimationsName;
 
@@ -125,6 +177,33 @@ private:
   float mZoomLevel;
   bool mDoubleTap;
   bool mRotateEnvironment;
+
+#if defined SHADOWMAPS_CAST
+  Shader mShadowShader;
+
+  struct ShadowCaster
+  {
+    Actor actor;
+    Property::Index uNearFar;
+  };
+
+  std::vector<ShadowCaster> mShadowCasters;
+#endif
+
+#if defined SHADOWMAPS_RECEIVE
+  FrameBuffer mShadowRenderTarget;
+  Texture mShadowRenderTargetTexture;
+
+  struct ShadowReceiver
+  {
+    Actor actor;
+    Property::Index uInverseShadowmapSize;
+    Property::Index uLightSpaceTransform;
+    Property::Index uLightDir;
+  };
+
+  std::vector<ShadowReceiver> mShadowReceivers;
+#endif
 };
 
 #endif // SCENE_LAUNCHER_EXAMPLE_H
