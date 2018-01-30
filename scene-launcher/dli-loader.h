@@ -64,7 +64,6 @@ struct DliCameraParameters
 class DliLoader
 {
 public:
-
   DliLoader();
   ~DliLoader();
 

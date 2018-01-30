@@ -1,0 +1,135 @@
+{
+    "asset" : { "version" : "1.0" },
+    "scene" : 0,
+    "scenes" : [ { "nodes" : [ 0 ] } ],
+    "nodes" : [
+        {
+            "name": "Sahdow_Cube_Test_01",
+            "matrix": [0.01, 0, 0, 0, 0, 0.01, 0, 0, 0, 0, 0.01, 0, 0, 0, 0, 1],
+            "children": [ 1 ]
+        },
+        {
+            "name": "Shadow_Test_Scene",
+            "children": [ 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13 ]
+        },
+        {
+            "name": "Plane_001",
+            "mesh": 0
+        },
+        {
+            "name": "Plane_002",
+            "matrix": [ -1, 0, 0, 0, 0, -1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1],
+            "mesh": 0
+        },
+        {
+            "name": "Cube_001",
+            "matrix": [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, -1, 0.5, 1, 1],
+            "mesh": 1
+        },
+        {
+            "name": "Cube_002",
+            "matrix": [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 1, 0.5, 1, 1],
+            "mesh": 1
+        },
+        {
+            "name": "Cube_003",
+            "matrix": [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, -1, 0.5, -1, 1],
+            "mesh": 1
+        },
+        {
+            "name": "Cube_004",
+            "matrix": [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 1, 0.5, -1, 1],
+            "mesh": 1
+        },
+        {
+            "name": "Cube_005",
+            "matrix": [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 1, 0, 1],
+            "mesh": 1
+        },
+        {
+            "name": "Cube_001b",
+            "matrix": [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, -1, -0.5, 1, 1],
+            "mesh": 1
+        },
+        {
+            "name": "Cube_002b",
+            "matrix": [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 1, -0.5, 1, 1],
+            "mesh": 1
+        },
+        {
+            "name": "Cube_003b",
+            "matrix": [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, -1, -0.5, -1, 1],
+            "mesh": 1
+        },
+        {
+            "name": "Cube_004b",
+            "matrix": [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 1, -0.5, -1, 1],
+            "mesh": 1
+        },
+        {
+            "name": "Cube_005b",
+            "matrix": [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, -1, 0, 1],
+            "mesh": 1
+        },
+        {
+            "name": "Cube_001_Original",
+            "matrix": [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0.498577, 0, 1],
+            "mesh": 1
+        }
+    ], 
+    "meshes" : [
+        {
+            "uri": "Sahdow_Cube_Test_01.bin",
+            "attributes": 63,
+            "primitive": "TRIANGLES",
+            "indices": { "byteOffset": 0, "byteLength": 1200 },
+            "positions": { "byteOffset": 1200, "byteLength": 7200 },
+            "normals": { "byteOffset": 8400, "byteLength": 7200 },
+            "textures": { "byteOffset": 15600, "byteLength": 4800 },
+            "tangents": { "byteOffset": 20400, "byteLength": 7200 },
+            "bitangents": { "byteOffset": 27600, "byteLength": 7200 }
+        }
+        ,{
+            "uri": "Sahdow_Cube_Test_01.bin",
+            "attributes": 63,
+            "primitive": "TRIANGLES",
+            "indices": { "byteOffset": 34800, "byteLength": 72 },
+            "positions": { "byteOffset": 34872, "byteLength": 432 },
+            "normals": { "byteOffset": 35304, "byteLength": 432 },
+            "textures": { "byteOffset": 35736, "byteLength": 288 },
+            "tangents": { "byteOffset": 36024, "byteLength": 432 },
+            "bitangents": { "byteOffset": 36456, "byteLength": 432 }
+        }
+    ], 
+    "cameras" : [
+        {
+            "fov": 59.9999,
+            "near": 0.1,
+            "far": 50,
+            "matrix": [0.889416, 0, -0.457098, 0, -0.282673, 0.785857, -0.550023, 0, 0.359214, 0.618408, 0.698954, 0, 1.49501, 2.10206, 2.79497, 1]
+        }
+    ], 
+    "materials" : [
+        {
+            "texture1": "scenes/Basic_albedo_metallic.png",
+            "texture2": "scenes/Basic_normal_roughness.png",
+            "environment": 1
+        }
+    ],
+    "environment" : [
+        {
+        },
+        {
+            "cubeSpecular": "scenes/EnvironmentTest_Radiance.ktx",
+            "cubeDiffuse": "scenes/EnvironmentTest_Irradiance.ktx"
+        }
+    ],
+    "shaders" : [
+        {
+            "vertex": "scenes/pbr_shadowmap_shader.vsh",
+            "fragment": "scenes/pbr_shadowmap_shader.fsh",
+            "uCubeMatrix": [ 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1 ],
+            "maxLOD": 8
+        }
+    ]
+}
