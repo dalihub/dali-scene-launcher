@@ -20,9 +20,9 @@
 
 // EXTERNAL INCLUDES
 #include <dali/public-api/actors/actor.h>
+#include <dali/public-api/animation/animation.h>
 #include <dali/public-api/common/vector-wrapper.h>
 #include <dali/public-api/rendering/renderer.h>
-#include <dali-toolkit/dali-toolkit.h>
 
 // INTERNAL INCLUDES
 #include "dli-loader.h"
@@ -118,6 +118,17 @@ public:
   Texture GetSkyboxTexture();
 
   /**
+   * @brief Clone the actors and their renderers. Geometry and Shader references will be shared.
+   * Optionally, the vector of shader references and the skybox texture may also be shared.
+   */
+  void Duplicate(ModelPbr& other, bool getShaders = false, bool getSkyboxTexture = false) const;
+
+  /**
+   * @brief Adds the given texture to each actor's renderer's texture set.
+   */
+  void AttachTexture(Texture texture, Sampler sampler);
+
+  /**
    * @brief Create a node with actor, mesh and renderer
    *
    * @param[in] shader used for this node.
@@ -130,8 +141,8 @@ public:
   static Actor CreateNode( Shader shader, int blend, TextureSet textureSet, Geometry geometry, Vector3 actorSize, const std::string& name );
 
 private:
-
   static int mOrderIdx;
+
   Actor mActor;
   std::vector<Shader> mShaderArray;
   Texture mSkyboxTexture;
