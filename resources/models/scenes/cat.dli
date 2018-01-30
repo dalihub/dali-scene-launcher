@@ -1,0 +1,90 @@
+{
+    "asset" : { "version" : "1.0" },
+    "scene" : 0,
+    "scenes" : [ { "nodes" : [ 0 ] } ],
+    "nodes" : [
+        {
+            "name": "ID3",
+            "matrix": [0.01, 0, 0, 0, 0, 0.01, 0, 0, 0, 0, 0.01, 0, 0, 0, 0, 1],
+            "children": [ 1 ]
+        },
+        {
+            "name": "CorrectionPush",
+            "children": [ 3 ]
+        },
+        {
+            "name": "RotationAxis",
+            "children": [ 3 ]
+        },
+        {
+            "name": "ID4",
+            "mesh": 0
+        }
+    ], 
+    "meshes" : [
+        {
+            "uri": "cat.bin",
+            "attributes": 63,
+            "primitive": "TRIANGLES",
+            "indices": { "byteOffset": 0, "byteLength": 12492 },
+            "positions": { "byteOffset": 12492, "byteLength": 74952 },
+            "normals": { "byteOffset": 87444, "byteLength": 74952 },
+            "textures": { "byteOffset": 162396, "byteLength": 49968 },
+            "tangents": { "byteOffset": 212364, "byteLength": 74952 },
+            "bitangents": { "byteOffset": 287316, "byteLength": 74952 }
+        }
+    ], 
+    "cameras" : [
+        {
+            "fov": 60.0,
+            "near": 0.1,
+            "far": 2000.0,
+            "matrix": [1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1000.0, 1.0]
+        }
+    ], 
+    "materials" : [
+        {
+            "texture1": "scenes/Basic_albedo_metallic.png",
+            "texture2": "scenes/Basic_normal_roughness.png",
+            "environment": 1
+        }
+    ],
+    "-skybox" : {
+        "texture": "scenes/EnvironmentTest_Radiance.ktx"
+    },
+    "environment" : [
+        {
+        },
+        {
+            "cubeSpecular": "scenes/EnvironmentTest_Radiance.ktx",
+            "cubeDiffuse": "scenes/EnvironmentTest_Irradiance.ktx"
+        }
+    ],
+    "shaders" : [
+        {
+            "vertex": "scenes/default_pbr_shader.vsh",
+            "fragment": "scenes/default_pbr_shader.fsh",
+            "uCubeMatrix": [ 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1 ],
+            "maxLOD": 8
+        }
+    ],
+	"animations": {
+      "loaded": [
+        {
+          "properties": [{
+            "actor": "RotationAxis",
+            "property": "orientation",
+            "value": [0, -360, 0],
+            "alphaFunction": "LINEAR",
+            "timePeriod": {
+              "delay": 0.0,
+              "duration": 60.0
+            },
+            "gui-builder-timeline-color": "#f5aeb8",
+            "relative": true
+          }],
+          "loop": true
+        }
+      ]
+    }
+}
