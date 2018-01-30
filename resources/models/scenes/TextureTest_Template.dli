@@ -1,0 +1,85 @@
+{
+    "asset" : { "version" : "1.0" },
+    "scene" : 0,
+    "scenes" : [ { "nodes" : [ 0 ] } ],
+    "nodes" : [
+        {
+            "name": "TextureTest_Template",
+            "matrix": [0.01, 0, 0, 0, 0, 0.01, 0, 0, 0, 0, 0.01, 0, 0, 0, 0, 1],
+            "children": [ 1 ]
+        },
+        {
+            "name": "Scene_TextureTest",
+            "matrix": [1, 0, 0, 0, 0, 0, -1, 0, 0, 1, 0, 0, 0, 0, 0, 1],
+            "children": [ 2 ]
+        },
+        {
+            "name": "TestPlane",
+            "matrix": [1, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 1],
+            "mesh": 0
+        }
+    ], 
+    "meshes" : [
+        {
+            "uri": "TextureTest_Template.bin",
+            "attributes": 63,
+            "primitive": "TRIANGLES",
+            "indices": { "byteOffset": 0, "byteLength": 240 },
+            "positions": { "byteOffset": 240, "byteLength": 1440 },
+            "normals": { "byteOffset": 1680, "byteLength": 1440 },
+            "textures": { "byteOffset": 3120, "byteLength": 960 },
+            "tangents": { "byteOffset": 4080, "byteLength": 1440 },
+            "bitangents": { "byteOffset": 5520, "byteLength": 1440 }
+        }
+    ], 
+    "cameras" : [
+        {
+            "fov": 59.9999,
+            "near": 0.1,
+            "far": 10000,
+            "matrix": [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 5, 1]
+        }
+    ], 
+    "materials" : [
+        {
+            "texture1": "scenes/Pattern_01/TestModel_AlbedoMetallic.png",
+            "texture2": "scenes/Pattern_01/TestModel_NormalRoughness.png",
+            "environment": 1
+        }
+    ],
+    "environment" : [
+        {
+        },
+        {
+            "cubeSpecular": "scenes/EnvironmentTest_Radiance.ktx",
+            "cubeDiffuse": "scenes/EnvironmentTest_Irradiance.ktx"
+        }
+    ],
+    "shaders" : [
+        {
+            "vertex": "scenes/pbr_parallax_shader.vsh",
+            "fragment": "scenes/default_pbr_shader.fsh",
+            "uCubeMatrix": [ 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1 ],
+            "maxLOD": 8
+        }
+    ],
+	"animations": {
+      "loaded": [
+        {
+          "properties": [{
+            "actor": "Scene_TextureTest",
+            "property": "orientation",
+            "value": [0, -360, 0],
+            "alphaFunction": "LINEAR",
+            "timePeriod": {
+              "delay": 0.0,
+              "duration": 60.0
+            },
+            "gui-builder-timeline-color": "#f5aeb8",
+            "relative": true
+          }],
+          "loop": true
+        }
+      ]
+    }
+}
