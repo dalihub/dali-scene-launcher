@@ -1,0 +1,212 @@
+{
+    "asset" : { "version" : "1.0" },
+    "scene" : 0,
+    "scenes" : [ { "nodes" : [ 0 ] } ],
+    "nodes" : [
+        {
+            "name": "WatchFace_V_04",
+            "matrix": [0.01, 0, 0, 0, 0, 0.01, 0, 0, 0, 0, 0.01, 0, 0, 0, 0, 1],
+            "children": [ 1, 9 ]
+        },
+        {
+            "name": "Scene_WatchPoC_v3",
+            "children": [ 8, 2, 3, 4, 5, 6, 7 ]
+        },
+        {
+            "name": "Hand_Seconds",
+            "matrix": [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1.47572, 0, 0, 0, 0.047412, 1],
+            "mesh": 0,
+            "material": 1,
+            "shader": 1
+        },
+        {
+            "name": "Hand_Minutes",
+            "matrix": [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1.47572, 0, 0, 0, 0.047412, 1],
+            "mesh": 1,
+            "material": 1,
+            "shader": 1
+        },
+        {
+            "name": "Hand_Hours",
+            "matrix": [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1.47572, 0, 0, 0, 0.047412, 1],
+            "mesh": 2,
+            "material": 1,
+            "shader": 1
+        },
+        {
+            "name": "Complication_Bottom",
+            "matrix": [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, -0.00149, -0.398958, -0.021985, 1],
+            "mesh": 3,
+            "material": 1,
+            "shader": 1
+        },
+        {
+            "name": "Complication_Top",
+            "matrix": [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, -0.00149, 0.401042, -0.044115, 1],
+            "mesh": 4,
+            "material": 1,
+            "shader": 1
+        },
+        {
+            "name": "Steps",
+            "matrix": [1, 0, 0, 0, 0, 0, 1, 0, 0, -1, 0, 0, 0.432928, 0, -0.160685, 1],
+            "mesh": 5,
+            "material": 1,
+            "shader": 1
+        },
+        {
+            "name": "WatchFace",
+            "mesh": 6
+        },
+        {
+            "name": "Light",
+            "matrix": [0.9403037, -0.0596963, 0.3350601, 0,
+              -0.0596963, 0.9403037, 0.3350601, 0,
+              -0.3350601, -0.3350601, 0.8806075, 0,
+              1, 10, 1, 1]
+        }
+    ], 
+    "meshes" : [
+        {
+            "uri": "WatchFace_V_04.bin",
+            "attributes": 63,
+            "primitive": "TRIANGLES",
+            "indices": { "byteOffset": 0, "byteLength": 48 },
+            "positions": { "byteOffset": 48, "byteLength": 288 },
+            "normals": { "byteOffset": 336, "byteLength": 288 },
+            "textures": { "byteOffset": 624, "byteLength": 192 },
+            "tangents": { "byteOffset": 816, "byteLength": 288 },
+            "bitangents": { "byteOffset": 1104, "byteLength": 288 }
+        }
+        ,{
+            "uri": "WatchFace_V_04.bin",
+            "attributes": 63,
+            "primitive": "TRIANGLES",
+            "indices": { "byteOffset": 1392, "byteLength": 48 },
+            "positions": { "byteOffset": 1440, "byteLength": 288 },
+            "normals": { "byteOffset": 1728, "byteLength": 288 },
+            "textures": { "byteOffset": 2016, "byteLength": 192 },
+            "tangents": { "byteOffset": 2208, "byteLength": 288 },
+            "bitangents": { "byteOffset": 2496, "byteLength": 288 }
+        }
+        ,{
+            "uri": "WatchFace_V_04.bin",
+            "attributes": 63,
+            "primitive": "TRIANGLES",
+            "indices": { "byteOffset": 2784, "byteLength": 48 },
+            "positions": { "byteOffset": 2832, "byteLength": 288 },
+            "normals": { "byteOffset": 3120, "byteLength": 288 },
+            "textures": { "byteOffset": 3408, "byteLength": 192 },
+            "tangents": { "byteOffset": 3600, "byteLength": 288 },
+            "bitangents": { "byteOffset": 3888, "byteLength": 288 }
+        }
+        ,{
+            "uri": "WatchFace_V_04.bin",
+            "attributes": 63,
+            "primitive": "TRIANGLES",
+            "indices": { "byteOffset": 4176, "byteLength": 24 },
+            "positions": { "byteOffset": 4200, "byteLength": 144 },
+            "normals": { "byteOffset": 4344, "byteLength": 144 },
+            "textures": { "byteOffset": 4488, "byteLength": 96 },
+            "tangents": { "byteOffset": 4584, "byteLength": 144 },
+            "bitangents": { "byteOffset": 4728, "byteLength": 144 }
+        }
+        ,{
+            "uri": "WatchFace_V_04.bin",
+            "attributes": 63,
+            "primitive": "TRIANGLES",
+            "indices": { "byteOffset": 4872, "byteLength": 24 },
+            "positions": { "byteOffset": 4896, "byteLength": 144 },
+            "normals": { "byteOffset": 5040, "byteLength": 144 },
+            "textures": { "byteOffset": 5184, "byteLength": 96 },
+            "tangents": { "byteOffset": 5280, "byteLength": 144 },
+            "bitangents": { "byteOffset": 5424, "byteLength": 144 }
+        }
+        ,{
+            "uri": "WatchFace_V_04.bin",
+            "attributes": 63,
+            "primitive": "TRIANGLES",
+            "indices": { "byteOffset": 5568, "byteLength": 12 },
+            "positions": { "byteOffset": 5580, "byteLength": 72 },
+            "normals": { "byteOffset": 5652, "byteLength": 72 },
+            "textures": { "byteOffset": 5724, "byteLength": 48 },
+            "tangents": { "byteOffset": 5772, "byteLength": 72 },
+            "bitangents": { "byteOffset": 5844, "byteLength": 72 }
+        }
+        ,{
+            "uri": "WatchFace_V_04.bin",
+            "attributes": 63,
+            "primitive": "TRIANGLES",
+            "indices": { "byteOffset": 5916, "byteLength": 9978 },
+            "positions": { "byteOffset": 15894, "byteLength": 59868 },
+            "normals": { "byteOffset": 75762, "byteLength": 59868 },
+            "textures": { "byteOffset": 135630, "byteLength": 39912 },
+            "tangents": { "byteOffset": 175542, "byteLength": 59868 },
+            "bitangents": { "byteOffset": 235410, "byteLength": 59868 }
+        }
+    ], 
+    "cameras" : [
+        {
+            "fov": 60,
+            "near": 0.1,
+            "far": 50,
+            "matrix": [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 3.43602, 1]
+        }
+    ], 
+    "materials" : [
+        {
+            "texture1": "scenes/watch3D_AlbedoMetallic.png",
+            "texture2": "scenes/watch3D_NormalRoughness.png",
+            "environment": 1
+        },
+		{
+            "texture1": "scenes/Hands_Albedo.png",
+            "texture2": "scenes/Hands_MetallicRoughness.png",
+            "texture3": "scenes/Hands_Normal.png",
+            "environment": 1
+        }
+    ],
+    "environment" : [
+        {
+        },
+        {
+            "cubeSpecular": "scenes/EnvironmentTest_Radiance.ktx"
+        }
+    ],
+    "shaders" : [
+        {
+            "vertex": "scenes/default_pbr_shader.vsh",
+            "fragment": "scenes/default_pbr_shader.fsh",
+            "uCubeMatrix": [ 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1 ],
+            "uDiffuse": [ 0.2, 0.2, 0.2 ],
+           	"maxLOD": 8
+        },
+        {
+            "vertex": "scenes/pbr_parallax_shader.vsh",
+            "fragment": "scenes/watch_WM_v2_3textures_hands.fsh",
+            "uCubeMatrix": [ 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1 ],
+            "uDiffuse": [ 0.2, 0.2, 0.2 ],
+           	"maxLOD": 8,
+            "renderMode": 1
+        }
+    ],
+	"animations": {
+      "loaded": [
+        {
+          "properties": [{
+            "actor": "WatchFace",
+            "property": "orientation",
+            "value": [0, -360, 0],
+            "alphaFunction": "LINEAR",
+            "timePeriod": {
+              "delay": 0.0,
+              "duration": 60.0
+            },
+            "gui-builder-timeline-color": "#f5aeb8",
+            "relative": true
+          }],
+          "loop": true
+        }
+      ]
+    }
+}
