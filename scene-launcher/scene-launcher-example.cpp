@@ -104,6 +104,7 @@ public:
     RenderTask rendertask = Stage::GetCurrent().GetRenderTaskList().CreateTask();
     rendertask.SetCameraActor( cameraUi );
     rendertask.SetSourceActor( mUiRoot );
+    rendertask.SetExclusive( true );
 
     mUiRoot.SetAnchorPoint(AnchorPoint::TOP_LEFT);
     mUiRoot.SetParentOrigin(ParentOrigin::TOP_LEFT);
