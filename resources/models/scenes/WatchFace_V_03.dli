@@ -1,0 +1,120 @@
+{
+    "asset" : { "version" : "1.0" },
+    "scene" : 0,
+    "scenes" : [ { "nodes" : [ 0 ] } ],
+    "nodes" : [
+        {
+            "name": "WatchFace_V_03",
+            "matrix": [0.01, 0, 0, 0, 0, 0.01, 0, 0, 0, 0, 0.01, 0, 0, 0, 0, 1],
+            "children": [ 1 ]
+        },
+        {
+            "name": "Scene_WatchPoC",
+            "children": [ 2 ]
+        },
+        {
+            "name": "Watch_3D",
+            "children": [ 3, 4, 5, 6 ]
+        },
+        {
+            "name": "Layer_01",
+            "matrix": [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, -0.11285, 1],
+            "mesh": 0
+        },
+        {
+            "name": "Layer_02",
+            "matrix": [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0.496862, 0, 0, 0, -0.097898, 1],
+            "mesh": 1
+        },
+        {
+            "name": "Layer_03",
+            "matrix": [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, -0.21458, 1],
+            "mesh": 2
+        },
+        {
+            "name": "Layer_04",
+            "matrix": [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, -0.202499, 1],
+            "mesh": 3
+        }
+    ], 
+    "meshes" : [
+        {
+            "uri": "WatchFace_V_03.bin",
+            "attributes": 63,
+            "primitive": "TRIANGLES",
+            "indices": { "byteOffset": 0, "byteLength": 960 },
+            "positions": { "byteOffset": 960, "byteLength": 5760 },
+            "normals": { "byteOffset": 6720, "byteLength": 5760 },
+            "textures": { "byteOffset": 12480, "byteLength": 3840 },
+            "tangents": { "byteOffset": 16320, "byteLength": 5760 },
+            "bitangents": { "byteOffset": 22080, "byteLength": 5760 }
+        }
+        ,{
+            "uri": "WatchFace_V_03.bin",
+            "attributes": 63,
+            "primitive": "TRIANGLES",
+            "indices": { "byteOffset": 27840, "byteLength": 720 },
+            "positions": { "byteOffset": 28560, "byteLength": 4320 },
+            "normals": { "byteOffset": 32880, "byteLength": 4320 },
+            "textures": { "byteOffset": 37200, "byteLength": 2880 },
+            "tangents": { "byteOffset": 40080, "byteLength": 4320 },
+            "bitangents": { "byteOffset": 44400, "byteLength": 4320 }
+        }
+        ,{
+            "uri": "WatchFace_V_03.bin",
+            "attributes": 63,
+            "primitive": "TRIANGLES",
+            "indices": { "byteOffset": 48720, "byteLength": 2208 },
+            "positions": { "byteOffset": 50928, "byteLength": 13248 },
+            "normals": { "byteOffset": 64176, "byteLength": 13248 },
+            "textures": { "byteOffset": 77424, "byteLength": 8832 },
+            "tangents": { "byteOffset": 86256, "byteLength": 13248 },
+            "bitangents": { "byteOffset": 99504, "byteLength": 13248 }
+        }
+        ,{
+            "uri": "WatchFace_V_03.bin",
+            "attributes": 63,
+            "primitive": "TRIANGLES",
+            "indices": { "byteOffset": 112752, "byteLength": 12 },
+            "positions": { "byteOffset": 112764, "byteLength": 72 },
+            "normals": { "byteOffset": 112836, "byteLength": 72 },
+            "textures": { "byteOffset": 112908, "byteLength": 48 },
+            "tangents": { "byteOffset": 112956, "byteLength": 72 },
+            "bitangents": { "byteOffset": 113028, "byteLength": 72 }
+        }
+    ],
+    "skybox" : {
+        "texture": "scenes/EnvironmentTest_Radiance.ktx"
+    },
+    "cameras" : [
+        {
+            "fov": 30.0,
+            "near": 0.1,
+            "far": 10,
+            "matrix": [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 7.46561, 1]
+        }
+    ], 
+    "materials" : [
+        {
+            "texture1": "scenes/Basic_albedo_metallic.png",
+            "texture2": "scenes/Basic_normal_roughness.png",
+            "environment": 1
+        }
+    ],
+    "environment" : [
+        {
+        },
+        {
+            "cubeSpecular": "scenes/EnvironmentTest_Radiance.ktx",
+            "cubeDiffuse": "scenes/EnvironmentTest_Irradiance.ktx"
+        }
+    ],
+    "shaders" : [
+        {
+            "vertex": "scenes/pbr_parallax_shader.vsh",
+            "fragment": "scenes/default_pbr_shader.fsh",
+            "uCubeMatrix": [ 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1 ],
+            "maxLOD": 8
+        }
+    ]
+}
