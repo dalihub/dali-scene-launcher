@@ -20,7 +20,6 @@
 
 // EXTERNAL INCLUDES
 #include <dali/public-api/actors/actor.h>
-
 #include <dali/public-api/rendering/geometry.h>
 #include <dali/public-api/rendering/renderer.h>
 #include <dali-toolkit/devel-api/builder/json-parser.h>
@@ -68,7 +67,6 @@ struct DliCameraParameters
 class DliLoader
 {
 public:
-
   DliLoader();
   ~DliLoader();
 
