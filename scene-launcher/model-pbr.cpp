@@ -26,6 +26,7 @@
 
 // INTERNAL INCLUDES
 #include "dli-loader.h"
+#include "utils.h"
 
 namespace
 {
@@ -42,6 +43,7 @@ struct Vertices
 
 namespace SceneLauncher
 {
+
 
 int ModelPbr::mOrderIdx = 0;
 
@@ -158,6 +160,34 @@ void ModelPbr::SetShaderAnimationUniform(std::string property, const Property::V
 Texture ModelPbr::GetSkyboxTexture()
 {
   return mSkyboxTexture;
+}
+
+void ModelPbr::Duplicate(ModelPbr& other, bool getShaders, bool getSkyboxTexture) const
+{
+  other.mActor = CloneActor(mActor);
+  if(getShaders)
+  {
+    other.mShaderArray.assign(mShaderArray.begin(), mShaderArray.end());
+  }
+
+  if(getSkyboxTexture)
+  {
+    other.mSkyboxTexture = mSkyboxTexture;
+  }
+}
+
+void ModelPbr::AttachTexture(Texture texture)
+{
+  auto fn = [texture](Actor a){
+    unsigned int numRenderers = a.GetRendererCount();
+    for(unsigned int i = 0; i < numRenderers; ++i)
+    {
+      TextureSet ts = a.GetRendererAt(i).GetTextures();
+      ts.SetTexture(ts.GetTextureCount(), texture);
+    }
+  };
+
+  VisitActor(mActor, fn);
 }
 
 Actor ModelPbr::CreateNode( Shader shader, int blend, TextureSet textureSet, Geometry geometry, Vector3 actorSize, const std::string& name )
