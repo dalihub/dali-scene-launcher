@@ -1,5 +1,5 @@
-#ifndef DALI_SCENE_LAUNCHER_APPLICATION_RESOURCES_H
-#define DALI_SCENE_LAUNCHER_APPLICATION_RESOURCES_H
+#ifndef DALI_SCENE_LAUNCHER_LUA_APPLICATION_BINDINGS_H
+#define DALI_SCENE_LAUNCHER_LUA_APPLICATION_BINDINGS_H
 
 /*
  * Copyright (c) 2018 Samsung Electronics Co., Ltd.
@@ -19,27 +19,29 @@
  */
 
 // EXTERNAL INCLUDES
-#include <string>
+#include <lua.hpp>
 
-class ApplicationResources
+namespace SceneLauncher
 {
-public:
 
-  static ApplicationResources& Get();
+struct LuaBindingFuction
+{
+  LuaBindingFuction()
+  : name{ nullptr },
+    function{ nullptr }
+  {}
 
-  const std::string& GetResourcesPath() const;
-  const std::string& GetImagesPath() const;
-  const std::string& GetModelsPath() const;
-  const std::string& GetShadersPath() const;
-  const std::string& GetLuaScriptsPath() const;
+  LuaBindingFuction( const char* name, lua_CFunction function )
+  : name{ name },
+    function{ function }
+  {}
 
-private:
-  ApplicationResources();
-  ApplicationResources(ApplicationResources const& other); //= delete;
-  ~ApplicationResources();
-
-  struct Impl;
-  Impl* mImpl;
+  const char* name;
+  lua_CFunction function;
 };
 
-#endif // DALI_SCENE_LAUNCHER_APPLICATION_RESOURCES_H
+extern const LuaBindingFuction LUA_BINDING_FUNCTIONS[];
+extern const unsigned int NUMBER_OF_LUA_BINDING_FUNCTIONS;
+} // namespace SceneLauncher
+
+#endif // DALI_SCENE_LAUNCHER_LUA_APPLICATION_BINDINGS_H
