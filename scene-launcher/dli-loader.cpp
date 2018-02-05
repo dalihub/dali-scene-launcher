@@ -409,6 +409,8 @@ bool DliLoader::CreateScene( std::vector<Shader>& shaderArray, Actor toActor, Te
   inodes = Tidx(mNodes, starting_node);
   AddNode( toActor, inodes, shaderArray );
 
+  LoadScripts();
+
   return true;
 }
 
@@ -668,6 +670,11 @@ std::string DliLoader::GetParseError() const
   }
 
   return stream.str();
+}
+
+const std::vector<DliLoader::Script>& DliLoader::GetScripts() const
+{
+  return mScripts;
 }
 
 bool DliLoader::LoadTextureSetArray( Texture& skyboxTexture )
@@ -955,6 +962,38 @@ void DliLoader::AddNode( Actor toActor, const TreeNode *addnode, const std::vect
         AddNode( actor, inodes, shaderArray );
       }
     }
+  }
+}
+
+void DliLoader::LoadScripts()
+{
+  const TreeNode* root = mParser.GetRoot();
+
+  if( nullptr == root )
+  {
+    // nothing to do
+    return;
+  }
+
+  const TreeNode* scriptsRoot = root->GetChild( "scripts" );
+
+  if( nullptr == scriptsRoot )
+  {
+    // nothing to do
+    return;
+  }
+
+  // Resizes the Event vector.
+  mScripts.resize( scriptsRoot->Size() );
+  unsigned int scriptIndex = 0u;
+
+  for( TreeNode::ConstIterator scriptIt = scriptsRoot->CBegin(), scriptEndIt = scriptsRoot->CEnd(); scriptIt != scriptEndIt; ++scriptIt, ++scriptIndex )
+  {
+    const TreeNode& scriptNode = (*scriptIt).second;
+
+    Script& script = *( mScripts.begin() + scriptIndex );
+
+    ReadString( scriptNode.GetChild( "url" ), script.url );
   }
 }
 

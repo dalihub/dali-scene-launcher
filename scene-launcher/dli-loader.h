@@ -27,7 +27,6 @@
 
 #include <dali-toolkit/devel-api/builder/json-parser.h>
 
-
 using namespace Dali;
 using namespace Dali::Toolkit;
 
@@ -53,6 +52,13 @@ class DliLoader
 {
 public:
 
+  struct Script
+  {
+    std::string url;
+  };
+
+public:
+
   DliLoader();
   ~DliLoader();
 
@@ -66,6 +72,8 @@ public:
 
   std::string GetParseError() const;
 
+  const std::vector<Script>& GetScripts() const;
+
 private:
 
   bool LoadTextureSetArray( Texture& eCubeSpecular );
@@ -75,6 +83,8 @@ private:
   bool LoadGeometryArray();
 
   void AddNode( Actor toActor, const TreeNode* addnode, const std::vector<Shader>& shaderArray );
+
+  void LoadScripts();
 
   void CreateSkyboxTexture( const std::string& skyBoxTexturePath, Texture& skyboxTexture );
 
@@ -89,6 +99,7 @@ private:
   std::vector<Geometry> mGeometryArray;
   std::vector<TextureSet> mTextureSetArray;
   std::vector<RendererOptions> mRendererOptionsArray;
+  std::vector<Script> mScripts;
   const TreeNode* mNodes;
   JsonParser mParser;
   std::string mDirectory;
