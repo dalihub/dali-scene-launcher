@@ -119,6 +119,20 @@ void Scene3dLauncher::Create( Application& application )
 
   mDoubleTapTime = Timer::New(150);
   mDoubleTapTime.TickSignal().Connect( this, &Scene3dLauncher::OnDoubleTapTime );
+
+  // Load lua scripts
+  const std::string scriptDir( SCENE_LAUNCHER_LUA_SCRIPTS_DIR );
+  for( const auto& script : mScripts )
+  {
+    mLua.LoadScriptFile( ( scriptDir + script.url ).c_str() );
+  }
+
+  // Call the function OnCreate implemented in lua.
+  mLua.FetchFunction( "OnCreate" );
+
+  mLua.PushParameter( static_cast<void*>( this ) );
+
+  mLua.ExecuteFunction( 0 ); // 0 is the number of returned parameters.
 }
 
 bool Scene3dLauncher::OnDoubleTapTime()
@@ -253,20 +267,27 @@ bool Scene3dLauncher::OnTouch( Actor actor, const TouchData& touch )
 
 void Scene3dLauncher::OnKeyEvent( const KeyEvent& event )
 {
-  if( event.state == KeyEvent::Down )
-  {
-    if( IsKey( event, Dali::DALI_KEY_ESCAPE ) || IsKey( event, Dali::DALI_KEY_BACK ) )
-    {
-      mApplication.Quit();
-    }
-  }
+  // Call the OnKeyEvent function in lua.
+  mLua.FetchFunction( "OnKeyEvent" );
+
+  mLua.PushParameter( event.keyCode );
+  mLua.PushParameter( event.keyModifier );
+  mLua.PushParameter( event.state );
+
+  mLua.ExecuteFunction( 0 ); // 0 is the number of returned parameters.
 }
 
 void Scene3dLauncher::InitPbrActor()
 {
   const SceneLauncher::Asset& asset = mSceneParser.GetAsset();
   SceneLauncher::DliCameraParameters camera;
-  mModel.Init( ASSET_MODEL_DIR + asset.model, Vector3::ZERO, asset.modelScaleFactor, &camera, &mAnimations, &mAnimationsName );
+  mModel.Init( ASSET_MODEL_DIR + asset.model,
+               Vector3::ZERO,
+               asset.modelScaleFactor,
+               &camera,
+               &mAnimations,
+               &mAnimationsName,
+               mScripts );
 
   mModel.GetActor().SetOrientation( mModelOrientation );
   mSceneParser.SetCameraParameters( camera );
@@ -387,6 +408,11 @@ void Scene3dLauncher::PlayAnimation( std::vector<Animation> animationList )
   {
     (*it).Play();
   }
+}
+
+void Scene3dLauncher::ApplicationQuit()
+{
+  mApplication.Quit();
 }
 
 // Entry point for Linux & Tizen applications

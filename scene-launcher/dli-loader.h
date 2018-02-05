@@ -69,6 +69,13 @@ class DliLoader
 {
 public:
 
+  struct Script
+  {
+    std::string url;
+  };
+
+public:
+
   DliLoader();
   ~DliLoader();
 
@@ -82,6 +89,8 @@ public:
 
   std::string GetParseError() const;
 
+  const std::vector<Script>& GetScripts() const;
+
 private:
 
   bool LoadTextureSetArray( Texture& eCubeSpecular );
@@ -91,6 +100,8 @@ private:
   bool LoadGeometryArray();
 
   void AddNode( Actor toActor, const TreeNode* addnode );
+
+  void LoadScripts();
 
   void CreateSkyboxTexture( const std::string& skyBoxTexturePath, Texture& skyboxTexture );
 
@@ -108,6 +119,7 @@ private:
   std::vector<TextureSet> mTextureSetArray;
   std::vector<RendererOptions> mRendererOptionsArray;
   std::vector<Shader>* mShaderArrayPtr;
+  std::vector<Script> mScripts;
   std::string mDirectory;
 
 };

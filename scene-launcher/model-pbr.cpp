@@ -24,9 +24,6 @@
 #include <string.h>
 #include <dali/devel-api/actors/actor-devel.h>
 
-// INTERNAL INCLUDES
-#include "dli-loader.h"
-
 namespace
 {
 
@@ -53,7 +50,13 @@ ModelPbr::~ModelPbr()
 {
 }
 
-void ModelPbr::Init( const std::string& modelUrl, const Vector3& position, const Vector3& size, DliCameraParameters *camera, std::vector<std::vector<Animation>> *animations, std::vector<std::string> *animationsName )
+void ModelPbr::Init( const std::string& modelUrl,
+                     const Vector3& position,
+                     const Vector3& size,
+                     DliCameraParameters *camera,
+                     std::vector<std::vector<Animation>> *animations,
+                     std::vector<std::string> *animationsName,
+                     std::vector<DliLoader::Script>& scripts )
 {
   mActor = Actor::New();
   mActor.SetAnchorPoint( AnchorPoint::CENTER );
@@ -78,6 +81,8 @@ void ModelPbr::Init( const std::string& modelUrl, const Vector3& position, const
           animations->push_back(aniItem);
         }
       }
+
+      scripts = dliLoader.GetScripts();
     }
     else
     {
