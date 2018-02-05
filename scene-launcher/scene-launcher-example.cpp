@@ -19,6 +19,7 @@
 #include <dali/integration-api/debug.h>
 #include <dali-toolkit/dali-toolkit.h>
 #include <dali/devel-api/actors/actor-devel.h>
+#include <lua.hpp>
 
 // INTERNAL INCLUDES
 #include "model-pbr.h"
@@ -38,6 +39,48 @@ const std::string ASSET_MODEL_DIR = SCENE_LAUNCHER_MODEL_DIR;
 const Vector3 CAMERA_DEFAULT_POSITION( 0.0f, 0.0f, 3.5f );
 
 const float TEXT_AUTO_SCROLL_SPEED = 200.f;
+
+const std::string LUA_SCRIPT("io.write(string.format(\"Hello dali-scene-launcher\"))");
+
+void PrintLuaError( lua_State* state )
+{
+  // The error message is on top of the stack.
+  // Fetch it, print it and then pop it off the stack.
+  const char* message = lua_tostring(state, -1);
+  puts(message);
+  lua_pop(state, 1);
+}
+
+void ExecuteLuaScript(const char* buffer)
+{
+  lua_State *state = luaL_newstate();
+
+  // Make standard libraries available in the Lua object
+  luaL_openlibs(state);
+
+  int result;
+
+  // Load the program; this supports both source code and bytecode files.
+  //result = luaL_loadfile(state, filename);
+  result = luaL_loadstring(state, buffer);
+
+  if ( result != LUA_OK )
+  {
+    PrintLuaError(state);
+    return;
+  }
+
+  // Finally, execute the program by calling into it.
+  // Change the arguments if you're not running vanilla Lua code.
+
+  result = lua_pcall(state, 0, LUA_MULTRET, 0);
+
+  if ( result != LUA_OK )
+  {
+    PrintLuaError(state);
+    return;
+  }
+}
 
 } // namespace
 
@@ -87,6 +130,8 @@ public:
    */
   void Create( Application& application )
   {
+    ExecuteLuaScript(LUA_SCRIPT.c_str());
+
     // Disable indicator
     Dali::Window winHandle = application.GetWindow();
     winHandle.ShowIndicator( Dali::Window::INVISIBLE );
