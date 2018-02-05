@@ -32,6 +32,8 @@ const Vector3 CAMERA_DEFAULT_POSITION( 0.0f, 0.0f, 3.5f );
 
 const float TEXT_AUTO_SCROLL_SPEED = 200.f;
 
+
+const char* const SCENE_LAUNCHER_LUA_SCRIPT = SCENE_LAUNCHER_LUA_SCRIPTS_DIR "scene-launcher.lua";
 } // namespace
 
 Scene3dLauncher::Scene3dLauncher( Application& application )
@@ -63,6 +65,16 @@ Scene3dLauncher::~Scene3dLauncher()
 
 void Scene3dLauncher::Create( Application& application )
 {
+  // Load lua scripts
+  mLua.LoadScriptFile( SCENE_LAUNCHER_LUA_SCRIPT );
+
+  // Call the function OnCreate implemented in lua.
+  mLua.FetchFunction( "OnCreate" );
+
+  mLua.PushParameter( reinterpret_cast<void*>( this ) );
+
+  mLua.ExecuteFunction( 0 ); // 0 is the number of returned parameters.
+
   // Disable indicator
   Dali::Window winHandle = application.GetWindow();
   winHandle.ShowIndicator( Dali::Window::INVISIBLE );
@@ -253,13 +265,14 @@ bool Scene3dLauncher::OnTouch( Actor actor, const TouchData& touch )
 
 void Scene3dLauncher::OnKeyEvent( const KeyEvent& event )
 {
-  if( event.state == KeyEvent::Down )
-  {
-    if( IsKey( event, Dali::DALI_KEY_ESCAPE ) || IsKey( event, Dali::DALI_KEY_BACK ) )
-    {
-      mApplication.Quit();
-    }
-  }
+  // Call the OnKeyEvent function in lua.
+  mLua.FetchFunction( "OnKeyEvent" );
+
+  mLua.PushParameter( event.keyCode );
+  mLua.PushParameter( event.keyModifier );
+  mLua.PushParameter( event.state );
+
+  mLua.ExecuteFunction( 0 ); // 0 is the number of returned parameters.
 }
 
 void Scene3dLauncher::InitPbrActor()
@@ -387,6 +400,11 @@ void Scene3dLauncher::PlayAnimation( std::vector<Animation> animationList )
   {
     (*it).Play();
   }
+}
+
+void Scene3dLauncher::ApplicationQuit()
+{
+  mApplication.Quit();
 }
 
 // Entry point for Linux & Tizen applications
