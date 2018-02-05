@@ -25,6 +25,7 @@
 #include "model-pbr.h"
 #include "scene-file-parser.h"
 #include "model-skybox.h"
+#include "lua-interface.h"
 
 using namespace Dali;
 using namespace Toolkit;
@@ -101,6 +102,7 @@ private:
   Application& mApplication;
 
   SceneLauncher::SceneFileParser mSceneParser;
+  SceneLauncher::Lua mLua;
 
   TextLabel mErrorMessage;
   Timer mDoubleTapTime;
