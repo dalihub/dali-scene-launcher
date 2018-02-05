@@ -32,6 +32,7 @@ struct ApplicationResources::Impl
   std::string mImagesPath;
   std::string mModelsPath;
   std::string mShadersPath;
+  std::string mLuaScriptPath;
 };
 
 ApplicationResources& ApplicationResources::Get()
@@ -77,6 +78,15 @@ const std::string& ApplicationResources::GetShadersPath() const
     mImpl->mShadersPath = SCENE_LAUNCHER_SHADER_DIR;
   }
   return mImpl->mShadersPath;
+}
+
+const std::string& ApplicationResources::GetLuaScriptsPath() const
+{
+  if( mImpl->mLuaScriptPath.empty() )
+  {
+    mImpl->mLuaScriptPath = SCENE_LAUNCHER_LUA_SCRIPTS_DIR;
+  }
+  return mImpl->mLuaScriptPath;
 }
 
 ApplicationResources::ApplicationResources()

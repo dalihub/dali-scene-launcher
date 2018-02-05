@@ -25,6 +25,8 @@
 #include "model-pbr.h"
 #include "scene-file-parser.h"
 #include "model-skybox.h"
+#include "lua-application-helper.h"
+#include "lua-interface.h"
 
 using namespace Toolkit;
 
@@ -37,7 +39,7 @@ using namespace Toolkit;
  * - Pan anywhere else to rotate scene
  *
  */
-class Scene3dLauncher : public ConnectionTracker
+class Scene3dLauncher : public Dali::ConnectionTracker
 {
 public:
 
@@ -63,14 +65,6 @@ public:
   bool OnTouch( Actor actor, const TouchData& touch );
 
   /**
-   * @brief Called when any key event is received
-   *
-   * Will use this to quit the application if Back or the Escape key is received
-   * @param[in] event The key event information
-   */
-  void OnKeyEvent( const KeyEvent& event );
-
-  /**
    * @brief Initialise model geometry, shader, position and orientation
    */
   void InitPbrActor();
@@ -94,12 +88,12 @@ public:
 
   void PlayAnimation( std::vector<Animation>& animationList );
 
-  void ApplicationQuit();
-
 private:
   Application& mApplication;
 
   SceneLauncher::FileParser mSceneFileParser;
+  SceneLauncher::Lua mLua;
+  SceneLauncher::LuaApplicationHelper mLuaApplicationHelper;
 
   TextLabel mErrorMessage;
   Timer mDoubleTapTime;
@@ -111,6 +105,8 @@ private:
   SceneLauncher::ModelPbr mModel;
   std::vector<std::vector<Animation>> mAnimations;
   std::vector<std::string> mAnimationsName;
+
+  std::vector<SceneLauncher::DliLoader::Script> mScripts;
 
   Vector3 mCameraPosition;
   Vector2 mPointZ;
