@@ -3,6 +3,7 @@ SET(SCENE_LAUNCHER_SRC_DIR ${ROOT_SRC_DIR}/scene-launcher)
 SET( COMMON_SRCS
        ${SCENE_LAUNCHER_SRC_DIR}/dli-loader.cpp
        ${SCENE_LAUNCHER_SRC_DIR}/ktx-loader.cpp
+       ${SCENE_LAUNCHER_SRC_DIR}/lua-implementation.cpp
        ${SCENE_LAUNCHER_SRC_DIR}/model-pbr.cpp
        ${SCENE_LAUNCHER_SRC_DIR}/model-skybox.cpp
        ${SCENE_LAUNCHER_SRC_DIR}/scene-file-parser.cpp

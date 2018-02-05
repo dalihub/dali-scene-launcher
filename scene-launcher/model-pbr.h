@@ -18,13 +18,8 @@
  *
  */
 
-// EXTERNAL INCLUDES
-#include <dali/public-api/actors/actor.h>
-#include <dali/public-api/common/vector-wrapper.h>
-#include <dali/public-api/animation/animation.h>
-#include <dali/public-api/rendering/geometry.h>
-#include <dali/public-api/rendering/shader.h>
-#include <dali/public-api/rendering/texture-set.h>
+// INTERNAL INCLUDES
+#include "dli-loader.h"
 
 using namespace Dali;
 
@@ -64,8 +59,13 @@ public:
    * @param[in] position The position of the actor.
    * @param[out] animations Vector of array of animations from file.
    * @param[out] animationsName Vector of animations names to be loaded.
+   * @param[out] scripts Vector of script's urls got from the dli file.
    */
-  void Init( Asset& asset, const Vector3& position, std::vector<std::vector<Animation>>& animations, std::vector<std::string>& animationsName );
+  void Init( Asset& asset,
+             const Vector3& position,
+             std::vector<std::vector<Animation>>& animations,
+             std::vector<std::string>& animationsName,
+             std::vector<DliLoader::Script>& scripts );
 
   /**
    * @brief Clears the previously allocated PBR model resources.
