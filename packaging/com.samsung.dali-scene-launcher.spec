@@ -20,6 +20,7 @@ BuildRequires:  pkgconfig(dlog)
 BuildRequires:  gettext-tools
 BuildRequires:  pkgconfig(dali-core)
 BuildRequires:  pkgconfig(dali-toolkit)
+BuildRequires:  pkgconfig(lua)
 
 #need libtzplatform-config for directory if tizen version is >= 3.x
 %if 0%{?tizen_version_major} >= 3
