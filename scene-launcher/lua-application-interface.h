@@ -1,5 +1,5 @@
-#ifndef DALI_SCENE_LAUNCHER_APPLICATION_RESOURCES_H
-#define DALI_SCENE_LAUNCHER_APPLICATION_RESOURCES_H
+#ifndef DALI_SCENE_LAUNCHER_LUA_APPLICATION_INTERFACE_H
+#define DALI_SCENE_LAUNCHER_LUA_APPLICATION_INTERFACE_H
 
 /*
  * Copyright (c) 2018 Samsung Electronics Co., Ltd.
@@ -19,27 +19,22 @@
  */
 
 // EXTERNAL INCLUDES
-#include <string>
+#include <dali/public-api/signals/connection-tracker.h>
 
-class ApplicationResources
+namespace SceneLauncher
+{
+
+class LuaApplicationInterface : public Dali::ConnectionTracker
 {
 public:
 
-  static ApplicationResources& Get();
+  virtual ~LuaApplicationInterface() {}
 
-  const std::string& GetResourcesPath() const;
-  const std::string& GetImagesPath() const;
-  const std::string& GetModelsPath() const;
-  const std::string& GetShadersPath() const;
-  const std::string& GetLuaScriptsPath() const;
-
-private:
-  ApplicationResources();
-  ApplicationResources(ApplicationResources const& other); //= delete;
-  ~ApplicationResources();
-
-  struct Impl;
-  Impl* mImpl;
+  virtual void ConnectKeyEvents() = 0;
+  virtual void QuitApplication() = 0;
 };
 
-#endif // DALI_SCENE_LAUNCHER_APPLICATION_RESOURCES_H
+} // namespace SceneLauncher
+
+#endif // DALI_SCENE_LAUNCHER_LUA_APPLICATION_INTERFACE_H
+

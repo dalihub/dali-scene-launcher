@@ -25,6 +25,8 @@
 #include "model-pbr.h"
 #include "scene-file-parser.h"
 #include "model-skybox.h"
+#include "lua-application-interface.h"
+#include "lua-interface.h"
 
 using namespace Toolkit;
 
@@ -37,7 +39,7 @@ using namespace Toolkit;
  * - Pan anywhere else to rotate scene
  *
  */
-class Scene3dLauncher : public ConnectionTracker
+class Scene3dLauncher : public SceneLauncher::LuaApplicationInterface
 {
 public:
 
@@ -94,12 +96,17 @@ public:
 
   void PlayAnimation( std::vector<Animation>& animationList );
 
-  void ApplicationQuit();
+
+public: // Inherited from SceneLauncher::LuaApplicationInterface
+
+  void ConnectKeyEvents();
+  void QuitApplication();
 
 private:
   Application& mApplication;
 
   SceneLauncher::FileParser mSceneFileParser;
+  SceneLauncher::Lua mLua;
 
   TextLabel mErrorMessage;
   Timer mDoubleTapTime;
@@ -111,6 +118,8 @@ private:
   SceneLauncher::ModelPbr mModel;
   std::vector<std::vector<Animation>> mAnimations;
   std::vector<std::string> mAnimationsName;
+
+  std::vector<SceneLauncher::DliLoader::Script> mScripts;
 
   Vector3 mCameraPosition;
   Vector2 mPointZ;
