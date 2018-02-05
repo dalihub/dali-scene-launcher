@@ -21,6 +21,8 @@
 
  - Ubuntu 14.04 or later
  - Environment created using dali_env script in dali-core repository
+ - Lua development package installed:
+         $ sudo apt-get install lua5.2-dev
 
 ### Building the Repository
 

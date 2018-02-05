@@ -38,6 +38,8 @@ const float TEXT_AUTO_SCROLL_SPEED = 200.f;
 Scene3dLauncher::Scene3dLauncher( Application& application )
 : mApplication( application ),
   mSceneFileParser(),
+  mLua(),
+  mLuaApplicationHelper( application, mLua ),
   mDoubleTapTime(),
   m3dRoot(),
   mUiRoot(),
@@ -115,11 +117,19 @@ void Scene3dLauncher::Create( Application& application )
 
   // Respond to a click anywhere on the stage
   mUiRoot.TouchSignal().Connect( this, &Scene3dLauncher::OnTouch );
-  // Respond to key events
-  stage.KeyEventSignal().Connect( this, &Scene3dLauncher::OnKeyEvent );
 
   mDoubleTapTime = Timer::New(150);
   mDoubleTapTime.TickSignal().Connect( this, &Scene3dLauncher::OnDoubleTapTime );
+
+  // Load lua scripts
+  const std::string scriptDir( ApplicationResources::Get().GetLuaScriptsPath() );
+  for( const auto& script : mScripts )
+  {
+    mLua.LoadScriptFile( ( scriptDir + script.url ).c_str() );
+  }
+
+  // Second stage initialization. It calls an OnConnect() function in Lua and does the KeyEventSignal connection to an OnKeyEvent() function in Lua.
+  mLuaApplicationHelper.Initialize();
 }
 
 bool Scene3dLauncher::OnDoubleTapTime()
@@ -230,21 +240,14 @@ bool Scene3dLauncher::OnTouch( Actor actor, const TouchData& touch )
   return true;
 }
 
-void Scene3dLauncher::OnKeyEvent( const KeyEvent& event )
-{
-  if( event.state == KeyEvent::Down )
-  {
-    if( IsKey( event, Dali::DALI_KEY_ESCAPE ) || IsKey( event, Dali::DALI_KEY_BACK ) )
-    {
-      mApplication.Quit();
-    }
-  }
-}
-
 void Scene3dLauncher::InitPbrActor()
 {
   SceneLauncher::Asset& asset = mSceneFileParser.GetAsset();
-  mModel.Init( asset, Vector3::ZERO, mAnimations, mAnimationsName );
+  mModel.Init( asset,
+               Vector3::ZERO,
+               mAnimations,
+               mAnimationsName,
+               mScripts );
 
   mModel.GetActor().SetOrientation( mModelOrientation );
 }

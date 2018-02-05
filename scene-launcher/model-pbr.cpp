@@ -58,7 +58,11 @@ ModelPbr::~ModelPbr()
 {
 }
 
-void ModelPbr::Init( Asset& asset, const Vector3& position, std::vector<std::vector<Animation>>& animations, std::vector<std::string>& animationsName )
+void ModelPbr::Init( Asset& asset,
+                     const Vector3& position,
+                     std::vector<std::vector<Animation>>& animations,
+                     std::vector<std::string>& animationsName,
+                     std::vector<DliLoader::Script>& scripts )
 {
   mActor = Actor::New();
   mActor.SetAnchorPoint( AnchorPoint::CENTER );
@@ -81,6 +85,8 @@ void ModelPbr::Init( Asset& asset, const Vector3& position, std::vector<std::vec
         dliLoader.LoadAnimation( mActor, aniItem, animationName );
         animations.push_back( aniItem );
       }
+
+      scripts = dliLoader.GetScripts();
     }
     else
     {
