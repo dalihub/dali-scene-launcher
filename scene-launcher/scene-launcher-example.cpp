@@ -34,6 +34,11 @@ const float TEXT_AUTO_SCROLL_SPEED = 200.f;
 
 
 const char* const SCENE_LAUNCHER_LUA_SCRIPT = SCENE_LAUNCHER_LUA_SCRIPTS_DIR "scene-launcher.lua";
+
+const std::string HOUR_0_11_MINUTE_STR( "hour0-11.minute" );
+const std::string HOUR_0_23_MINUTE_STR( "hour0-23.minute" );
+const std::string MINUTE_SECOND_STR( "minute.second" );
+const std::string SECOND_MILLISECOND_STR( "second.millisecond" );
 } // namespace
 
 Scene3dLauncher::Scene3dLauncher( Application& application )
@@ -131,6 +136,8 @@ void Scene3dLauncher::Create( Application& application )
 
   mDoubleTapTime = Timer::New(150);
   mDoubleTapTime.TickSignal().Connect( this, &Scene3dLauncher::OnDoubleTapTime );
+
+  mDataProvider.Start();
 }
 
 bool Scene3dLauncher::OnDoubleTapTime()
@@ -275,6 +282,11 @@ void Scene3dLauncher::OnKeyEvent( const KeyEvent& event )
   mLua.ExecuteFunction( 0 ); // 0 is the number of returned parameters.
 }
 
+void Scene3dLauncher::SetUpEvents()
+{
+  mDataProvider.Register( this );
+}
+
 void Scene3dLauncher::InitPbrActor()
 {
   const SceneLauncher::Asset& asset = mSceneParser.GetAsset();
@@ -369,6 +381,8 @@ void Scene3dLauncher::CreateModel()
   {
     PlayAnimation( mAnimations[0] );
   }
+
+  SetUpEvents();
 }
 
 void Scene3dLauncher::DisplayError( const std::string& errorMessage )
@@ -405,6 +419,10 @@ void Scene3dLauncher::PlayAnimation( std::vector<Animation> animationList )
 void Scene3dLauncher::ApplicationQuit()
 {
   mApplication.Quit();
+}
+
+void Scene3dLauncher::OnNotification( const SceneLauncher::DataProvider::Notification& notification )
+{
 }
 
 // Entry point for Linux & Tizen applications
