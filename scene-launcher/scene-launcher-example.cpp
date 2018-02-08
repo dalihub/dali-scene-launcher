@@ -15,18 +15,11 @@
  *
  */
 
+// CLASS HEADER
+#include "scene-launcher-example.h"
+
 // EXTERNAL INCLUDES
 #include <dali/integration-api/debug.h>
-#include <dali-toolkit/dali-toolkit.h>
-#include <dali/devel-api/actors/actor-devel.h>
-
-// INTERNAL INCLUDES
-#include "model-pbr.h"
-#include "scene-file-parser.h"
-#include "model-skybox.h"
-
-using namespace Dali;
-using namespace Toolkit;
 
 namespace
 {
@@ -41,437 +34,360 @@ const float TEXT_AUTO_SCROLL_SPEED = 200.f;
 
 } // namespace
 
-/*
- *
- * This example shows a Physically Based Rendering illumination model.
- *
- * - Double-tap to toggle between 3D models.
- * - Pan up/down on left side of screen to zoom out/in
- * - Pan anywhere else to rotate scene
- *
-*/
-
-class Scene3dLauncher : public ConnectionTracker
+Scene3dLauncher::Scene3dLauncher( Application& application )
+: mApplication( application ),
+  mSceneParser(),
+  mDoubleTapTime(),
+  m3dRoot(),
+  mUiRoot(),
+  mAnimations(),
+  mAnimationsName(),
+  mCameraPosition( CAMERA_DEFAULT_POSITION ),
+  mCameraOrientationInv(),
+  mModelOrientation(),
+  mCubeOrientation(),
+  mZoomLevel( 1.f ),
+  mDoubleTap( false ),
+  mRotateEnvironment( true )
 {
-public:
+  mAnimationsName.push_back("loaded");
 
-  Scene3dLauncher( Application& application )
-  : mApplication( application ),
-    mSceneParser(),
-    mDoubleTapTime(),
-    m3dRoot(),
-    mUiRoot(),
-    mAnimations(),
-    mAnimationsName(),
-    mCameraPosition( CAMERA_DEFAULT_POSITION ),
-    mCameraOrientationInv(),
-    mModelOrientation(),
-    mCubeOrientation(),
-    mZoomLevel( 1.f ),
-    mDoubleTap( false ),
-    mRotateEnvironment( true )
+  // Connect to the Application's Init signal
+  mApplication.InitSignal().Connect( this, &Scene3dLauncher::Create );
+}
+
+Scene3dLauncher::~Scene3dLauncher()
+{
+  // Nothing to do here;
+}
+
+void Scene3dLauncher::Create( Application& application )
+{
+  // Disable indicator
+  Dali::Window winHandle = application.GetWindow();
+  winHandle.ShowIndicator( Dali::Window::INVISIBLE );
+
+  // Get a handle to the stage
+  Stage stage = Stage::GetCurrent();
+  stage.SetBackgroundColor( Color::BLACK );
+
+  // Creating root and camera actor for rendertask for 3D Scene rendering
+  mUiRoot = Actor::New();
+  m3dRoot = Actor::New();
+  CameraActor cameraUi = CameraActor::New( stage.GetSize() );
+  cameraUi.SetAnchorPoint(AnchorPoint::CENTER);
+  cameraUi.SetParentOrigin(ParentOrigin::CENTER);
+  RenderTask rendertask = Stage::GetCurrent().GetRenderTaskList().CreateTask();
+  rendertask.SetCameraActor( cameraUi );
+  rendertask.SetSourceActor( mUiRoot );
+  rendertask.SetExclusive( true );
+
+  mUiRoot.SetAnchorPoint(AnchorPoint::TOP_LEFT);
+  mUiRoot.SetParentOrigin(ParentOrigin::TOP_LEFT);
+  mUiRoot.SetSize(stage.GetSize());
+
+  m3dRoot.SetAnchorPoint(AnchorPoint::CENTER);
+  m3dRoot.SetParentOrigin(ParentOrigin::CENTER);
+
+  stage.Add( cameraUi );
+  stage.Add( mUiRoot );
+  stage.Add( m3dRoot );
+
+  try
   {
-    mAnimationsName.push_back("loaded");
+    // Read models from the filesystem
+    mSceneParser.ReadPbrModelFolder( MODEL_DIR_URL );
 
-    // Connect to the Application's Init signal
-    mApplication.InitSignal().Connect( this, &Scene3dLauncher::Create );
+    CreateModel();
+  }
+  catch( DaliException& e )
+  {
+    std::stringstream stream;
+    stream << "Error while loading " << mSceneParser.GetCurrentModelFile() << ". Error : " << std::string( e.condition );
+
+    DisplayError( stream.str() );
+  }
+  catch( ... )
+  {
+    DALI_LOG_ERROR( "Unknown error while loading %s\n", mSceneParser.GetCurrentModelFile().c_str() );
   }
 
-  ~Scene3dLauncher()
+  // Respond to a click anywhere on the stage
+  mUiRoot.TouchSignal().Connect( this, &Scene3dLauncher::OnTouch );
+  // Respond to key events
+  stage.KeyEventSignal().Connect( this, &Scene3dLauncher::OnKeyEvent );
+
+  mDoubleTapTime = Timer::New(150);
+  mDoubleTapTime.TickSignal().Connect( this, &Scene3dLauncher::OnDoubleTapTime );
+}
+
+bool Scene3dLauncher::OnDoubleTapTime()
+{
+  mDoubleTap = false;
+  return true;
+}
+
+bool Scene3dLauncher::OnTouch( Actor actor, const TouchData& touch )
+{
+  const PointState::Type state = touch.GetState( 0 );
+
+  switch( state )
   {
-    // Nothing to do here;
-  }
-
-  /**
-   * @brief The Init signal is received once (only) during the Application lifetime
-   */
-  void Create( Application& application )
-  {
-    // Disable indicator
-    Dali::Window winHandle = application.GetWindow();
-    winHandle.ShowIndicator( Dali::Window::INVISIBLE );
-
-    // Get a handle to the stage
-    Stage stage = Stage::GetCurrent();
-    stage.SetBackgroundColor( Color::BLACK );
-
-    // Creating root and camera actor for rendertask for 3D Scene rendering
-    mUiRoot = Actor::New();
-    m3dRoot = Actor::New();
-    CameraActor cameraUi = CameraActor::New( stage.GetSize() );
-    cameraUi.SetAnchorPoint(AnchorPoint::CENTER);
-    cameraUi.SetParentOrigin(ParentOrigin::CENTER);
-    RenderTask rendertask = Stage::GetCurrent().GetRenderTaskList().CreateTask();
-    rendertask.SetCameraActor( cameraUi );
-    rendertask.SetSourceActor( mUiRoot );
-    rendertask.SetExclusive( true );
-
-    mUiRoot.SetAnchorPoint(AnchorPoint::TOP_LEFT);
-    mUiRoot.SetParentOrigin(ParentOrigin::TOP_LEFT);
-    mUiRoot.SetSize(stage.GetSize());
-
-    m3dRoot.SetAnchorPoint(AnchorPoint::CENTER);
-    m3dRoot.SetParentOrigin(ParentOrigin::CENTER);
-
-    stage.Add( cameraUi );
-    stage.Add( mUiRoot );
-    stage.Add( m3dRoot );
-
-    try
+    case PointState::DOWN:
     {
-      // Read models from the filesystem
-      mSceneParser.ReadPbrModelFolder( MODEL_DIR_URL );
-
-      CreateModel();
-    }
-    catch( DaliException& e )
-    {
-      std::stringstream stream;
-      stream << "Error while loading " << mSceneParser.GetCurrentModelFile() << ". Error : " << std::string( e.condition );
-
-      DisplayError( stream.str() );
-    }
-    catch( ... )
-    {
-      DALI_LOG_ERROR( "Unknown error while loading %s\n", mSceneParser.GetCurrentModelFile().c_str() );
-    }
-
-    // Respond to a click anywhere on the stage
-    mUiRoot.TouchSignal().Connect( this, &Scene3dLauncher::OnTouch );
-    // Respond to key events
-    stage.KeyEventSignal().Connect( this, &Scene3dLauncher::OnKeyEvent );
-
-    mDoubleTapTime = Timer::New(150);
-    mDoubleTapTime.TickSignal().Connect( this, &Scene3dLauncher::OnDoubleTapTime );
-  }
-
-  /*
-   * @brief Function triggered by timer, to calculate the double tap event
-   */
-  bool OnDoubleTapTime()
-  {
-    mDoubleTap = false;
-    return true;
-  }
-
-  /**
-   * @brief This function will zoom of model, and orientation or model or environment according to mode.
-   *
-   * The mode can be changed double tap the screen bottom, if double tap
-   * in other place, will change model.
-   */
-  bool OnTouch( Actor actor, const TouchData& touch )
-  {
-    const PointState::Type state = touch.GetState( 0 );
-
-    switch( state )
-    {
-      case PointState::DOWN:
+      if(mDoubleTap)
       {
-        if(mDoubleTap)
-        {
-          const Size& size = Stage::GetCurrent().GetSize();
-          const float scaleY = size.height;
-          if( mStartTouch.y > ( scaleY * 0.7f ) )
-          {
-            mRotateEnvironment = !mRotateEnvironment;
-          }
-          else
-          {
-            ClearModel();
-
-            try
-            {
-              mSceneParser.LoadNextModel();
-
-              CreateModel();
-            }
-            catch( DaliException e )
-            {
-              std::stringstream stream;
-              stream << "Error while loading " << mSceneParser.GetCurrentModelFile() << ". Error : " << std::string( e.condition );
-
-              DisplayError( stream.str() );
-            }
-            catch( ... )
-            {
-              DALI_LOG_ERROR( "Unknown error while loading %s\n", mSceneParser.GetCurrentModelFile().c_str() );
-            }
-          }
-        }
-        mDoubleTapTime.Stop();
-        mStartTouch = touch.GetScreenPosition(0);
-        mPointZ = mStartTouch;
-        break;
-      }
-      case PointState::MOTION:
-      {
-        const Stage stage = Stage::GetCurrent();
-        const Size& size = stage.GetSize();
-        const float scaleX = size.width;
+        const Size& size = Stage::GetCurrent().GetSize();
         const float scaleY = size.height;
-        const Vector2& point = touch.GetScreenPosition(0);
-        if( ( mStartTouch.x < ( scaleX * 0.3f ) ) && ( point.x < ( scaleX * 0.3f ) ) )
+        if( mStartTouch.y > ( scaleY * 0.7f ) )
         {
-          mZoomLevel += ( mStartTouch.y - point.y ) / ( scaleY * 0.9f );
-
-          //Clamp mZoomLevel to 0.0 to 1.0
-          mZoomLevel = std::max( 0.f, std::min( 1.f, mZoomLevel ) );
-
-          CameraActor cam = stage.GetRenderTaskList().GetTask(0).GetCameraActor();
-          if( cam )
-          {
-            cam.SetPosition( mCameraPosition * ( mZoomLevel + 0.1f ) );
-          }
-
-          mStartTouch = point;
+          mRotateEnvironment = !mRotateEnvironment;
         }
-        //If the touch is not processed above, then change the model orientation
         else
         {
-          const float angle1 = ( ( mPointZ.y - point.y ) / scaleY );
-          const float angle2 = ( ( mPointZ.x - point.x ) / scaleX );
+          ClearModel();
 
-          if( mRotateEnvironment )
+          try
           {
-            Quaternion cubeOrientation = mCameraOrientationInv * mCubeOrientation;
-            cubeOrientation.Conjugate();
-            const Quaternion pitchRot( Radian( Degree( angle1 * -200.0f ) ), cubeOrientation.Rotate( Vector3::XAXIS ) );
-            const Quaternion yawRot( Radian( Degree( angle2 * 200.0f ) ), cubeOrientation.Rotate( Vector3::YAXIS ) );
+            mSceneParser.LoadNextModel();
 
-            mCubeOrientation = mCubeOrientation * pitchRot * yawRot;
-
-            Actor skyboxActor = mSkybox.GetActor();
-            if( skyboxActor )
-            {
-              skyboxActor.SetOrientation( mCubeOrientation );
-            }
-
-            Matrix matCube( mCameraOrientationInv * mCubeOrientation );
-            matCube.Transpose();
-            mModel.SetShaderUniform("uCubeMatrix" , matCube );
+            CreateModel();
           }
-          else
+          catch( DaliException e )
           {
-            Quaternion modelOrientation = mCameraOrientationInv * mModelOrientation;
-            modelOrientation.Conjugate();
-            const Quaternion pitchRot( Radian( Degree( angle1 * 200.0f ) ), modelOrientation.Rotate( Vector3::XAXIS ) );
-            const Quaternion yawRot( Radian( Degree( angle2 * -200.0f ) ), modelOrientation.Rotate( Vector3::YAXIS ) );
+            std::stringstream stream;
+            stream << "Error while loading " << mSceneParser.GetCurrentModelFile() << ". Error : " << std::string( e.condition );
 
-            mModelOrientation = mModelOrientation * pitchRot * yawRot;
-            Actor modelActor = mModel.GetActor();
-            if( modelActor )
-            {
-              modelActor.SetOrientation( mModelOrientation );
-            }
+            DisplayError( stream.str() );
           }
-
-          mPointZ = point;
+          catch( ... )
+          {
+            DALI_LOG_ERROR( "Unknown error while loading %s\n", mSceneParser.GetCurrentModelFile().c_str() );
+          }
         }
-        break;
       }
-      case PointState::UP:
+      mDoubleTapTime.Stop();
+      mStartTouch = touch.GetScreenPosition(0);
+      mPointZ = mStartTouch;
+      break;
+    }
+    case PointState::MOTION:
+    {
+      const Stage stage = Stage::GetCurrent();
+      const Size& size = stage.GetSize();
+      const float scaleX = size.width;
+      const float scaleY = size.height;
+      const Vector2& point = touch.GetScreenPosition(0);
+      if( ( mStartTouch.x < ( scaleX * 0.3f ) ) && ( point.x < ( scaleX * 0.3f ) ) )
       {
-        mDoubleTapTime.Start();
-        mDoubleTap = true;
-        break;
+        mZoomLevel += ( mStartTouch.y - point.y ) / ( scaleY * 0.9f );
+
+        //Clamp mZoomLevel to 0.0 to 1.0
+        mZoomLevel = std::max( 0.f, std::min( 1.f, mZoomLevel ) );
+
+        CameraActor cam = stage.GetRenderTaskList().GetTask(0).GetCameraActor();
+        if( cam )
+        {
+          cam.SetPosition( mCameraPosition * ( mZoomLevel + 0.1f ) );
+        }
+
+        mStartTouch = point;
       }
-      default:
+      //If the touch is not processed above, then change the model orientation
+      else
       {
-        break;
+        const float angle1 = ( ( mPointZ.y - point.y ) / scaleY );
+        const float angle2 = ( ( mPointZ.x - point.x ) / scaleX );
+
+        if( mRotateEnvironment )
+        {
+          Quaternion cubeOrientation = mCameraOrientationInv * mCubeOrientation;
+          cubeOrientation.Conjugate();
+          const Quaternion pitchRot( Radian( Degree( angle1 * -200.0f ) ), cubeOrientation.Rotate( Vector3::XAXIS ) );
+          const Quaternion yawRot( Radian( Degree( angle2 * 200.0f ) ), cubeOrientation.Rotate( Vector3::YAXIS ) );
+
+          mCubeOrientation = mCubeOrientation * pitchRot * yawRot;
+
+          Actor skyboxActor = mSkybox.GetActor();
+          if( skyboxActor )
+          {
+            skyboxActor.SetOrientation( mCubeOrientation );
+          }
+
+          Matrix matCube( mCameraOrientationInv * mCubeOrientation );
+          matCube.Transpose();
+          mModel.SetShaderUniform("uCubeMatrix" , matCube );
+        }
+        else
+        {
+          Quaternion modelOrientation = mCameraOrientationInv * mModelOrientation;
+          modelOrientation.Conjugate();
+          const Quaternion pitchRot( Radian( Degree( angle1 * 200.0f ) ), modelOrientation.Rotate( Vector3::XAXIS ) );
+          const Quaternion yawRot( Radian( Degree( angle2 * -200.0f ) ), modelOrientation.Rotate( Vector3::YAXIS ) );
+
+          mModelOrientation = mModelOrientation * pitchRot * yawRot;
+          Actor modelActor = mModel.GetActor();
+          if( modelActor )
+          {
+            modelActor.SetOrientation( mModelOrientation );
+          }
+        }
+
+        mPointZ = point;
       }
+      break;
     }
-    return true;
-  }
-
-  /**
-   * @brief Called when any key event is received
-   *
-   * Will use this to quit the application if Back or the Escape key is received
-   * @param[in] event The key event information
-   */
-  void OnKeyEvent( const KeyEvent& event )
-  {
-    if( event.state == KeyEvent::Down )
+    case PointState::UP:
     {
-      if( IsKey( event, Dali::DALI_KEY_ESCAPE ) || IsKey( event, Dali::DALI_KEY_BACK ) )
-      {
-        mApplication.Quit();
-      }
+      mDoubleTapTime.Start();
+      mDoubleTap = true;
+      break;
     }
-  }
-
-  /**
-   * @brief Initialise model geometry, shader, position and orientation
-   */
-  void InitPbrActor()
-  {
-    const SceneLauncher::Asset& asset = mSceneParser.GetAsset();
-    SceneLauncher::DliCameraParameters camera;
-    mModel.Init( ASSET_MODEL_DIR + asset.model, Vector3::ZERO, asset.modelScaleFactor, &camera, &mAnimations, &mAnimationsName );
-
-    mModel.GetActor().SetOrientation( mModelOrientation );
-    mSceneParser.SetCameraParameters( camera );
-  }
-
-  /**
-   * @brief Creates scene actors and setup camera parameters
-   */
-  void InitActors()
-  {
-    Stage stage = Stage::GetCurrent();
-    const SceneLauncher::Asset& asset = mSceneParser.GetAsset();
-
-    if( mModel.GetSkyboxTexture() )
+    default:
     {
-      mSkybox.InitTexture( mModel.GetSkyboxTexture() );
-      mSkybox.Init();
+      break;
     }
-
-    mCameraPosition = asset.cameraMatrix.GetTranslation3();
-
-
-    CameraActor camera3d = stage.GetRenderTaskList().GetTask(0).GetCameraActor();
-    camera3d.SetInvertYAxis( true );
-    camera3d.SetPosition( mCameraPosition );
-    if(asset.enablePerspective)
-    {
-      camera3d.SetNearClippingPlane( asset.cameraNear );
-      camera3d.SetFarClippingPlane( asset.cameraFar );
-      camera3d.SetFieldOfView( Radian( Degree( asset.cameraFov ) ) );
-    }
-    else
-    {
-      camera3d.SetOrthographicProjection(
-          asset.cameraOrthographicSize.x,
-          asset.cameraOrthographicSize.y,
-          asset.cameraOrthographicSize.z,
-          asset.cameraOrthographicSize.w,
-          asset.cameraNear,
-          asset.cameraFar);
-    }
-
-
-    // Setting camera parameters for 3D Scene
-    // CameraActors should face in the negative Z direction, towards the other actors
-    //viewQuaternion is the viewMatrix used by camera in DALI
-    Quaternion viewQuaternion( Dali::ANGLE_180, Vector3::YAXIS );
-    Quaternion camOrientation( asset.cameraMatrix );
-    camOrientation = camOrientation * viewQuaternion;
-    camera3d.SetOrientation( camOrientation );
-    mCameraOrientationInv = camOrientation;
-    mCameraOrientationInv.Conjugate();
-
-    Property::Value uniformValue;
-    if( mModel.GetUniform( "uCubeMatrix", uniformValue, -1 ) )
-    {
-      Matrix cubeMatrix;
-      uniformValue.Get( cubeMatrix );
-      mCubeOrientation = Quaternion(cubeMatrix);
-    }
-
-    Actor skyBoxActor = mSkybox.GetActor();
-    if( skyBoxActor )
-    {
-      skyBoxActor.SetOrientation( mCubeOrientation );
-      m3dRoot.Add( skyBoxActor );
-    }
-
-    m3dRoot.Add( mModel.GetActor() );
-
-    Matrix matCube( mCameraOrientationInv * mCubeOrientation );
-    matCube.Transpose();
-    mModel.SetShaderUniform("uCubeMatrix" , matCube );
   }
+  return true;
+}
 
-  /*
-   * @brief Clear resources
-   */
-  void ClearModel()
+void Scene3dLauncher::OnKeyEvent( const KeyEvent& event )
+{
+  if( event.state == KeyEvent::Down )
   {
-    mSkybox.Clear();
-    mModel.Clear();
-  }
-
-  /*
-   * @brief loads model and initialise textures.
-   */
-  void CreateModel()
-  {
-    UnparentAndReset( mErrorMessage );
-
-    // Init Pbr actor
-    InitPbrActor();
-
-
-    // Initialise Main Actors
-    InitActors();
-    if( mAnimations.size() > 0)
+    if( IsKey( event, Dali::DALI_KEY_ESCAPE ) || IsKey( event, Dali::DALI_KEY_BACK ) )
     {
-      PlayAnimation( mAnimations[0] );
+      mApplication.Quit();
     }
   }
+}
 
+void Scene3dLauncher::InitPbrActor()
+{
+  const SceneLauncher::Asset& asset = mSceneParser.GetAsset();
+  SceneLauncher::DliCameraParameters camera;
+  mModel.Init( ASSET_MODEL_DIR + asset.model, Vector3::ZERO, asset.modelScaleFactor, &camera, &mAnimations, &mAnimationsName );
 
-  void DisplayError( const std::string& errorMessage )
+  mModel.GetActor().SetOrientation( mModelOrientation );
+  mSceneParser.SetCameraParameters( camera );
+}
+
+void Scene3dLauncher::InitActors()
+{
+  Stage stage = Stage::GetCurrent();
+  const SceneLauncher::Asset& asset = mSceneParser.GetAsset();
+
+  if( mModel.GetSkyboxTexture() )
   {
-    DALI_LOG_ERROR( "%s\n", errorMessage.c_str() );
-
-    mErrorMessage = TextLabel::New();
-    mErrorMessage.SetProperty( TextLabel::Property::TEXT, errorMessage );
-    mErrorMessage.SetProperty( TextLabel::Property::TEXT_COLOR, Color::WHITE );
-    mErrorMessage.SetProperty( TextLabel::Property::AUTO_SCROLL_SPEED, TEXT_AUTO_SCROLL_SPEED );
-    mErrorMessage.SetProperty( TextLabel::Property::AUTO_SCROLL_LOOP_COUNT, 0 );
-    mErrorMessage.SetProperty( TextLabel::Property::ENABLE_AUTO_SCROLL, true );
-
-    Property::Map colorMap;
-    colorMap.Insert( Visual::Property::TYPE, Visual::COLOR );
-    colorMap.Insert( ColorVisual::Property::MIX_COLOR, Color::BLACK );
-    mErrorMessage.SetProperty( Control::Property::BACKGROUND, colorMap );
-
-    mErrorMessage.SetResizePolicy( ResizePolicy::FILL_TO_PARENT, Dimension::WIDTH );
-    mErrorMessage.SetParentOrigin( ParentOrigin::CENTER );
-    mErrorMessage.SetAnchorPoint( AnchorPoint::CENTER );
-
-    mUiRoot.Add( mErrorMessage );
+    mSkybox.InitTexture( mModel.GetSkyboxTexture() );
+    mSkybox.Init();
   }
 
-  void PlayAnimation( std::vector<Animation> animationList )
+  mCameraPosition = asset.cameraMatrix.GetTranslation3();
+
+  CameraActor camera3d = stage.GetRenderTaskList().GetTask(0).GetCameraActor();
+  camera3d.SetInvertYAxis( true );
+  camera3d.SetPosition( mCameraPosition );
+  if( asset.enablePerspective )
   {
-     for(std::vector<Animation>::iterator it = animationList.begin(); it != animationList.end(); ++it)
-     {
-       (*it).Play();
-     }
+    camera3d.SetNearClippingPlane( asset.cameraNear );
+    camera3d.SetFarClippingPlane( asset.cameraFar );
+    camera3d.SetFieldOfView( Radian( Degree( asset.cameraFov ) ) );
+  }
+  else
+  {
+    camera3d.SetOrthographicProjection( asset.cameraOrthographicSize.x,
+                                        asset.cameraOrthographicSize.y,
+                                        asset.cameraOrthographicSize.z,
+                                        asset.cameraOrthographicSize.w,
+                                        asset.cameraNear,
+                                        asset.cameraFar );
   }
 
-private:
-  Application& mApplication;
+  // Setting camera parameters for 3D Scene
+  // CameraActors should face in the negative Z direction, towards the other actors
+  //viewQuaternion is the viewMatrix used by camera in DALI
+  Quaternion viewQuaternion( Dali::ANGLE_180, Vector3::YAXIS );
+  Quaternion camOrientation( asset.cameraMatrix );
+  camOrientation = camOrientation * viewQuaternion;
+  camera3d.SetOrientation( camOrientation );
+  mCameraOrientationInv = camOrientation;
+  mCameraOrientationInv.Conjugate();
 
-  SceneLauncher::SceneFileParser mSceneParser;
+  Property::Value uniformValue;
+  if( mModel.GetUniform( "uCubeMatrix", uniformValue, -1 ) )
+  {
+    Matrix cubeMatrix;
+    uniformValue.Get( cubeMatrix );
+    mCubeOrientation = Quaternion(cubeMatrix);
+  }
 
-  TextLabel mErrorMessage;
-  Timer mDoubleTapTime;
+  Actor skyBoxActor = mSkybox.GetActor();
+  if( skyBoxActor )
+  {
+    skyBoxActor.SetOrientation( mCubeOrientation );
+    m3dRoot.Add( skyBoxActor );
+  }
 
-  Actor m3dRoot;
-  Actor mUiRoot;
-  ModelSkybox mSkybox;
-  SceneLauncher::ModelPbr mModel;
-  std::vector<std::vector<Animation>> mAnimations;
-  std::vector<std::string> mAnimationsName;
+  m3dRoot.Add( mModel.GetActor() );
 
-  Vector3 mCameraPosition;
-  Vector2 mPointZ;
-  Vector2 mStartTouch;
+  Matrix matCube( mCameraOrientationInv * mCubeOrientation );
+  matCube.Transpose();
+  mModel.SetShaderUniform("uCubeMatrix" , matCube );
+}
 
-  //Quaternion of ViewMatrix
-  Quaternion mCameraOrientationInv;
-  Quaternion mModelOrientation;
-  Quaternion mCubeOrientation;
+void Scene3dLauncher::ClearModel()
+{
+  mSkybox.Clear();
+  mModel.Clear();
+}
 
-  float mZoomLevel;
-  bool mDoubleTap;
-  bool mRotateEnvironment;
-};
+void Scene3dLauncher::CreateModel()
+{
+  UnparentAndReset( mErrorMessage );
+
+  // Init Pbr actor
+  InitPbrActor();
+
+
+  // Initialise Main Actors
+  InitActors();
+  if( mAnimations.size() > 0)
+  {
+    PlayAnimation( mAnimations[0] );
+  }
+}
+
+void Scene3dLauncher::DisplayError( const std::string& errorMessage )
+{
+  DALI_LOG_ERROR( "%s\n", errorMessage.c_str() );
+
+  mErrorMessage = TextLabel::New();
+  mErrorMessage.SetProperty( TextLabel::Property::TEXT, errorMessage );
+  mErrorMessage.SetProperty( TextLabel::Property::TEXT_COLOR, Color::WHITE );
+  mErrorMessage.SetProperty( TextLabel::Property::AUTO_SCROLL_SPEED, TEXT_AUTO_SCROLL_SPEED );
+  mErrorMessage.SetProperty( TextLabel::Property::AUTO_SCROLL_LOOP_COUNT, 0 );
+  mErrorMessage.SetProperty( TextLabel::Property::ENABLE_AUTO_SCROLL, true );
+
+  Property::Map colorMap;
+  colorMap.Insert( Visual::Property::TYPE, Visual::COLOR );
+  colorMap.Insert( ColorVisual::Property::MIX_COLOR, Color::BLACK );
+  mErrorMessage.SetProperty( Control::Property::BACKGROUND, colorMap );
+
+  mErrorMessage.SetResizePolicy( ResizePolicy::FILL_TO_PARENT, Dimension::WIDTH );
+  mErrorMessage.SetParentOrigin( ParentOrigin::CENTER );
+  mErrorMessage.SetAnchorPoint( AnchorPoint::CENTER );
+
+  mUiRoot.Add( mErrorMessage );
+}
+
+void Scene3dLauncher::PlayAnimation( std::vector<Animation> animationList )
+{
+  for(std::vector<Animation>::iterator it = animationList.begin(); it != animationList.end(); ++it)
+  {
+    (*it).Play();
+  }
+}
 
 // Entry point for Linux & Tizen applications
 //
