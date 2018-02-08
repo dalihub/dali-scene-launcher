@@ -27,6 +27,7 @@
 #include "model-skybox.h"
 #include "lua-application-helper.h"
 #include "lua-interface.h"
+#include "data-provider.h"
 
 using namespace Toolkit;
 
@@ -39,7 +40,7 @@ using namespace Toolkit;
  * - Pan anywhere else to rotate scene
  *
  */
-class Scene3dLauncher : public Dali::ConnectionTracker
+class Scene3dLauncher : public Dali::ConnectionTracker, public SceneLauncher::DataProvider::Observer
 {
 public:
 
@@ -88,12 +89,17 @@ public:
 
   void PlayAnimation( std::vector<Animation>& animationList );
 
+private: // Inherited from SceneLauncher::DataProvider::Observer
+
+  void OnNotification( const SceneLauncher::DataProvider::Notification& notification );
+
 private:
   Application& mApplication;
 
   SceneLauncher::FileParser mSceneFileParser;
   SceneLauncher::Lua mLua;
   SceneLauncher::LuaApplicationHelper mLuaApplicationHelper;
+  SceneLauncher::DataProvider mDataProvider;
 
   TextLabel mErrorMessage;
   Timer mDoubleTapTime;

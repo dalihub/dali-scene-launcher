@@ -130,6 +130,9 @@ void Scene3dLauncher::Create( Application& application )
 
   // Second stage initialization. It calls an OnConnect() function in Lua and does the KeyEventSignal connection to an OnKeyEvent() function in Lua.
   mLuaApplicationHelper.Initialize();
+
+  // Starts the data provider.
+  mDataProvider.Start();
 }
 
 bool Scene3dLauncher::OnDoubleTapTime()
@@ -336,6 +339,8 @@ void Scene3dLauncher::CreateModel()
   {
     PlayAnimation( mAnimations[0] );
   }
+
+  mDataProvider.Register( this );
 }
 
 void Scene3dLauncher::DisplayError( const std::string& errorMessage )
@@ -367,6 +372,10 @@ void Scene3dLauncher::PlayAnimation( std::vector<Animation>& animationList )
   {
     (*it).Play();
   }
+}
+
+void Scene3dLauncher::OnNotification( const SceneLauncher::DataProvider::Notification& notification )
+{
 }
 
 // Entry point for Linux & Tizen applications
