@@ -26,6 +26,7 @@
 #include "scene-file-parser.h"
 #include "model-skybox.h"
 #include "lua-interface.h"
+#include "data-provider.h"
 
 using namespace Toolkit;
 
@@ -38,7 +39,7 @@ using namespace Toolkit;
  * - Pan anywhere else to rotate scene
  *
  */
-class Scene3dLauncher : public ConnectionTracker
+class Scene3dLauncher : public ConnectionTracker, public SceneLauncher::DataProvider::Observer
 {
 public:
 
@@ -71,6 +72,8 @@ public:
    */
   void OnKeyEvent( const KeyEvent& event );
 
+  void SetUpEvents();
+
   /**
    * @brief Initialise model geometry, shader, position and orientation
    */
@@ -98,10 +101,15 @@ public:
   void ApplicationQuit();
 
 private:
+
+  void OnNotification( const SceneLauncher::DataProvider::Notification& notification );
+
+private:
   Application& mApplication;
 
   SceneLauncher::FileParser mSceneFileParser;
   SceneLauncher::Lua mLua;
+  SceneLauncher::DataProvider mDataProvider;
 
   TextLabel mErrorMessage;
   Timer mDoubleTapTime;
