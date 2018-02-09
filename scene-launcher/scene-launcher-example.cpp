@@ -21,6 +21,9 @@
 // EXTERNAL INCLUDES
 #include <dali/integration-api/debug.h>
 
+// INTERNAL INCLUDES
+#include "dli-loader.h"
+
 namespace
 {
 
@@ -260,8 +263,77 @@ void Scene3dLauncher::OnKeyEvent( const KeyEvent& event )
   mLua.ExecuteFunction( 0 ); // 0 is the number of returned parameters.
 }
 
-void Scene3dLauncher::SetUpEvents()
+void Scene3dLauncher::SetUpEvents( const std::vector<SceneLauncher::DliLoader::Script>& scripts )
 {
+  unsigned int scriptIndex = 0u;
+  for( const auto& script : scripts )
+  {
+    unsigned int eventIndex = 0u;
+    for( const auto& event : script.events )
+    {
+      // Find the data provider id.
+      unsigned int dataProviderId = 0u;
+      if( HOUR_0_11_MINUTE_STR == event.source )
+      {
+        dataProviderId = SceneLauncher::DataProvider::Notification::HOUR_0_11_MINUTE;
+      }
+      else if( HOUR_0_23_MINUTE_STR == event.source )
+      {
+        dataProviderId = SceneLauncher::DataProvider::Notification::HOUR_0_23_MINUTE;
+      }
+      else if( MINUTE_SECOND_STR == event.source )
+      {
+        dataProviderId = SceneLauncher::DataProvider::Notification::MINUTE_SECOND;
+      }
+      else if( SECOND_MILLISECOND_STR == event.source )
+      {
+        dataProviderId = SceneLauncher::DataProvider::Notification::SECOND_MILLISECOND;
+      }
+      else
+      {
+        // do nothing
+        continue;
+      }
+
+      // Find the item in the vector of data providers.
+      unsigned int dataProviderVectorIndex = 0u;
+      bool found = false;
+      for( auto& observer : mDataProviderObservers )
+      {
+        if( dataProviderId == observer.dataProviderId )
+        {
+          found = true;
+          break;
+        }
+
+        ++dataProviderVectorIndex;
+      }
+
+      if( !found )
+      {
+        dataProviderVectorIndex = mDataProviderObservers.size();
+        mDataProviderObservers.push_back( DataProviderObserver() );
+      }
+
+      DataProviderObserver& dataProviderObserver = *( mDataProviderObservers.begin() + dataProviderVectorIndex );
+
+      // Fill the DataProviderObserver
+
+      // Set the data provider id
+      dataProviderObserver.dataProviderId = dataProviderId;
+
+      // Push the callback index to retrieve it when there is a notification.
+      DataProviderObserver::Index callbackIndex;
+      callbackIndex.scriptIndex = scriptIndex;
+      callbackIndex.eventIndex = eventIndex;
+
+      dataProviderObserver.callbackIndices.PushBack( callbackIndex );
+
+      ++eventIndex;
+    }
+    ++scriptIndex;
+  }
+
   mDataProvider.Register( this );
 }
 
@@ -362,7 +434,7 @@ void Scene3dLauncher::CreateModel()
     PlayAnimation( mAnimations[0] );
   }
 
-  SetUpEvents();
+  SetUpEvents( mScripts );
 }
 
 void Scene3dLauncher::DisplayError( const std::string& errorMessage )
@@ -403,6 +475,31 @@ void Scene3dLauncher::ApplicationQuit()
 
 void Scene3dLauncher::OnNotification( const SceneLauncher::DataProvider::Notification& notification )
 {
+  for( const auto& item : mDataProviderObservers )
+  {
+    if( item.dataProviderId == notification.mType )
+    {
+      // Execute the script for this notification.
+
+      for( Vector<DataProviderObserver::Index>::ConstIterator it = item.callbackIndices.Begin(), endIt = item.callbackIndices.End(); it != endIt; ++it )
+      {
+        const DataProviderObserver::Index& callbackIndex = *it;
+
+        const SceneLauncher::DliLoader::Script& script = *( mScripts.begin() + callbackIndex.scriptIndex );
+
+        const SceneLauncher::DliLoader::Event& event = *( script.events.begin() + callbackIndex.eventIndex );
+
+        // Fetch the lua function
+        mLua.FetchFunction( event.callback.c_str() );
+
+        // Push the notification value as a parameter for the lua script.
+        mLua.PushParameter( notification.mValue );
+
+        // Execute the script.
+        mLua.ExecuteFunction( 0u );
+      }
+    }
+  }
 }
 
 // Entry point for Linux & Tizen applications

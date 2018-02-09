@@ -27,6 +27,7 @@
 
 namespace
 {
+const float TWO_PI_OVER_360 = Math::PI / 180.f; // 2 * PI / 360
 
 void PrintLuaError( lua_State* state )
 {
@@ -64,6 +65,27 @@ int QuitApplication( lua_State* state )
 
   // Pops the parameter from the top of the stack.
   lua_pop( state, 1 );
+
+  return 0;
+}
+
+int RotateActor( lua_State* state )
+{
+  const std::string actorName( lua_tostring( state, 1 ) );
+  const float angle = lua_tonumber( state, 2 );
+  Vector3 axis;
+  axis.x = lua_tonumber( state, 3 );
+  axis.y = lua_tonumber( state, 4 );
+  axis.z = lua_tonumber( state, 5 );
+
+  Layer root = Stage::GetCurrent().GetRootLayer();
+
+  Actor actor = root.FindChildByName( actorName );
+
+  if( actor )
+  {
+    actor.SetOrientation( Radian( -TWO_PI_OVER_360 * angle ), axis );
+  }
 
   return 0;
 }
@@ -135,6 +157,24 @@ struct Lua::Impl
     lua_pushinteger( mState, parameter );
   }
 
+  void PushParameter( float parameter )
+  {
+    // Increases the parameter counter.
+    ++mNumberOfPushedParameters;
+
+    // Pushes the parameter onto the stack.
+    lua_pushnumber( mState, parameter );
+  }
+
+  void PushParameter( const char* const parameter )
+  {
+    // Increases the parameter counter.
+    ++mNumberOfPushedParameters;
+
+    // Pushes the parameter onto the stack.
+    lua_pushstring( mState, parameter );
+  }
+
   void ExecuteFunction( int numberOfResults )
   {
     // Calls the function.
@@ -158,6 +198,7 @@ struct Lua::Impl
       // Registers the C API to be used in Lua.
       lua_register( mState, "ConnectKeyEvent", ConnectKeyEvent );
       lua_register( mState, "QuitApplication", QuitApplication );
+      lua_register( mState, "RotateActor", RotateActor );
     }
   }
 
@@ -196,6 +237,16 @@ void Lua::PushParameter( void* parameter )
 }
 
 void Lua::PushParameter( int parameter )
+{
+  mImpl->PushParameter( parameter );
+}
+
+void Lua::PushParameter( float parameter )
+{
+  mImpl->PushParameter( parameter );
+}
+
+void Lua::PushParameter( const char* const parameter )
 {
   mImpl->PushParameter( parameter );
 }

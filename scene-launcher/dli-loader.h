@@ -52,8 +52,15 @@ class DliLoader
 {
 public:
 
+  struct Event
+  {
+    std::string source;
+    std::string callback;
+  };
+
   struct Script
   {
+    std::vector<Event> events;
     std::string url;
   };
 
@@ -103,7 +110,6 @@ private:
   const TreeNode* mNodes;
   JsonParser mParser;
   std::string mDirectory;
-
 };
 
 } // namespace SceneLauncher

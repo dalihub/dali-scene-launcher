@@ -994,6 +994,22 @@ void DliLoader::LoadScripts()
     Script& script = *( mScripts.begin() + scriptIndex );
 
     ReadString( scriptNode.GetChild( "url" ), script.url );
+
+    const TreeNode* eventsRoot = scriptNode.GetChild( "data-provider-events" );
+    if( nullptr != eventsRoot )
+    {
+      script.events.resize( eventsRoot->Size() );
+      unsigned int eventIndex = 0u;
+      for( TreeNode::ConstIterator eventIt = eventsRoot->CBegin(), eventEndIt = eventsRoot->CEnd(); eventIt != eventEndIt; ++eventIt, ++eventIndex )
+      {
+        const TreeNode& eventNode = (*eventIt).second;
+
+        Event& event = *( script.events.begin() + eventIndex );
+
+        ReadString( eventNode.GetChild( "source" ), event.source );
+        ReadString( eventNode.GetChild( "callback" ), event.callback );
+      }
+    }
   }
 }
 
