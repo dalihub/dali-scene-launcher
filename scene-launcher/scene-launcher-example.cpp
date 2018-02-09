@@ -33,6 +33,9 @@ const Vector3 CAMERA_DEFAULT_POSITION( 0.0f, 0.0f, 3.5f );
 
 const float TEXT_AUTO_SCROLL_SPEED = 200.f;
 
+const std::string ON_HOUR_CHANGE( "OnHourChange" );
+const std::string ON_MINUTE_CHANGE( "OnMinuteChange" );
+const std::string ON_SECOND_CHANGE( "OnSecondChange" );
 } // namespace
 
 Scene3dLauncher::Scene3dLauncher( Application& application )
@@ -376,6 +379,41 @@ void Scene3dLauncher::PlayAnimation( std::vector<Animation>& animationList )
 
 void Scene3dLauncher::OnNotification( const SceneLauncher::DataProvider::Notification& notification )
 {
+  std::string callback;
+  switch( notification.mType )
+  {
+    case SceneLauncher::DataProvider::Notification::HOUR_0_11_MINUTE:
+    {
+      callback = ON_HOUR_CHANGE;
+      break;
+    }
+    case SceneLauncher::DataProvider::Notification::MINUTE_SECOND:
+    {
+      callback = ON_MINUTE_CHANGE;
+      break;
+    }
+    case SceneLauncher::DataProvider::Notification::SECOND_MILLISECOND:
+    {
+      callback = ON_SECOND_CHANGE;
+      break;
+    }
+    default:
+    {
+      //nothing to do.
+    }
+  }
+
+  if( !callback.empty() )
+  {
+    // Fetch the lua function
+    mLua.FetchFunction( callback.c_str() );
+
+    // Push the notification value as a parameter for the lua script.
+    mLua.PushParameter( notification.mValue );
+
+    // Execute the script. Expects 0 return values.
+    mLua.ExecuteFunction( 0u );
+  }
 }
 
 // Entry point for Linux & Tizen applications
