@@ -23,6 +23,7 @@
 // EXTERNAL INCLUDES
 #include <fstream>
 #include <sstream>
+#include <string.h>
 #include <dali/integration-api/debug.h>
 
 using namespace Dali;
@@ -104,6 +105,21 @@ bool ReadString( const TreeNode* node, std::string& strValue )
   if( node->GetType() == TreeNode::STRING )
   {
     strValue = node->GetString();
+    returnValue = true;
+  }
+  return returnValue;
+}
+
+bool ReadString( const TreeNode* node, char* strValue )
+{
+  if( !node )
+  {
+    return false;
+  }
+  bool returnValue = false;
+  if( node->GetType() == TreeNode::STRING )
+  {
+    strcpy( strValue, node->GetString() );
     returnValue = true;
   }
   return returnValue;
@@ -412,6 +428,8 @@ bool DliLoader::CreateScene( std::vector<Shader>& shaderArray, Actor toActor, Te
 
   mShaderArrayPtr = NULL;
 
+  LoadEvents();
+
   return true;
 }
 
@@ -673,6 +691,11 @@ std::string DliLoader::GetParseError() const
   }
 
   return stream.str();
+}
+
+const std::vector<DliLoader::Event>& DliLoader::GetEvents() const
+{
+  return mEvents;
 }
 
 bool DliLoader::LoadTextureSetArray( Texture& skyboxTexture )
@@ -960,6 +983,63 @@ void DliLoader::AddNode( Actor toActor, const TreeNode *addnode )
         AddNode( actor, inodes );
       }
     }
+  }
+}
+
+void DliLoader::LoadEvents()
+{
+  const TreeNode* root = mParser.GetRoot();
+
+  if( nullptr == root )
+  {
+    // nothing to do
+    return;
+  }
+
+  const TreeNode* eventsRoot = root->GetChild( "events" );
+
+  if( nullptr == eventsRoot )
+  {
+    // nothing to do
+    return;
+  }
+
+  // Resizes the Event vector.
+  mEvents.resize( eventsRoot->Size() );
+  unsigned int eventIndex = 0u;
+
+  for( TreeNode::ConstIterator eventIt = eventsRoot->CBegin(), eventEndIt = eventsRoot->CEnd(); eventIt != eventEndIt; ++eventIt, ++eventIndex )
+  {
+    const TreeNode& eventNode = (*eventIt).second;
+
+    Event& event = *( mEvents.begin() + eventIndex );
+
+    ReadString( eventNode.GetChild( "source" ), event.source );
+
+    const TreeNode* scriptRoot = eventNode.GetChild( "script" );
+
+    if( nullptr == scriptRoot )
+    {
+      // nothing else to do for this event.
+      continue;
+    }
+
+    ReadString( scriptRoot->GetChild( "url" ), event.script.url );
+    
+    const TreeNode* parametersRoot = scriptRoot->GetChild( "parameters" );
+
+    // Resize the vector of parameters.
+    event.script.parameters.resize( parametersRoot->Size() );
+
+    unsigned int parameterIndex = 0u;
+    for( TreeNode::ConstIterator parameterIt = parametersRoot->CBegin(), parameterEndIt = parametersRoot->CEnd(); parameterIt != parameterEndIt; ++parameterIt, ++parameterIndex )
+    {
+      const TreeNode& parameterNode = (*parameterIt).second;
+
+      Parameter& parameter = *( event.script.parameters.begin() + parameterIndex );
+
+      ReadString( parameterNode.GetChild( "s" ), parameter.arrayParameter );
+    }    
   }
 }
 

@@ -21,6 +21,9 @@
 // EXTERNAL INCLUDES
 #include <dali/integration-api/debug.h>
 
+// INTERNAL INCLUDES
+#include "dli-loader.h"
+
 namespace
 {
 
@@ -31,7 +34,6 @@ const std::string ASSET_MODEL_DIR = SCENE_LAUNCHER_MODEL_DIR;
 const Vector3 CAMERA_DEFAULT_POSITION( 0.0f, 0.0f, 3.5f );
 
 const float TEXT_AUTO_SCROLL_SPEED = 200.f;
-
 
 const char* const SCENE_LAUNCHER_LUA_SCRIPT = SCENE_LAUNCHER_LUA_SCRIPTS_DIR "scene-launcher.lua";
 
@@ -282,8 +284,72 @@ void Scene3dLauncher::OnKeyEvent( const KeyEvent& event )
   mLua.ExecuteFunction( 0 ); // 0 is the number of returned parameters.
 }
 
-void Scene3dLauncher::SetUpEvents()
+void Scene3dLauncher::SetUpEvents( const std::vector<SceneLauncher::DliLoader::Event>& events )
 {
+  unsigned int eventIndex = 0u;
+  for( const auto& event : events )
+  {
+    // Find the data provider id.
+    unsigned int dataProviderId = 0u;
+    if( HOUR_0_11_MINUTE_STR == event.source )
+    {
+      dataProviderId = SceneLauncher::DataProvider::Notification::HOUR_0_11_MINUTE;
+    }
+    else if( HOUR_0_23_MINUTE_STR == event.source )
+    {
+      dataProviderId = SceneLauncher::DataProvider::Notification::HOUR_0_23_MINUTE;
+    }
+    else if( MINUTE_SECOND_STR == event.source )
+    {
+      dataProviderId = SceneLauncher::DataProvider::Notification::MINUTE_SECOND;
+    }
+    else if( SECOND_MILLISECOND_STR == event.source )
+    {
+      dataProviderId = SceneLauncher::DataProvider::Notification::SECOND_MILLISECOND;
+    }
+    else
+    {
+      // do nothing
+      continue;
+    }
+
+    // Load the lua script.
+    const std::string scriptUrl = std::string( SCENE_LAUNCHER_LUA_SCRIPTS_DIR ) + event.script.url;
+    mLua.LoadScriptFile(  scriptUrl.c_str() );
+
+    // Find the item in the vector of data providers.
+    unsigned int dataProviderVectorIndex = 0u;
+    bool found = false;
+    for( auto& observer : mDataProviderObservers )
+    {
+      if( dataProviderId == observer.dataProviderId )
+      {
+        found = true;
+        break;
+      }
+
+      ++dataProviderVectorIndex;
+    }
+
+    if( !found )
+    {
+      dataProviderVectorIndex = mDataProviderObservers.size();
+      mDataProviderObservers.push_back( DataProviderObserver() );
+    }
+
+    DataProviderObserver& dataProviderObserver = *( mDataProviderObservers.begin() + dataProviderVectorIndex );
+
+    // Fill the DataProviderObserver
+
+    // Set the data provider id
+    dataProviderObserver.dataProviderId = dataProviderId;
+
+    // Push the event index to retrieve the parameters.
+    dataProviderObserver.eventIndices.PushBack( eventIndex );
+
+    ++eventIndex;
+  }
+
   mDataProvider.Register( this );
 }
 
@@ -291,7 +357,13 @@ void Scene3dLauncher::InitPbrActor()
 {
   const SceneLauncher::Asset& asset = mSceneParser.GetAsset();
   SceneLauncher::DliCameraParameters camera;
-  mModel.Init( ASSET_MODEL_DIR + asset.model, Vector3::ZERO, asset.modelScaleFactor, &camera, &mAnimations, &mAnimationsName );
+  mModel.Init( ASSET_MODEL_DIR + asset.model,
+               Vector3::ZERO,
+               asset.modelScaleFactor,
+               &camera,
+               &mAnimations,
+               &mAnimationsName,
+               mEvents );
 
   mModel.GetActor().SetOrientation( mModelOrientation );
   mSceneParser.SetCameraParameters( camera );
@@ -382,7 +454,7 @@ void Scene3dLauncher::CreateModel()
     PlayAnimation( mAnimations[0] );
   }
 
-  SetUpEvents();
+  SetUpEvents( mEvents );
 }
 
 void Scene3dLauncher::DisplayError( const std::string& errorMessage )
@@ -423,6 +495,33 @@ void Scene3dLauncher::ApplicationQuit()
 
 void Scene3dLauncher::OnNotification( const SceneLauncher::DataProvider::Notification& notification )
 {
+  for( const auto& item : mDataProviderObservers )
+  {
+    if( item.dataProviderId == notification.mType )
+    {
+      // Execute the script for this notification.
+
+      for( Vector<unsigned int>::ConstIterator it = item.eventIndices.Begin(), endIt = item.eventIndices.End(); it != endIt; ++it )
+      {
+        const SceneLauncher::DliLoader::Event& event = *( mEvents.begin() + *it );
+
+        // Fetch the lua function
+        mLua.FetchFunction( event.script.parameters[0u].arrayParameter );
+
+        // Push the notification value as a parameter for the lua script.
+        mLua.PushParameter( notification.mValue );
+
+        // Push the rest of parameters.
+        for( unsigned int index = 1u; index < event.script.parameters.size(); ++index )
+        {
+          mLua.PushParameter( event.script.parameters[index].arrayParameter );
+        }
+
+        // Execute the script.
+        mLua.ExecuteFunction( 0u );
+      }
+    }
+  }
 }
 
 // Entry point for Linux & Tizen applications

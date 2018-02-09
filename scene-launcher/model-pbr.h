@@ -64,8 +64,15 @@ public:
    * @param[in] camera pointer to load the camera from file.
    * @param[in] pointer to an array of array of animations from file.
    * @param[in] pointer to an array animations names to be loaded.
+   * @param[in] events Vector of events and the script to be executed when they are triggered.
    */
-  void Init( const std::string& modelUrl, const Vector3& position, const Vector3& size, DliCameraParameters *camera, std::vector<std::vector<Animation>> *animations, std::vector<std::string> *animationsName );
+  void Init( const std::string& modelUrl,
+             const Vector3& position,
+             const Vector3& size,
+             DliCameraParameters *camera,
+             std::vector<std::vector<Animation>> *animations,
+             std::vector<std::string> *animationsName,
+             std::vector<DliLoader::Event>& events );
 
   /**
    * @brief Clears the previously allocated PBR model resources.

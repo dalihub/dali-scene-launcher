@@ -63,6 +63,20 @@ public:
   void PushParameter( int parameter );
 
   /**
+   * @brief Pushes a @e float onto the stack.
+   *
+   * @param[in] parameter The @e float to be pushed onto the stack.
+   */
+  void PushParameter( float parameter );
+
+  /**
+   * @brief Pushes a @e string onto the stack.
+   *
+   * @param[in] parameter The @e string to be pushed onto the stack.
+   */
+  void PushParameter( const char* const parameter );
+
+  /**
    * @brief Executes the function previously fetched.
    *
    * @param[in] numberOfResults The number of results the function returns.

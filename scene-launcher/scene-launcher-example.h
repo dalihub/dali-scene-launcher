@@ -73,7 +73,7 @@ public:
    */
   void OnKeyEvent( const KeyEvent& event );
 
-  void SetUpEvents();
+  void SetUpEvents( const std::vector<SceneLauncher::DliLoader::Event>& events );
 
   /**
    * @brief Initialise model geometry, shader, position and orientation
@@ -122,6 +122,14 @@ private:
   SceneLauncher::ModelPbr mModel;
   std::vector<std::vector<Animation>> mAnimations;
   std::vector<std::string> mAnimationsName;
+
+  std::vector<SceneLauncher::DliLoader::Event> mEvents;
+  struct DataProviderObserver
+  {
+    unsigned int dataProviderId;
+    Vector<unsigned int> eventIndices;
+  };
+  std::vector<DataProviderObserver> mDataProviderObservers;
 
   Vector3 mCameraPosition;
   Vector2 mPointZ;

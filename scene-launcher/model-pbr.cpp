@@ -53,7 +53,13 @@ ModelPbr::~ModelPbr()
 {
 }
 
-void ModelPbr::Init( const std::string& modelUrl, const Vector3& position, const Vector3& size, DliCameraParameters *camera, std::vector<std::vector<Animation>> *animations, std::vector<std::string> *animationsName )
+void ModelPbr::Init( const std::string& modelUrl,
+                     const Vector3& position,
+                     const Vector3& size,
+                     DliCameraParameters *camera,
+                     std::vector<std::vector<Animation>> *animations,
+                     std::vector<std::string> *animationsName,
+                     std::vector<DliLoader::Event>& events )
 {
   mActor = Actor::New();
   mActor.SetAnchorPoint( AnchorPoint::CENTER );
@@ -78,6 +84,8 @@ void ModelPbr::Init( const std::string& modelUrl, const Vector3& position, const
           animations->push_back(aniItem);
         }
       }
+
+      events = dliLoader.GetEvents();
     }
     else
     {

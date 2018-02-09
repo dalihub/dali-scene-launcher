@@ -29,6 +29,11 @@
 using namespace Dali;
 using namespace Dali::Toolkit;
 
+namespace
+{
+  const unsigned int MAX_ARRAY_PARAMETER_LENGTH = 256u;
+} // namespace
+
 namespace SceneLauncher
 {
 struct RendererOptions
@@ -69,6 +74,27 @@ class DliLoader
 {
 public:
 
+  union Parameter
+  {
+    char arrayParameter[MAX_ARRAY_PARAMETER_LENGTH];
+    int intParameter;
+    float floatParameter;
+  };
+
+  struct Script
+  {
+    std::string url;
+    std::vector<Parameter> parameters;
+  };
+
+  struct Event
+  {
+    std::string source;
+    Script script;
+  };
+
+public:
+
   DliLoader();
   ~DliLoader();
 
@@ -82,6 +108,8 @@ public:
 
   std::string GetParseError() const;
 
+  const std::vector<Event>& GetEvents() const;
+
 private:
 
   bool LoadTextureSetArray( Texture& eCubeSpecular );
@@ -91,6 +119,8 @@ private:
   bool LoadGeometryArray();
 
   void AddNode( Actor toActor, const TreeNode* addnode );
+
+  void LoadEvents();
 
   void CreateSkyboxTexture( const std::string& skyBoxTexturePath, Texture& skyboxTexture );
 
@@ -108,6 +138,7 @@ private:
   std::vector<TextureSet> mTextureSetArray;
   std::vector<RendererOptions> mRendererOptionsArray;
   std::vector<Shader>* mShaderArrayPtr;
+  std::vector<Event> mEvents;
   std::string mDirectory;
 
 };
