@@ -18,19 +18,33 @@
 // FILE HEADER
 #include "lua-application-bindings.h"
 
+// EXTERNAL INCLUDES
+#include <dali/public-api/actors/layer.h>
+#include <dali/public-api/common/stage.h>
+
 // INTERNAL INCLUDES
 #include "lua-application-helper.h"
+
+namespace
+{
+const float TWO_PI_OVER_360 = Math::PI / 180.f; // 2 * PI / 360
+} // namespace
 
 namespace SceneLauncher
 {
 
 int QuitApplication( lua_State* state );
+int RotateActor( lua_State* state );
 
 const LuaBindingFuction LUA_BINDING_FUNCTIONS[] =
 {
   {
     "QuitApplication",
     QuitApplication
+  },
+  {
+    "RotateActor",
+    RotateActor
   }
 };
 const unsigned int NUMBER_OF_LUA_BINDING_FUNCTIONS = sizeof( LUA_BINDING_FUNCTIONS ) / sizeof( LuaBindingFuction );
@@ -47,6 +61,27 @@ int QuitApplication( lua_State* state )
 
   // Pops the parameter from the top of the stack.
   lua_pop( state, 1 );
+
+  return 0;
+}
+
+int RotateActor( lua_State* state )
+{
+  const std::string actorName( lua_tostring( state, 1 ) );
+  const float angle = lua_tonumber( state, 2 );
+  Vector3 axis;
+  axis.x = lua_tonumber( state, 3 );
+  axis.y = lua_tonumber( state, 4 );
+  axis.z = lua_tonumber( state, 5 );
+
+  Layer root = Stage::GetCurrent().GetRootLayer();
+
+  Actor actor = root.FindChildByName( actorName );
+
+  if( actor )
+  {
+    actor.SetOrientation( Radian( -TWO_PI_OVER_360 * angle ), axis );
+  }
 
   return 0;
 }
