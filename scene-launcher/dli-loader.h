@@ -72,28 +72,35 @@ public:
   DliLoader();
   ~DliLoader();
 
-  void GetCameraParameters( unsigned int eidx, DliCameraParameters* camera );
-
   bool LoadObject( const std::string& modelUrl );
-
-  std::string GetParseError() const;
 
   bool CreateScene( std::vector<Shader>& shaderArray, Actor toActor, Texture& skyboxTexture );
 
   bool LoadAnimation( Actor toActor, std::vector<Animation> *animArray, const std::string& animationName );
 
-private:
-  void ReadAnglePosition(const TreeNode* node, Actor &actor);
-  void AddNode( Actor toActor, const TreeNode* addnode );
+  void GetCameraParameters( unsigned int eidx, DliCameraParameters* camera );
 
-  bool LoadBuffer(const TreeNode* mesh, Geometry geometry, std::string& ebinFilename, unsigned char*& efileContent);
-  void CreateTextures( std::string strTexture[4], Texture eTexture[4], bool createMipmaps );
-  void CreateEnvironmentTextures( const std::string& cubeDiffuse, const std::string& cubeSpecular, Texture& eDiffuseTexture, Texture& eSpecularTexture );
-  void CreateSkyboxTexture( const std::string& skyBoxTexturePath, Texture& skyboxTexture );
+  std::string GetParseError() const;
+
+private:
+
+  bool LoadTextureSetArray( Texture& eCubeSpecular );
 
   bool LoadShaderArray( std::vector<Shader>& shaderArray );
-  bool LoadTextureSetArray( Texture& eCubeSpecular );
+
   bool LoadGeometryArray();
+
+  void AddNode( Actor toActor, const TreeNode* addnode );
+
+  void CreateSkyboxTexture( const std::string& skyBoxTexturePath, Texture& skyboxTexture );
+
+  void CreateEnvironmentTextures( const std::string& cubeDiffuse, const std::string& cubeSpecular, Texture& eDiffuseTexture, Texture& eSpecularTexture );
+
+  void CreateTextures( std::string strTexture[4], Texture eTexture[4], bool createMipmaps );
+
+  bool LoadBuffer(const TreeNode* mesh, Geometry geometry, std::string& ebinFilename, unsigned char*& efileContent);
+
+  void ReadAnglePosition(const TreeNode* node, Actor &actor);
 
   JsonParser mParser;
   const TreeNode *mNodes;

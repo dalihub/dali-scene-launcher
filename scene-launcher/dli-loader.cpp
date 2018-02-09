@@ -360,34 +360,6 @@ Shader LoadShaders( const std::string& shaderVertexFileName, const std::string& 
 namespace SceneLauncher
 {
 
-void DliLoader::GetCameraParameters( unsigned int eidx, DliCameraParameters* camera )
-{
-  const TreeNode* cameras = mParser.GetRoot()->GetChild( "cameras" );
-
-  if( ( NULL == cameras ) || ( NULL == camera ) )
-  {
-    return;
-  }
-
-  const TreeNode* node = Tidx(cameras, eidx);
-  const TreeNode* parameter;
-  if(node)
-  {
-    ReadFloat(node->GetChild( "fov" ), camera->cameraFov );
-    ReadFloat(node->GetChild( "near" ), camera->cameraNear );
-    ReadFloat(node->GetChild( "far" ), camera->cameraFar );
-    if(ReadVector( node->GetChild( "orthographic" ), camera->cameraOrthographicSize.AsFloat(), 4u ))
-    {
-      camera->enablePerspective = false;
-    }
-
-    if((parameter = node->GetChild( "matrix" )))
-    {
-      ReadVector( node->GetChild( "matrix" ), camera->cameraMatrix.AsFloat(), 16u );
-    }
-  }
-}
-
 DliLoader::DliLoader()
 : mNodes( NULL ),
   mShaderArrayPtr( NULL )
@@ -396,99 +368,6 @@ DliLoader::DliLoader()
 
 DliLoader::~DliLoader()
 {
-}
-
-void DliLoader::CreateEnvironmentTextures( const std::string& cubeDiffuse, const std::string& cubeSpecular, Texture& eDiffuseTexture, Texture& eSpecularTexture )
-{
-  // This texture should have 6 faces and only one mipmap
-  CubeData diffuse;
-  bool result = false;
-  if( !cubeDiffuse.empty() )
-  {
-    result = LoadCubeMapFromKtxFile( ASSET_TEXTURE_DIR + cubeDiffuse, diffuse );
-
-    if( !result )
-    {
-      throw Dali::DaliException( ASSERT_LOCATION, "Failed to load cubemap textures." );
-    }
-
-    eDiffuseTexture = Texture::New( TextureType::TEXTURE_CUBE, diffuse.img[0][0].GetPixelFormat(), diffuse.img[0][0].GetWidth(), diffuse.img[0][0].GetHeight() );
-    for( unsigned int midmapLevel = 0; midmapLevel < diffuse.img[0].size(); ++midmapLevel )
-    {
-      for( unsigned int i = 0; i < diffuse.img.size(); ++i )
-      {
-        eDiffuseTexture.Upload( diffuse.img[i][midmapLevel], CubeMapLayer::POSITIVE_X + i, midmapLevel, 0, 0, diffuse.img[i][midmapLevel].GetWidth(), diffuse.img[i][midmapLevel].GetHeight() );
-      }
-    }
-  }
-
-  // This texture should have 6 faces and 6 mipmaps
-  if( !cubeSpecular.empty() )
-  {
-    CubeData specular;
-    result = LoadCubeMapFromKtxFile( ASSET_TEXTURE_DIR + cubeSpecular, specular);
-
-    if( !result )
-    {
-      throw Dali::DaliException( ASSERT_LOCATION, "Failed to load cubemap textures." );
-    }
-
-    eSpecularTexture = Texture::New( TextureType::TEXTURE_CUBE, specular.img[0][0].GetPixelFormat(), specular.img[0][0].GetWidth(), specular.img[0][0].GetHeight() );
-    for( unsigned int midmapLevel = 0; midmapLevel < specular.img[0].size(); ++midmapLevel )
-    {
-      for( unsigned int i = 0; i < specular.img.size(); ++i )
-      {
-        eSpecularTexture.Upload( specular.img[i][midmapLevel], CubeMapLayer::POSITIVE_X + i, midmapLevel, 0, 0, specular.img[i][midmapLevel].GetWidth(), specular.img[i][midmapLevel].GetHeight() );
-      }
-    }
-  }
-}
-
-void DliLoader::CreateSkyboxTexture( const std::string& skyBoxTexturePath, Texture& skyboxTexture )
-{
-  if( !skyBoxTexturePath.empty() )
-  {
-    CubeData skybox;
-    const bool result = LoadCubeMapFromKtxFile( ASSET_TEXTURE_DIR + skyBoxTexturePath, skybox );
-
-    if( !result )
-    {
-      throw Dali::DaliException( ASSERT_LOCATION, "Failed to load skybox textures." );
-    }
-
-    skyboxTexture = Texture::New( TextureType::TEXTURE_CUBE, skybox.img[0][0].GetPixelFormat(), skybox.img[0][0].GetWidth(), skybox.img[0][0].GetHeight() );
-    for( unsigned int midmapLevel = 0u; midmapLevel < skybox.img[0].size(); ++midmapLevel )
-    {
-      for( unsigned int i = 0u; i < skybox.img.size(); ++i )
-      {
-        skyboxTexture.Upload( skybox.img[i][midmapLevel], CubeMapLayer::POSITIVE_X + i, midmapLevel, 0, 0, skybox.img[i][midmapLevel].GetWidth(), skybox.img[i][midmapLevel].GetHeight() );
-      }
-    }
-  }
-}
-
-void DliLoader::CreateTextures(std::string strTexture[4], Texture eTexture[4], bool createMipmaps )
-{
-  PixelData pixelData;
-  for(int i = 0; i < 4; i++)
-  {
-    if( strTexture[i].empty() )
-      return;
-    pixelData = SyncImageLoader::Load( ASSET_TEXTURE_DIR + strTexture[i] );
-
-    if( !pixelData )
-    {
-      throw Dali::DaliException( ASSERT_LOCATION, "Failed to load texture." );
-    }
-
-    eTexture[i] = Texture::New( TextureType::TEXTURE_2D, pixelData.GetPixelFormat(), pixelData.GetWidth(), pixelData.GetHeight() );
-    eTexture[i].Upload( pixelData, 0, 0, 0, 0, pixelData.GetWidth(), pixelData.GetHeight() );
-    if( createMipmaps )
-    {
-      eTexture[i].GenerateMipmaps();
-    }
-  }
-
 }
 
 bool DliLoader::LoadObject( const std::string& modelUrl )
@@ -502,216 +381,37 @@ bool DliLoader::LoadObject( const std::string& modelUrl )
   return result_format;
 }
 
-std::string DliLoader::GetParseError() const
+bool DliLoader::CreateScene( std::vector<Shader>& shaderArray, Actor toActor, Texture& skyboxTexture )
 {
-  std::stringstream stream;
+  const TreeNode *root = mParser.GetRoot();
+  const TreeNode *inodes = NULL;
+  const TreeNode *itn = NULL;
 
-  if( mParser.ParseError() )
-  {
-    stream << "position: " << mParser.GetErrorPosition() << ", line: " << mParser.GetErrorLineNumber() << ", column: " << mParser.GetErrorColumn() << ", description: " << mParser.GetErrorDescription() << ".";
-  }
+  itn = root->GetChild( "scene" );
+  int scene_load = itn->GetInteger();
 
-  return stream.str();
-}
-
-bool DliLoader::LoadTextureSetArray( Texture& skyboxTexture )
-{
-  const TreeNode* materials = mParser.GetRoot()->GetChild( "materials" );
-  const TreeNode* environment = mParser.GetRoot()->GetChild( "environment" );
-  if( ( NULL == materials ) || ( NULL == environment ) )
-  {
-    // Nothing to do if there aren't materials or environment.
-    return false;
-  }
-
-  const TreeNode* skybox = mParser.GetRoot()->GetChild( "skybox" );
-  if( NULL != skybox )
-  {
-    std::string skyboxTexturePath;
-    if( ReadString( skybox->GetChild( "texture" ), skyboxTexturePath ) )
-    {
-      CreateSkyboxTexture( skyboxTexturePath, skyboxTexture );
-    }
-  }
-
-  const unsigned int numberOfEnvironments = environment->Size();
-
-  std::vector<Texture> cubeDiffuseTextures;
-  std::vector<Texture> cubeSpecularTextures;
-
-  cubeDiffuseTextures.reserve( numberOfEnvironments );
-  cubeSpecularTextures.reserve( numberOfEnvironments );
-
-  for( TreeNode::ConstIterator it = environment->CBegin(); it != environment->CEnd(); ++it )
-  {
-    const TreeNode *node = &((*it).second);
-
-    std::string cubeDiffuse;
-    std::string cubeSpecular;
-
-    ReadString( node->GetChild( "cubeDiffuse" ), cubeDiffuse );
-    ReadString( node->GetChild( "cubeSpecular" ), cubeSpecular );
-
-    Texture diffuseTexture;
-    Texture specularTexture;
-
-    CreateEnvironmentTextures( cubeDiffuse, cubeSpecular, diffuseTexture, specularTexture );
-
-    cubeDiffuseTextures.push_back( diffuseTexture );
-    cubeSpecularTextures.push_back( specularTexture );
-  }
-
-  for( TreeNode::ConstIterator it = (*materials).CBegin(); it != (*materials).CEnd(); ++it)
-  {
-    const TreeNode *node = &((*it).second);
-
-    int environmentIndex = 0;
-    ReadInt( node->GetChild( "environment" ), environmentIndex );
-
-    Texture diffuseTexture = cubeDiffuseTextures[environmentIndex];
-    Texture specularTexture = cubeSpecularTextures[environmentIndex];
-
-    std::string strTexture[4];
-    Texture texture[4];
-    if( ReadString( node->GetChild( "texture1" ), strTexture[0] ) )
-    {
-      if( ReadString( node->GetChild( "texture2" ), strTexture[1] ) )
-      {
-        if( ReadString( node->GetChild( "texture3" ), strTexture[2] ) )
-        {
-          ReadString( node->GetChild( "texture4" ), strTexture[3] );
-        }
-      }
-    }
-    bool createMipmap = false;
-    ReadBool( node->GetChild( "mipmap" ), createMipmap );
-
-    CreateTextures( strTexture, texture, createMipmap );
-
-    TextureSet textureSet = TextureSet::New();
-
-    Sampler samplerA = Sampler::New();
-    samplerA.SetWrapMode( WrapMode::REPEAT, WrapMode::REPEAT );
-    Sampler sampler = Sampler::New();
-    sampler.SetWrapMode( WrapMode::CLAMP_TO_EDGE,WrapMode::CLAMP_TO_EDGE, WrapMode::CLAMP_TO_EDGE );
-    if(createMipmap)
-    {
-      samplerA.SetFilterMode( FilterMode::LINEAR_MIPMAP_LINEAR, FilterMode::LINEAR );
-      sampler.SetFilterMode( FilterMode::LINEAR_MIPMAP_LINEAR, FilterMode::LINEAR );
-    }
-
-    unsigned int i = 0u;
-    for( ; i < 4u ; ++i )
-    {
-      if( texture[i] )
-      {
-        textureSet.SetTexture( i , texture[i] );
-        textureSet.SetSampler( i, samplerA );
-      }
-      else
-      {
-        break;
-      }
-    }
-
-    if( diffuseTexture )
-    {
-      textureSet.SetTexture( i++ , diffuseTexture );
-    }
-
-    if( specularTexture )
-    {
-      textureSet.SetTexture( i , specularTexture );
-      textureSet.SetSampler( i , sampler );
-    }
-
-    mTextureSetArray.push_back( textureSet );
-  }
-
-  return true;
-}
-
-bool DliLoader::LoadShaderArray(std::vector<Shader>& shaderArray)
-{
-  const TreeNode *shaders = mParser.GetRoot()->GetChild( "shaders" );
-  if(!shaders)
+  if( !( ( itn = root->GetChild( "scenes" ) ) && ( mNodes = root->GetChild( "nodes" ) ) ) )
   {
     return false;
   }
 
-  for( TreeNode::ConstIterator it = (*shaders).CBegin(); it != (*shaders).CEnd(); ++it)
+  itn = Tidx( itn, scene_load );
+  if( !itn )
   {
-    const TreeNode *node = &((*it).second);
-
-    std::string vertex;
-    std::string fragment;
-    ReadString( node->GetChild( "vertex" ), vertex );
-    ReadString( node->GetChild( "fragment" ), fragment );
-    Shader shader = LoadShaders( ASSET_SHADER_DIR + vertex, ASSET_SHADER_DIR + fragment );
-
-    if( !shader )
-    {
-      throw DaliException( ASSERT_LOCATION, "Failed to load shader." );
-      return false;
-    }
-    else
-    {
-      shaderArray.push_back( shader );
-    }
-
-    for( TreeNode::ConstIterator uniformNode = node->CBegin(); uniformNode != node->CEnd(); ++uniformNode )
-    {
-      const TreeNode::KeyNodePair& pKeyChild = *uniformNode;
-      std::string strItem( pKeyChild.first );
-
-      if( !strItem.compare( "vertex" ) || !strItem.compare( "fragment" ) || !strItem.compare( "renderMode" ))
-      {
-        continue;
-      }
-
-      float fNum[16];
-      if( ( pKeyChild.second.GetType() ==  TreeNode::INTEGER ) || ( pKeyChild.second.GetType() ==  TreeNode::FLOAT ) )
-      {
-        if(ReadFloat( &pKeyChild.second, fNum[0]))
-        {
-          shader.RegisterProperty( pKeyChild.first, fNum[0] );
-        }
-      }
-      else if( ReadVector( &pKeyChild.second, fNum, 16 ) )
-      {
-        Matrix matrix( fNum );
-        shader.RegisterProperty( pKeyChild.first, matrix );
-      }
-      else if( ReadVector( &pKeyChild.second, fNum, 9 ) )
-      {
-        Matrix3 matrix( fNum[0], fNum[1], fNum[2], fNum[3], fNum[4], fNum[5], fNum[6], fNum[7], fNum[8] );
-        shader.RegisterProperty( pKeyChild.first, matrix );
-      }
-      else if( ReadVector( &pKeyChild.second, fNum, 4 ) )
-      {
-        Vector4 vector( fNum );
-        shader.RegisterProperty( pKeyChild.first, vector );
-      }
-      else if( ReadVector( &pKeyChild.second, fNum, 3 ) )
-      {
-        Vector3 vector( fNum );
-        shader.RegisterProperty( pKeyChild.first, vector );
-      }
-      else if( ReadVector( &pKeyChild.second, fNum, 2 ) )
-      {
-        Vector2 vector( fNum );
-        shader.RegisterProperty( pKeyChild.first, vector );
-      }
-
-    }
-
-
-    RendererOptions renderer;
-    ReadInt( node->GetChild( "renderMode" ), renderer.blend );
-
-    mRendererOptionsArray.push_back( renderer );
+    return false;
   }
-  mShaderArrayPtr = &shaderArray;
+
+  LoadTextureSetArray( skyboxTexture );
+  LoadShaderArray( shaderArray );
+  LoadGeometryArray();
+
+  int starting_node = itn->GetInteger();
+
+  inodes = Tidx(mNodes, starting_node);
+  AddNode( toActor, inodes );
+
+  mShaderArrayPtr = NULL;
+
   return true;
 }
 
@@ -935,37 +635,244 @@ bool DliLoader::LoadAnimation( Actor toActor, std::vector<Animation> *animArray,
   return true;
 }
 
-bool DliLoader::CreateScene( std::vector<Shader>& shaderArray, Actor toActor, Texture& skyboxTexture )
+void DliLoader::GetCameraParameters( unsigned int eidx, DliCameraParameters* camera )
 {
-  const TreeNode *root = mParser.GetRoot();
-  const TreeNode *inodes = NULL;
-  const TreeNode *itn = NULL;
+  const TreeNode* cameras = mParser.GetRoot()->GetChild( "cameras" );
 
-  itn = root->GetChild( "scene" );
-  int scene_load = itn->GetInteger();
+  if( ( NULL == cameras ) || ( NULL == camera ) )
+  {
+    return;
+  }
 
-  if( !( ( itn = root->GetChild( "scenes" ) ) && ( mNodes = root->GetChild( "nodes" ) ) ) )
+  const TreeNode* node = Tidx(cameras, eidx);
+  const TreeNode* parameter;
+  if(node)
+  {
+    ReadFloat(node->GetChild( "fov" ), camera->cameraFov );
+    ReadFloat(node->GetChild( "near" ), camera->cameraNear );
+    ReadFloat(node->GetChild( "far" ), camera->cameraFar );
+    if(ReadVector( node->GetChild( "orthographic" ), camera->cameraOrthographicSize.AsFloat(), 4u ))
+    {
+      camera->enablePerspective = false;
+    }
+
+    if((parameter = node->GetChild( "matrix" )))
+    {
+      ReadVector( node->GetChild( "matrix" ), camera->cameraMatrix.AsFloat(), 16u );
+    }
+  }
+}
+
+std::string DliLoader::GetParseError() const
+{
+  std::stringstream stream;
+
+  if( mParser.ParseError() )
+  {
+    stream << "position: " << mParser.GetErrorPosition() << ", line: " << mParser.GetErrorLineNumber() << ", column: " << mParser.GetErrorColumn() << ", description: " << mParser.GetErrorDescription() << ".";
+  }
+
+  return stream.str();
+}
+
+bool DliLoader::LoadTextureSetArray( Texture& skyboxTexture )
+{
+  const TreeNode* materials = mParser.GetRoot()->GetChild( "materials" );
+  const TreeNode* environment = mParser.GetRoot()->GetChild( "environment" );
+  if( ( NULL == materials ) || ( NULL == environment ) )
+  {
+    // Nothing to do if there aren't materials or environment.
+    return false;
+  }
+
+  const TreeNode* skybox = mParser.GetRoot()->GetChild( "skybox" );
+  if( NULL != skybox )
+  {
+    std::string skyboxTexturePath;
+    if( ReadString( skybox->GetChild( "texture" ), skyboxTexturePath ) )
+    {
+      CreateSkyboxTexture( skyboxTexturePath, skyboxTexture );
+    }
+  }
+
+  const unsigned int numberOfEnvironments = environment->Size();
+
+  std::vector<Texture> cubeDiffuseTextures;
+  std::vector<Texture> cubeSpecularTextures;
+
+  cubeDiffuseTextures.reserve( numberOfEnvironments );
+  cubeSpecularTextures.reserve( numberOfEnvironments );
+
+  for( TreeNode::ConstIterator it = environment->CBegin(); it != environment->CEnd(); ++it )
+  {
+    const TreeNode *node = &((*it).second);
+
+    std::string cubeDiffuse;
+    std::string cubeSpecular;
+
+    ReadString( node->GetChild( "cubeDiffuse" ), cubeDiffuse );
+    ReadString( node->GetChild( "cubeSpecular" ), cubeSpecular );
+
+    Texture diffuseTexture;
+    Texture specularTexture;
+
+    CreateEnvironmentTextures( cubeDiffuse, cubeSpecular, diffuseTexture, specularTexture );
+
+    cubeDiffuseTextures.push_back( diffuseTexture );
+    cubeSpecularTextures.push_back( specularTexture );
+  }
+
+  for( TreeNode::ConstIterator it = (*materials).CBegin(); it != (*materials).CEnd(); ++it)
+  {
+    const TreeNode *node = &((*it).second);
+
+    int environmentIndex = 0;
+    ReadInt( node->GetChild( "environment" ), environmentIndex );
+
+    Texture diffuseTexture = cubeDiffuseTextures[environmentIndex];
+    Texture specularTexture = cubeSpecularTextures[environmentIndex];
+
+    std::string strTexture[4];
+    Texture texture[4];
+    if( ReadString( node->GetChild( "texture1" ), strTexture[0] ) )
+    {
+      if( ReadString( node->GetChild( "texture2" ), strTexture[1] ) )
+      {
+        if( ReadString( node->GetChild( "texture3" ), strTexture[2] ) )
+        {
+          ReadString( node->GetChild( "texture4" ), strTexture[3] );
+        }
+      }
+    }
+    bool createMipmap = false;
+    ReadBool( node->GetChild( "mipmap" ), createMipmap );
+
+    CreateTextures( strTexture, texture, createMipmap );
+
+    TextureSet textureSet = TextureSet::New();
+
+    Sampler samplerA = Sampler::New();
+    samplerA.SetWrapMode( WrapMode::REPEAT, WrapMode::REPEAT );
+    Sampler sampler = Sampler::New();
+    sampler.SetWrapMode( WrapMode::CLAMP_TO_EDGE,WrapMode::CLAMP_TO_EDGE, WrapMode::CLAMP_TO_EDGE );
+    if(createMipmap)
+    {
+      samplerA.SetFilterMode( FilterMode::LINEAR_MIPMAP_LINEAR, FilterMode::LINEAR );
+      sampler.SetFilterMode( FilterMode::LINEAR_MIPMAP_LINEAR, FilterMode::LINEAR );
+    }
+
+    unsigned int i = 0u;
+    for( ; i < 4u ; ++i )
+    {
+      if( texture[i] )
+      {
+        textureSet.SetTexture( i , texture[i] );
+        textureSet.SetSampler( i, samplerA );
+      }
+      else
+      {
+        break;
+      }
+    }
+
+    if( diffuseTexture )
+    {
+      textureSet.SetTexture( i++ , diffuseTexture );
+    }
+
+    if( specularTexture )
+    {
+      textureSet.SetTexture( i , specularTexture );
+      textureSet.SetSampler( i , sampler );
+    }
+
+    mTextureSetArray.push_back( textureSet );
+  }
+
+  return true;
+}
+
+bool DliLoader::LoadShaderArray(std::vector<Shader>& shaderArray)
+{
+  const TreeNode *shaders = mParser.GetRoot()->GetChild( "shaders" );
+  if(!shaders)
   {
     return false;
   }
 
-  itn = Tidx( itn, scene_load );
-  if( !itn )
+  for( TreeNode::ConstIterator it = (*shaders).CBegin(); it != (*shaders).CEnd(); ++it)
   {
-    return false;
+    const TreeNode *node = &((*it).second);
+
+    std::string vertex;
+    std::string fragment;
+    ReadString( node->GetChild( "vertex" ), vertex );
+    ReadString( node->GetChild( "fragment" ), fragment );
+    Shader shader = LoadShaders( ASSET_SHADER_DIR + vertex, ASSET_SHADER_DIR + fragment );
+
+    if( !shader )
+    {
+      throw DaliException( ASSERT_LOCATION, "Failed to load shader." );
+      return false;
+    }
+    else
+    {
+      shaderArray.push_back( shader );
+    }
+
+    for( TreeNode::ConstIterator uniformNode = node->CBegin(); uniformNode != node->CEnd(); ++uniformNode )
+    {
+      const TreeNode::KeyNodePair& pKeyChild = *uniformNode;
+      std::string strItem( pKeyChild.first );
+
+      if( !strItem.compare( "vertex" ) || !strItem.compare( "fragment" ) || !strItem.compare( "renderMode" ))
+      {
+        continue;
+      }
+
+      float fNum[16];
+      if( ( pKeyChild.second.GetType() ==  TreeNode::INTEGER ) || ( pKeyChild.second.GetType() ==  TreeNode::FLOAT ) )
+      {
+        if(ReadFloat( &pKeyChild.second, fNum[0]))
+        {
+          shader.RegisterProperty( pKeyChild.first, fNum[0] );
+        }
+      }
+      else if( ReadVector( &pKeyChild.second, fNum, 16 ) )
+      {
+        Matrix matrix( fNum );
+        shader.RegisterProperty( pKeyChild.first, matrix );
+      }
+      else if( ReadVector( &pKeyChild.second, fNum, 9 ) )
+      {
+        Matrix3 matrix( fNum[0], fNum[1], fNum[2], fNum[3], fNum[4], fNum[5], fNum[6], fNum[7], fNum[8] );
+        shader.RegisterProperty( pKeyChild.first, matrix );
+      }
+      else if( ReadVector( &pKeyChild.second, fNum, 4 ) )
+      {
+        Vector4 vector( fNum );
+        shader.RegisterProperty( pKeyChild.first, vector );
+      }
+      else if( ReadVector( &pKeyChild.second, fNum, 3 ) )
+      {
+        Vector3 vector( fNum );
+        shader.RegisterProperty( pKeyChild.first, vector );
+      }
+      else if( ReadVector( &pKeyChild.second, fNum, 2 ) )
+      {
+        Vector2 vector( fNum );
+        shader.RegisterProperty( pKeyChild.first, vector );
+      }
+
+    }
+
+
+    RendererOptions renderer;
+    ReadInt( node->GetChild( "renderMode" ), renderer.blend );
+
+    mRendererOptionsArray.push_back( renderer );
   }
-
-  LoadTextureSetArray( skyboxTexture );
-  LoadShaderArray( shaderArray );
-  LoadGeometryArray();
-
-  int starting_node = itn->GetInteger();
-
-  inodes = Tidx(mNodes, starting_node);
-  AddNode( toActor, inodes );
-
-  mShaderArrayPtr = NULL;
-
+  mShaderArrayPtr = &shaderArray;
   return true;
 }
 
@@ -987,6 +894,166 @@ bool DliLoader::LoadGeometryArray()
     free(fileContent);
   }
   return true;
+}
+
+void DliLoader::AddNode( Actor toActor, const TreeNode *addnode )
+{
+  const TreeNode *itn = NULL;
+  Actor actor;
+  Vector3 actorSize( Vector3::ONE );
+  float floatVec[3];
+  if( ReadVector( addnode->GetChild( "bounds" ), floatVec, 3 ) || ReadVector( addnode->GetChild( "size" ), floatVec, 3 ) )
+  {
+    actorSize = Vector3( floatVec[0], floatVec[1], floatVec[2] );
+  }
+
+  if( !( itn = addnode->GetChild( "mesh" ) ) )
+  {
+
+    actor = Actor::New();
+    actor.SetAnchorPoint( AnchorPoint::CENTER );
+    actor.SetParentOrigin( ParentOrigin::CENTER );
+    actor.SetPosition( Vector3() );
+    actor.SetSize( actorSize );
+    const TreeNode *itname = addnode->GetChild( "name" );
+    if( itname )
+    {
+      actor.SetName( itname->GetString() );
+    }
+  }
+  else
+  {
+    std::string nodeName;
+    int shaderIdx = 0;
+    int materialIndex = 0;
+    int meshIndex = itn->GetInteger();
+    ReadString( addnode->GetChild( "name" ), nodeName );
+    ReadInt( addnode->GetChild( "shader" ), shaderIdx );
+    ReadInt( addnode->GetChild( "material" ), materialIndex );
+
+    actor = ModelPbr::CreateNode( (*mShaderArrayPtr)[shaderIdx],
+                                  mRendererOptionsArray[shaderIdx].blend,
+                                  mTextureSetArray[materialIndex],
+                                  mGeometryArray[meshIndex],
+                                  actorSize,
+                                  nodeName );
+  }
+
+  ReadAnglePosition(addnode, actor );
+
+  if( actor )
+  {
+    toActor.Add( actor );
+
+    if((itn = addnode->GetChild("children")))
+    {
+      Vector<int> children;
+      children.Reserve(itn->Size());
+      for( TreeNode::ConstIterator it = ( *itn ).CBegin(); it != ( *itn ).CEnd(); ++it )
+      {
+        children.PushBack( ( ( *it ).second).GetInteger() );
+      }
+
+      for( unsigned int i = 0; i < children.Size(); ++i )
+      {
+        const TreeNode *inodes = Tidx( mNodes, children[i] );
+        AddNode( actor, inodes );
+      }
+    }
+  }
+}
+
+void DliLoader::CreateSkyboxTexture( const std::string& skyBoxTexturePath, Texture& skyboxTexture )
+{
+  if( !skyBoxTexturePath.empty() )
+  {
+    CubeData skybox;
+    const bool result = LoadCubeMapFromKtxFile( ASSET_TEXTURE_DIR + skyBoxTexturePath, skybox );
+
+    if( !result )
+    {
+      throw Dali::DaliException( ASSERT_LOCATION, "Failed to load skybox textures." );
+    }
+
+    skyboxTexture = Texture::New( TextureType::TEXTURE_CUBE, skybox.img[0][0].GetPixelFormat(), skybox.img[0][0].GetWidth(), skybox.img[0][0].GetHeight() );
+    for( unsigned int midmapLevel = 0u; midmapLevel < skybox.img[0].size(); ++midmapLevel )
+    {
+      for( unsigned int i = 0u; i < skybox.img.size(); ++i )
+      {
+        skyboxTexture.Upload( skybox.img[i][midmapLevel], CubeMapLayer::POSITIVE_X + i, midmapLevel, 0, 0, skybox.img[i][midmapLevel].GetWidth(), skybox.img[i][midmapLevel].GetHeight() );
+      }
+    }
+  }
+}
+
+void DliLoader::CreateEnvironmentTextures( const std::string& cubeDiffuse, const std::string& cubeSpecular, Texture& eDiffuseTexture, Texture& eSpecularTexture )
+{
+  // This texture should have 6 faces and only one mipmap
+  CubeData diffuse;
+  bool result = false;
+  if( !cubeDiffuse.empty() )
+  {
+    result = LoadCubeMapFromKtxFile( ASSET_TEXTURE_DIR + cubeDiffuse, diffuse );
+
+    if( !result )
+    {
+      throw Dali::DaliException( ASSERT_LOCATION, "Failed to load cubemap textures." );
+    }
+
+    eDiffuseTexture = Texture::New( TextureType::TEXTURE_CUBE, diffuse.img[0][0].GetPixelFormat(), diffuse.img[0][0].GetWidth(), diffuse.img[0][0].GetHeight() );
+    for( unsigned int midmapLevel = 0; midmapLevel < diffuse.img[0].size(); ++midmapLevel )
+    {
+      for( unsigned int i = 0; i < diffuse.img.size(); ++i )
+      {
+        eDiffuseTexture.Upload( diffuse.img[i][midmapLevel], CubeMapLayer::POSITIVE_X + i, midmapLevel, 0, 0, diffuse.img[i][midmapLevel].GetWidth(), diffuse.img[i][midmapLevel].GetHeight() );
+      }
+    }
+  }
+
+  // This texture should have 6 faces and 6 mipmaps
+  if( !cubeSpecular.empty() )
+  {
+    CubeData specular;
+    result = LoadCubeMapFromKtxFile( ASSET_TEXTURE_DIR + cubeSpecular, specular);
+
+    if( !result )
+    {
+      throw Dali::DaliException( ASSERT_LOCATION, "Failed to load cubemap textures." );
+    }
+
+    eSpecularTexture = Texture::New( TextureType::TEXTURE_CUBE, specular.img[0][0].GetPixelFormat(), specular.img[0][0].GetWidth(), specular.img[0][0].GetHeight() );
+    for( unsigned int midmapLevel = 0; midmapLevel < specular.img[0].size(); ++midmapLevel )
+    {
+      for( unsigned int i = 0; i < specular.img.size(); ++i )
+      {
+        eSpecularTexture.Upload( specular.img[i][midmapLevel], CubeMapLayer::POSITIVE_X + i, midmapLevel, 0, 0, specular.img[i][midmapLevel].GetWidth(), specular.img[i][midmapLevel].GetHeight() );
+      }
+    }
+  }
+}
+
+void DliLoader::CreateTextures(std::string strTexture[4], Texture eTexture[4], bool createMipmaps )
+{
+  PixelData pixelData;
+  for(int i = 0; i < 4; i++)
+  {
+    if( strTexture[i].empty() )
+      return;
+    pixelData = SyncImageLoader::Load( ASSET_TEXTURE_DIR + strTexture[i] );
+
+    if( !pixelData )
+    {
+      throw Dali::DaliException( ASSERT_LOCATION, "Failed to load texture." );
+    }
+
+    eTexture[i] = Texture::New( TextureType::TEXTURE_2D, pixelData.GetPixelFormat(), pixelData.GetWidth(), pixelData.GetHeight() );
+    eTexture[i].Upload( pixelData, 0, 0, 0, 0, pixelData.GetWidth(), pixelData.GetHeight() );
+    if( createMipmaps )
+    {
+      eTexture[i].GenerateMipmaps();
+    }
+  }
+
 }
 
 bool DliLoader::LoadBuffer( const TreeNode* mesh, Geometry geometry, std::string& ebinFilename, unsigned char*& efileContent)
@@ -1150,73 +1217,6 @@ void DliLoader::ReadAnglePosition(const TreeNode* node, Actor &actor)
     }
   }
 
-}
-
-void DliLoader::AddNode( Actor toActor, const TreeNode *addnode )
-{
-  const TreeNode *itn = NULL;
-  Actor actor;
-  Vector3 actorSize( Vector3::ONE );
-  float floatVec[3];
-  if( ReadVector( addnode->GetChild( "bounds" ), floatVec, 3 ) || ReadVector( addnode->GetChild( "size" ), floatVec, 3 ) )
-  {
-    actorSize = Vector3( floatVec[0], floatVec[1], floatVec[2] );
-  }
-
-  if( !( itn = addnode->GetChild( "mesh" ) ) )
-  {
-
-    actor = Actor::New();
-    actor.SetAnchorPoint( AnchorPoint::CENTER );
-    actor.SetParentOrigin( ParentOrigin::CENTER );
-    actor.SetPosition( Vector3() );
-    actor.SetSize( actorSize );
-    const TreeNode *itname = addnode->GetChild( "name" );
-    if( itname )
-    {
-      actor.SetName( itname->GetString() );
-    }
-  }
-  else
-  {
-    std::string nodeName;
-    int shaderIdx = 0;
-    int materialIndex = 0;
-    int meshIndex = itn->GetInteger();
-    ReadString( addnode->GetChild( "name" ), nodeName );
-    ReadInt( addnode->GetChild( "shader" ), shaderIdx );
-    ReadInt( addnode->GetChild( "material" ), materialIndex );
-
-    actor = ModelPbr::CreateNode( (*mShaderArrayPtr)[shaderIdx],
-                                  mRendererOptionsArray[shaderIdx].blend,
-                                  mTextureSetArray[materialIndex],
-                                  mGeometryArray[meshIndex],
-                                  actorSize,
-                                  nodeName );
-  }
-
-  ReadAnglePosition(addnode, actor );
-
-  if( actor )
-  {
-    toActor.Add( actor );
-
-    if((itn = addnode->GetChild("children")))
-    {
-      Vector<int> children;
-      children.Reserve(itn->Size());
-      for( TreeNode::ConstIterator it = ( *itn ).CBegin(); it != ( *itn ).CEnd(); ++it )
-      {
-        children.PushBack( ( ( *it ).second).GetInteger() );
-      }
-
-      for( unsigned int i = 0; i < children.Size(); ++i )
-      {
-        const TreeNode *inodes = Tidx( mNodes, children[i] );
-        AddNode( actor, inodes );
-      }
-    }
-  }
 }
 
 } // namespace SceneLauncher
