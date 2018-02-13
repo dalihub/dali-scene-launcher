@@ -18,25 +18,24 @@
 #ifndef DALI_DEMO_SCENE_FILE_PARSER_H
 #define DALI_DEMO_SCENE_FILE_PARSER_H
 
-#include <dali-toolkit/devel-api/builder/json-parser.h>
-#include "dli-loader.h"
+//EXTERNAL INCLUDES
+#include <dali/public-api/common/vector-wrapper.h>
+#include <dali/public-api/math/matrix.h>
+#include <dali/public-api/math/vector3.h>
+#include <string>
 
 using namespace Dali;
-using namespace Dali::Toolkit;
-
 
 namespace SceneLauncher
 {
 
-class ModelPbr;
+// Forward declarations
+struct DliCameraParameters;
 
 struct Asset
 {
   Asset()
-  : hourActors(),
-    minActors(),
-    secActors(),
-    name(),
+  : name(),
     model(),
     albedoMetalness(),
     normalRoughness(),
@@ -58,9 +57,6 @@ struct Asset
   ~Asset()
   {}
 
-  std::vector<std::string> hourActors;
-  std::vector<std::string> minActors;
-  std::vector<std::string> secActors;
   std::string name;
   std::string model;
   std::string albedoMetalness;
@@ -82,43 +78,6 @@ struct Asset
 
 class SceneFileParser
 {
-
-private:
-
-  /**
-   * @brief Insensitive case compare function.
-   *
-   * @param[in] a, compare string
-   * @param[in] b, compare string
-   * @return true if strings are equal
-   */
-  static bool CaseInsensitiveCharacterCompare( unsigned char a, unsigned char b );
-
-  /**
-   * @brief return true if the lower cased ASCII strings are equal.
-   *
-   * @param[in] a, compare string
-   * @param[in] b, compare string
-   * @return true if strings are equal
-   */
-  bool CaseInsensitiveStringCompare( const std::string& a, const std::string& b );
-
-  /**
-   * @brief get a vector3 from parsed node
-   *
-   * @param[in] node, parsed node
-   * @param[out] vector3, vector read.
-   */
-  void ParseVector3( const TreeNode& node, Vector3& vector3 );
-
-  /**
-   * @brief From a list of files, get the assets from the corresponding index file.
-   *
-   * @param[in] index, index of file
-   */
-  void ParseModelFile( unsigned int index );
-
-
 public:
 
   /**
@@ -135,6 +94,13 @@ public:
   ~SceneFileParser();
 
   /**
+   * @brief Parse the selected folder and load the first file
+   *
+   * @param[out] modelDirUrl, path to folder.
+   */
+  void ReadModelFolder( const char* const modelDirUrl );
+
+  /**
    * @brief Get assets from the next array asset or next files according to the case
    */
   void LoadNextModel();
@@ -147,30 +113,21 @@ public:
   const Asset& GetAsset() const;
 
   /**
+   * @return The current model file.
+   */
+  const std::string& GetCurrentModelFile() const;
+
+  /**
    * @brief Set camera parameters.
    *
    */
-  void SetCameraParameters(const DliCameraParameters &camera);
-
-  /**
-   * @brief Parse the selected folder and load the first file
-   *
-   * @param[out] modelDirUrl, path to folder.
-   */
-  void ReadPbrModelFolder( const char* const modelDirUrl );
-
-  /**
-   * @return The current model file.
-   */
-  std::string GetCurrentModelFile() const;
+  void SetCameraParameters(const DliCameraParameters& camera);
 
 private:
-  unsigned int mModelFileIndex;
-  unsigned int mViewModel;
-  std::vector<std::string> mPbrModelFiles;
   std::vector<Asset> mAssets;
+  unsigned int mViewModel;
 };
 
 } // namespace SceneLauncher
 
-#endif /* DALI_DEMO_EXAMPLES_SCENE_LAUNCHER_SCENE_FILE_PARSER_H_ */
+#endif // DALI_DEMO_SCENE_FILE_PARSER_H
