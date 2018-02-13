@@ -1,8 +1,8 @@
-#ifndef KTX_LOADER_H
-#define KTX_LOADER_H
+#ifndef DALI_SCENE_LAUNCHER_KTX_LOADER_H
+#define DALI_SCENE_LAUNCHER_KTX_LOADER_H
 
 /*
- * Copyright (c) 2017 Samsung Electronics Co., Ltd.
+ * Copyright (c) 2018 Samsung Electronics Co., Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -32,7 +32,7 @@ namespace SceneLauncher
  */
 struct CubeData
 {
-  std::vector< std::vector<Dali::PixelData> > img;
+  std::vector<std::vector<PixelData>> img;
 };
 
 /**
@@ -45,4 +45,4 @@ bool LoadCubeMapFromKtxFile( const std::string& path, CubeData& cubedata );
 
 } // namespace SceneLauncher
 
-#endif //KTX_LOADER_H
+#endif // DALI_SCENE_LAUNCHER_KTX_LOADER_H
