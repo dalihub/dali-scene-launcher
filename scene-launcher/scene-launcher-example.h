@@ -26,7 +26,6 @@
 #include "scene-file-parser.h"
 #include "model-skybox.h"
 
-using namespace Dali;
 using namespace Toolkit;
 
 /**
@@ -93,14 +92,14 @@ public:
 
   void DisplayError( const std::string& errorMessage );
 
-  void PlayAnimation( std::vector<Animation> animationList );
+  void PlayAnimation( std::vector<Animation>& animationList );
 
   void ApplicationQuit();
 
 private:
   Application& mApplication;
 
-  SceneLauncher::SceneFileParser mSceneParser;
+  SceneLauncher::FileParser mSceneFileParser;
 
   TextLabel mErrorMessage;
   Timer mDoubleTapTime;

@@ -19,16 +19,18 @@
 #include "model-pbr.h"
 
 // EXTERNAL INCLUDES
-#include <dali/devel-api/adaptor-framework/file-loader.h>
-#include <cstdio>
-#include <string.h>
+#include <dali/public-api/rendering/renderer.h>
 #include <dali/devel-api/actors/actor-devel.h>
 
 // INTERNAL INCLUDES
+#include "asset.h"
 #include "dli-loader.h"
 
 namespace
 {
+
+const std::string DLI_EXT( ".dli" );
+const size_t DLI_EXT_SIZE = DLI_EXT.size();
 
 struct Vertices
 {
@@ -53,30 +55,28 @@ ModelPbr::~ModelPbr()
 {
 }
 
-void ModelPbr::Init( const std::string& modelUrl, const Vector3& position, const Vector3& size, DliCameraParameters *camera, std::vector<std::vector<Animation>> *animations, std::vector<std::string> *animationsName )
+void ModelPbr::Init( Asset& asset, const Vector3& position, std::vector<std::vector<Animation>>& animations, std::vector<std::string>& animationsName )
 {
   mActor = Actor::New();
   mActor.SetAnchorPoint( AnchorPoint::CENTER );
   mActor.SetParentOrigin( ParentOrigin::CENTER );
   mActor.SetPosition( position );
-  mActor.SetSize( size );
+  mActor.SetSize( asset.modelScaleFactor );
 
-  if( modelUrl.rfind( ".dli" ) + 4 == modelUrl.length() )
+  if( asset.model.rfind( DLI_EXT ) + DLI_EXT_SIZE == asset.model.length() )
   {
     //If it is a DLI file, ignore "shader" parameter
     DliLoader dliLoader;
-    if( dliLoader.LoadObject( modelUrl ) )
+    if( dliLoader.LoadObject( asset.model ) )
     {
       dliLoader.CreateScene( mShaderArray, mActor, mSkyboxTexture );
-      dliLoader.GetCameraParameters( 0, camera );
-      if(animationsName)
+      dliLoader.GetCameraParameters( 0, asset.camera );
+
+      for( const auto& animationName : animationsName )
       {
-        for(std::vector<std::string>::iterator it = animationsName->begin(); it != animationsName->end(); ++it )
-        {
-          std::vector<Animation> aniItem;
-          dliLoader.LoadAnimation( mActor, &aniItem, *it );
-          animations->push_back(aniItem);
-        }
+        std::vector<Animation> aniItem;
+        dliLoader.LoadAnimation( mActor, aniItem, animationName );
+        animations.push_back( aniItem );
       }
     }
     else
@@ -88,7 +88,7 @@ void ModelPbr::Init( const std::string& modelUrl, const Vector3& position, const
 
 void ModelPbr::Clear()
 {
-  for(std::vector<Shader>::iterator it = mShaderArray.begin(); it !=mShaderArray.end(); ++it )
+  for( std::vector<Shader>::iterator it = mShaderArray.begin(); it !=mShaderArray.end(); ++it )
   {
      (*it).Reset();
   }
@@ -102,11 +102,11 @@ Actor& ModelPbr::GetActor()
   return mActor;
 }
 
-bool ModelPbr::GetUniform(std::string property, Property::Value& value, int shaderIndex )
+bool ModelPbr::GetUniform( const std::string& property, Property::Value& value, int shaderIndex )
 {
   if( shaderIndex < 0 )
   {
-    for(std::vector<Shader>::iterator it = mShaderArray.begin(); it != mShaderArray.end(); ++it )
+    for( std::vector<Shader>::iterator it = mShaderArray.begin(); it != mShaderArray.end(); ++it )
     {
       int index = (*it).GetPropertyIndex( property );
       if( index != Property::INVALID_INDEX )
@@ -128,9 +128,9 @@ bool ModelPbr::GetUniform(std::string property, Property::Value& value, int shad
   return false;
 }
 
-void ModelPbr::SetShaderUniform(std::string property, const Property::Value& value)
+void ModelPbr::SetShaderUniform( const std::string& property, const Property::Value& value )
 {
-  for(std::vector<Shader>::iterator it = mShaderArray.begin(); it != mShaderArray.end(); ++it )
+  for( std::vector<Shader>::iterator it = mShaderArray.begin(); it != mShaderArray.end(); ++it )
   {
     int index = (*it).GetPropertyIndex( property );
     if( index != Property::INVALID_INDEX )
@@ -140,9 +140,9 @@ void ModelPbr::SetShaderUniform(std::string property, const Property::Value& val
   }
 }
 
-void ModelPbr::SetShaderAnimationUniform(std::string property, const Property::Value& value, AlphaFunction alpha, TimePeriod etime )
+void ModelPbr::SetShaderAnimationUniform( const std::string& property, const Property::Value& value, AlphaFunction alpha, TimePeriod etime )
 {
-  for(std::vector<Shader>::iterator it = mShaderArray.begin(); it != mShaderArray.end(); ++it )
+  for( std::vector<Shader>::iterator it = mShaderArray.begin(); it != mShaderArray.end(); ++it )
   {
     int index = (*it).GetPropertyIndex( property );
     if( index != Property::INVALID_INDEX )
@@ -160,7 +160,7 @@ Texture ModelPbr::GetSkyboxTexture()
   return mSkyboxTexture;
 }
 
-Actor ModelPbr::CreateNode( Shader shader, int blend, TextureSet textureSet, Geometry geometry, Vector3 actorSize, const std::string& name )
+Actor ModelPbr::CreateNode( Shader shader, int blend, TextureSet textureSet, Geometry geometry, const Vector3& actorSize, const std::string& name )
 {
   Renderer renderer = Renderer::New( geometry, shader );
 

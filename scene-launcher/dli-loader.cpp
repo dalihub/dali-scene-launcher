@@ -17,16 +17,16 @@
 
 // CLASS HEADER
 #include "dli-loader.h"
-#include "model-pbr.h"
-#include "ktx-loader.h"
 
 // EXTERNAL INCLUDES
-#include <fstream>
-#include <sstream>
 #include <dali/integration-api/debug.h>
+#include <dali-toolkit/public-api/image-loader/sync-image-loader.h>
+#include <fstream>
 
-using namespace Dali;
-using namespace Dali::Toolkit;
+// INTERNAL INCLUDES
+#include "asset.h"
+#include "model-pbr.h"
+#include "ktx-loader.h"
 
 namespace
 {
@@ -361,8 +361,7 @@ namespace SceneLauncher
 {
 
 DliLoader::DliLoader()
-: mNodes( NULL ),
-  mShaderArrayPtr( NULL )
+: mNodes( NULL )
 {
 }
 
@@ -408,25 +407,23 @@ bool DliLoader::CreateScene( std::vector<Shader>& shaderArray, Actor toActor, Te
   int starting_node = itn->GetInteger();
 
   inodes = Tidx(mNodes, starting_node);
-  AddNode( toActor, inodes );
-
-  mShaderArrayPtr = NULL;
+  AddNode( toActor, inodes, shaderArray );
 
   return true;
 }
 
-bool DliLoader::LoadAnimation( Actor toActor, std::vector<Animation> *animArray, const std::string& animationName )
+bool DliLoader::LoadAnimation( Actor toActor, std::vector<Animation>& animArray, const std::string& animationName )
 {
-  const TreeNode *root = mParser.GetRoot();
-  const TreeNode *animations = root->GetChild( "animations" );
+  const TreeNode* root = mParser.GetRoot();
+  const TreeNode* animations = root->GetChild( "animations" );
 
-  if( NULL == animations || NULL == animArray )
+  if( nullptr == animations )
   {
     return false;
   }
   animations = animations->GetChild( animationName.c_str() );
 
-  if( NULL == animations )
+  if( nullptr == animations )
   {
     return false;
   }
@@ -626,20 +623,18 @@ bool DliLoader::LoadAnimation( Actor toActor, std::vector<Animation> *animArray,
       }
 
     }
-    if(animArray)
-    {
-      animArray->push_back( animation );
-    }
+
+    animArray.push_back( animation );
   }
 
   return true;
 }
 
-void DliLoader::GetCameraParameters( unsigned int eidx, DliCameraParameters* camera )
+void DliLoader::GetCameraParameters( unsigned int eidx, CameraParameters& camera )
 {
   const TreeNode* cameras = mParser.GetRoot()->GetChild( "cameras" );
 
-  if( ( NULL == cameras ) || ( NULL == camera ) )
+  if( nullptr == cameras )
   {
     return;
   }
@@ -648,17 +643,17 @@ void DliLoader::GetCameraParameters( unsigned int eidx, DliCameraParameters* cam
   const TreeNode* parameter;
   if(node)
   {
-    ReadFloat(node->GetChild( "fov" ), camera->cameraFov );
-    ReadFloat(node->GetChild( "near" ), camera->cameraNear );
-    ReadFloat(node->GetChild( "far" ), camera->cameraFar );
-    if(ReadVector( node->GetChild( "orthographic" ), camera->cameraOrthographicSize.AsFloat(), 4u ))
+    ReadFloat(node->GetChild( "fov" ), camera.cameraFov );
+    ReadFloat(node->GetChild( "near" ), camera.cameraNear );
+    ReadFloat(node->GetChild( "far" ), camera.cameraFar );
+    if(ReadVector( node->GetChild( "orthographic" ), camera.cameraOrthographicSize.AsFloat(), 4u ))
     {
-      camera->enablePerspective = false;
+      camera.enablePerspective = false;
     }
 
     if((parameter = node->GetChild( "matrix" )))
     {
-      ReadVector( node->GetChild( "matrix" ), camera->cameraMatrix.AsFloat(), 16u );
+      ReadVector( node->GetChild( "matrix" ), camera.cameraMatrix.AsFloat(), 16u );
     }
   }
 }
@@ -792,7 +787,7 @@ bool DliLoader::LoadTextureSetArray( Texture& skyboxTexture )
   return true;
 }
 
-bool DliLoader::LoadShaderArray(std::vector<Shader>& shaderArray)
+bool DliLoader::LoadShaderArray( std::vector<Shader>& shaderArray )
 {
   const TreeNode *shaders = mParser.GetRoot()->GetChild( "shaders" );
   if(!shaders)
@@ -872,7 +867,7 @@ bool DliLoader::LoadShaderArray(std::vector<Shader>& shaderArray)
 
     mRendererOptionsArray.push_back( renderer );
   }
-  mShaderArrayPtr = &shaderArray;
+
   return true;
 }
 
@@ -896,7 +891,7 @@ bool DliLoader::LoadGeometryArray()
   return true;
 }
 
-void DliLoader::AddNode( Actor toActor, const TreeNode *addnode )
+void DliLoader::AddNode( Actor toActor, const TreeNode *addnode, const std::vector<Shader>& shaderArray )
 {
   const TreeNode *itn = NULL;
   Actor actor;
@@ -931,7 +926,7 @@ void DliLoader::AddNode( Actor toActor, const TreeNode *addnode )
     ReadInt( addnode->GetChild( "shader" ), shaderIdx );
     ReadInt( addnode->GetChild( "material" ), materialIndex );
 
-    actor = ModelPbr::CreateNode( (*mShaderArrayPtr)[shaderIdx],
+    actor = ModelPbr::CreateNode( shaderArray[shaderIdx],
                                   mRendererOptionsArray[shaderIdx].blend,
                                   mTextureSetArray[materialIndex],
                                   mGeometryArray[meshIndex],
@@ -957,7 +952,7 @@ void DliLoader::AddNode( Actor toActor, const TreeNode *addnode )
       for( unsigned int i = 0; i < children.Size(); ++i )
       {
         const TreeNode *inodes = Tidx( mNodes, children[i] );
-        AddNode( actor, inodes );
+        AddNode( actor, inodes, shaderArray );
       }
     }
   }

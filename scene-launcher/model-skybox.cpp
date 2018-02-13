@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017 Samsung Electronics Co., Ltd.
+ * Copyright (c) 2018 Samsung Electronics Co., Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,9 +19,8 @@
 #include "model-skybox.h"
 
 // EXTERNAL INCLUDES
-#include <dali/devel-api/adaptor-framework/file-loader.h>
-#include <cstdio>
-#include <string.h>
+#include <dali/public-api/rendering/renderer.h>
+#include <dali/public-api/rendering/shader.h>
 
 namespace
 {
@@ -59,66 +58,14 @@ void main()\n
 }\n
 );
 
-} // namespace
 
 
-ModelSkybox::ModelSkybox()
-{
-}
-
-ModelSkybox::~ModelSkybox()
-{
-}
-
-void ModelSkybox::Init()
-{
-  Geometry geometry = CreateGeometry();
-  Shader shader = Shader::New( VERTEX_SHADER_SKYBOX, FRAGMENT_SHADER_SKYBOX );
-
-  Renderer renderer = Renderer::New( geometry, shader );
-
-  if( mTextureSet )
-  {
-    renderer.SetTextures( mTextureSet );
-  }
-
-  // Face culling is enabled to hide the backwards facing sides of the model
-  // This is sufficient to render a single object; for more complex scenes depth-testing might be required
-  renderer.SetProperty( Renderer::Property::DEPTH_TEST_MODE, DepthTestMode::ON );
-  renderer.SetProperty( Renderer::Property::DEPTH_WRITE_MODE, DepthWriteMode::ON );
-  renderer.SetProperty( Renderer::Property::DEPTH_FUNCTION, DepthFunction::LESS_EQUAL );
-  renderer.SetProperty( Renderer::Property::FACE_CULLING_MODE, FaceCullingMode::BACK );
-
-  mActor = Actor::New();
-  mActor.SetAnchorPoint( AnchorPoint::CENTER );
-  mActor.SetParentOrigin( ParentOrigin::CENTER );
-  mActor.SetSize( Vector3::ONE );
-  mActor.AddRenderer( renderer );
-}
-
-void ModelSkybox::InitTexture(Texture texSkybox)
-{
-  mTextureSet = TextureSet::New();
-  mTextureSet.SetTexture( 0u, texSkybox );
-
-  Sampler sampler = Sampler::New();
-  sampler.SetWrapMode(WrapMode::CLAMP_TO_EDGE,WrapMode::CLAMP_TO_EDGE,WrapMode::CLAMP_TO_EDGE);
-  sampler.SetFilterMode(FilterMode::LINEAR_MIPMAP_LINEAR,FilterMode::LINEAR);
-  mTextureSet.SetSampler(0,sampler);
-}
-
-void ModelSkybox::Clear()
-{
-  mTextureSet.Reset();
-  UnparentAndReset( mActor );
-}
-
-Actor& ModelSkybox::GetActor()
-{
-  return mActor;
-}
-
-Geometry ModelSkybox::CreateGeometry()
+/**
+ * @brief Creates a cube geometry including texture coordinates.
+ *
+ * @return The geometry.
+ */
+Geometry CreateGeometry()
 {
   Geometry geometry;
 
@@ -186,4 +133,63 @@ Geometry ModelSkybox::CreateGeometry()
   geometry.AddVertexBuffer( vertexBuffer );
   geometry.SetType( Geometry::TRIANGLES );
   return geometry;
+}
+
+} // namespace
+
+
+ModelSkybox::ModelSkybox()
+{
+}
+
+ModelSkybox::~ModelSkybox()
+{
+}
+
+void ModelSkybox::Init()
+{
+  Geometry geometry = CreateGeometry();
+  Shader shader = Shader::New( VERTEX_SHADER_SKYBOX, FRAGMENT_SHADER_SKYBOX );
+
+  Renderer renderer = Renderer::New( geometry, shader );
+
+  if( mTextureSet )
+  {
+    renderer.SetTextures( mTextureSet );
+  }
+
+  // Face culling is enabled to hide the backwards facing sides of the model
+  // This is sufficient to render a single object; for more complex scenes depth-testing might be required
+  renderer.SetProperty( Renderer::Property::DEPTH_TEST_MODE, DepthTestMode::ON );
+  renderer.SetProperty( Renderer::Property::DEPTH_WRITE_MODE, DepthWriteMode::ON );
+  renderer.SetProperty( Renderer::Property::DEPTH_FUNCTION, DepthFunction::LESS_EQUAL );
+  renderer.SetProperty( Renderer::Property::FACE_CULLING_MODE, FaceCullingMode::BACK );
+
+  mActor = Actor::New();
+  mActor.SetAnchorPoint( AnchorPoint::CENTER );
+  mActor.SetParentOrigin( ParentOrigin::CENTER );
+  mActor.SetSize( Vector3::ONE );
+  mActor.AddRenderer( renderer );
+}
+
+void ModelSkybox::InitTexture(Texture texSkybox)
+{
+  mTextureSet = TextureSet::New();
+  mTextureSet.SetTexture( 0u, texSkybox );
+
+  Sampler sampler = Sampler::New();
+  sampler.SetWrapMode(WrapMode::CLAMP_TO_EDGE,WrapMode::CLAMP_TO_EDGE,WrapMode::CLAMP_TO_EDGE);
+  sampler.SetFilterMode(FilterMode::LINEAR_MIPMAP_LINEAR,FilterMode::LINEAR);
+  mTextureSet.SetSampler(0,sampler);
+}
+
+void ModelSkybox::Clear()
+{
+  mTextureSet.Reset();
+  UnparentAndReset( mActor );
+}
+
+Actor& ModelSkybox::GetActor()
+{
+  return mActor;
 }

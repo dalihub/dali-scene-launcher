@@ -26,8 +26,6 @@ namespace
 
 const char* MODEL_DIR_URL = SCENE_LAUNCHER_MODEL_DIR "scenes";
 
-const std::string ASSET_MODEL_DIR = SCENE_LAUNCHER_MODEL_DIR;
-
 const Vector3 CAMERA_DEFAULT_POSITION( 0.0f, 0.0f, 3.5f );
 
 const float TEXT_AUTO_SCROLL_SPEED = 200.f;
@@ -36,7 +34,7 @@ const float TEXT_AUTO_SCROLL_SPEED = 200.f;
 
 Scene3dLauncher::Scene3dLauncher( Application& application )
 : mApplication( application ),
-  mSceneParser(),
+  mSceneFileParser(),
   mDoubleTapTime(),
   m3dRoot(),
   mUiRoot(),
@@ -96,20 +94,20 @@ void Scene3dLauncher::Create( Application& application )
   try
   {
     // Read models from the filesystem
-    mSceneParser.ReadPbrModelFolder( MODEL_DIR_URL );
+    mSceneFileParser.ReadModelFolder( MODEL_DIR_URL );
 
     CreateModel();
   }
   catch( DaliException& e )
   {
     std::stringstream stream;
-    stream << "Error while loading " << mSceneParser.GetCurrentModelFile() << ". Error : " << std::string( e.condition );
+    stream << "Error while loading " << mSceneFileParser.GetModelFile() << ". Error : " << std::string( e.condition );
 
     DisplayError( stream.str() );
   }
   catch( ... )
   {
-    DALI_LOG_ERROR( "Unknown error while loading %s\n", mSceneParser.GetCurrentModelFile().c_str() );
+    DALI_LOG_ERROR( "Unknown error while loading %s\n", mSceneFileParser.GetModelFile().c_str() );
   }
 
   // Respond to a click anywhere on the stage
@@ -142,28 +140,6 @@ bool Scene3dLauncher::OnTouch( Actor actor, const TouchData& touch )
         if( mStartTouch.y > ( scaleY * 0.7f ) )
         {
           mRotateEnvironment = !mRotateEnvironment;
-        }
-        else
-        {
-          ClearModel();
-
-          try
-          {
-            mSceneParser.LoadNextModel();
-
-            CreateModel();
-          }
-          catch( DaliException e )
-          {
-            std::stringstream stream;
-            stream << "Error while loading " << mSceneParser.GetCurrentModelFile() << ". Error : " << std::string( e.condition );
-
-            DisplayError( stream.str() );
-          }
-          catch( ... )
-          {
-            DALI_LOG_ERROR( "Unknown error while loading %s\n", mSceneParser.GetCurrentModelFile().c_str() );
-          }
         }
       }
       mDoubleTapTime.Stop();
@@ -264,18 +240,16 @@ void Scene3dLauncher::OnKeyEvent( const KeyEvent& event )
 
 void Scene3dLauncher::InitPbrActor()
 {
-  const SceneLauncher::Asset& asset = mSceneParser.GetAsset();
-  SceneLauncher::DliCameraParameters camera;
-  mModel.Init( ASSET_MODEL_DIR + asset.model, Vector3::ZERO, asset.modelScaleFactor, &camera, &mAnimations, &mAnimationsName );
+  SceneLauncher::Asset& asset = mSceneFileParser.GetAsset();
+  mModel.Init( asset, Vector3::ZERO, mAnimations, mAnimationsName );
 
   mModel.GetActor().SetOrientation( mModelOrientation );
-  mSceneParser.SetCameraParameters( camera );
 }
 
 void Scene3dLauncher::InitActors()
 {
   Stage stage = Stage::GetCurrent();
-  const SceneLauncher::Asset& asset = mSceneParser.GetAsset();
+  const SceneLauncher::Asset& asset = mSceneFileParser.GetAsset();
 
   if( mModel.GetSkyboxTexture() )
   {
@@ -283,32 +257,32 @@ void Scene3dLauncher::InitActors()
     mSkybox.Init();
   }
 
-  mCameraPosition = asset.cameraMatrix.GetTranslation3();
+  mCameraPosition = asset.camera.cameraMatrix.GetTranslation3();
 
   CameraActor camera3d = stage.GetRenderTaskList().GetTask(0).GetCameraActor();
   camera3d.SetInvertYAxis( true );
   camera3d.SetPosition( mCameraPosition );
-  if( asset.enablePerspective )
+  if( asset.camera.enablePerspective )
   {
-    camera3d.SetNearClippingPlane( asset.cameraNear );
-    camera3d.SetFarClippingPlane( asset.cameraFar );
-    camera3d.SetFieldOfView( Radian( Degree( asset.cameraFov ) ) );
+    camera3d.SetNearClippingPlane( asset.camera.cameraNear );
+    camera3d.SetFarClippingPlane( asset.camera.cameraFar );
+    camera3d.SetFieldOfView( Radian( Degree( asset.camera.cameraFov ) ) );
   }
   else
   {
-    camera3d.SetOrthographicProjection( asset.cameraOrthographicSize.x,
-                                        asset.cameraOrthographicSize.y,
-                                        asset.cameraOrthographicSize.z,
-                                        asset.cameraOrthographicSize.w,
-                                        asset.cameraNear,
-                                        asset.cameraFar );
+    camera3d.SetOrthographicProjection( asset.camera.cameraOrthographicSize.x,
+                                        asset.camera.cameraOrthographicSize.y,
+                                        asset.camera.cameraOrthographicSize.z,
+                                        asset.camera.cameraOrthographicSize.w,
+                                        asset.camera.cameraNear,
+                                        asset.camera.cameraFar );
   }
 
   // Setting camera parameters for 3D Scene
   // CameraActors should face in the negative Z direction, towards the other actors
   //viewQuaternion is the viewMatrix used by camera in DALI
   Quaternion viewQuaternion( Dali::ANGLE_180, Vector3::YAXIS );
-  Quaternion camOrientation( asset.cameraMatrix );
+  Quaternion camOrientation( asset.camera.cameraMatrix );
   camOrientation = camOrientation * viewQuaternion;
   camera3d.SetOrientation( camOrientation );
   mCameraOrientationInv = camOrientation;
@@ -381,7 +355,7 @@ void Scene3dLauncher::DisplayError( const std::string& errorMessage )
   mUiRoot.Add( mErrorMessage );
 }
 
-void Scene3dLauncher::PlayAnimation( std::vector<Animation> animationList )
+void Scene3dLauncher::PlayAnimation( std::vector<Animation>& animationList )
 {
   for(std::vector<Animation>::iterator it = animationList.begin(); it != animationList.end(); ++it)
   {

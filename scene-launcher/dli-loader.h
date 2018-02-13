@@ -20,17 +20,23 @@
 
 // EXTERNAL INCLUDES
 #include <dali/public-api/actors/actor.h>
-
+#include <dali/public-api/animation/animation.h>
 #include <dali/public-api/rendering/geometry.h>
-#include <dali/public-api/rendering/renderer.h>
+#include <dali/public-api/rendering/shader.h>
+#include <dali/public-api/rendering/texture-set.h>
+
 #include <dali-toolkit/devel-api/builder/json-parser.h>
-#include <dali-toolkit/devel-api/builder/builder.h>
+
 
 using namespace Dali;
 using namespace Dali::Toolkit;
 
 namespace SceneLauncher
 {
+
+// Forward declarations
+struct CameraParameters;
+
 struct RendererOptions
 {
   RendererOptions()
@@ -41,28 +47,6 @@ struct RendererOptions
   {}
 
   int blend;
-};
-
-struct DliCameraParameters
-{
-  DliCameraParameters()
-  : cameraMatrix( Matrix::IDENTITY ),
-    cameraOrthographicSize( -1.0f , 1.0f, 1.0f, -1.0f ),
-    cameraFov( 60.f ),
-    cameraNear( 0.1f ),
-    cameraFar( 1000.f ),
-    enablePerspective(true)
-  {}
-
-  ~DliCameraParameters()
-  {}
-
-  Matrix cameraMatrix;
-  Vector4 cameraOrthographicSize;
-  float cameraFov;
-  float cameraNear;
-  float cameraFar;
-  bool enablePerspective;
 };
 
 class DliLoader
@@ -76,9 +60,9 @@ public:
 
   bool CreateScene( std::vector<Shader>& shaderArray, Actor toActor, Texture& skyboxTexture );
 
-  bool LoadAnimation( Actor toActor, std::vector<Animation> *animArray, const std::string& animationName );
+  bool LoadAnimation( Actor toActor, std::vector<Animation>& animArray, const std::string& animationName );
 
-  void GetCameraParameters( unsigned int eidx, DliCameraParameters* camera );
+  void GetCameraParameters( unsigned int eidx, CameraParameters& camera );
 
   std::string GetParseError() const;
 
@@ -90,7 +74,7 @@ private:
 
   bool LoadGeometryArray();
 
-  void AddNode( Actor toActor, const TreeNode* addnode );
+  void AddNode( Actor toActor, const TreeNode* addnode, const std::vector<Shader>& shaderArray );
 
   void CreateSkyboxTexture( const std::string& skyBoxTexturePath, Texture& skyboxTexture );
 
@@ -100,14 +84,13 @@ private:
 
   bool LoadBuffer(const TreeNode* mesh, Geometry geometry, std::string& ebinFilename, unsigned char*& efileContent);
 
-  void ReadAnglePosition(const TreeNode* node, Actor &actor);
+  void ReadAnglePosition(const TreeNode* node, Actor& actor);
 
-  JsonParser mParser;
-  const TreeNode *mNodes;
   std::vector<Geometry> mGeometryArray;
   std::vector<TextureSet> mTextureSetArray;
   std::vector<RendererOptions> mRendererOptionsArray;
-  std::vector<Shader>* mShaderArrayPtr;
+  const TreeNode* mNodes;
+  JsonParser mParser;
   std::string mDirectory;
 
 };

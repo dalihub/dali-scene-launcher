@@ -1,5 +1,5 @@
-#ifndef DALI_SCENE_LAUNCHER_MODELSKYBOX_H
-#define DALI_SCENE_LAUNCHER_MODELSKYBOX_H
+#ifndef DALI_SCENE_LAUNCHER_MODEL_SKYBOX_H
+#define DALI_SCENE_LAUNCHER_MODEL_SKYBOX_H
 
 /*
  * Copyright (c) 2017 Samsung Electronics Co., Ltd.
@@ -20,7 +20,8 @@
 
 // EXTERNAL INCLUDES
 #include <dali/public-api/actors/actor.h>
-#include <dali/public-api/rendering/renderer.h>
+#include <dali/public-api/rendering/geometry.h>
+#include <dali/public-api/rendering/texture-set.h>
 
 using namespace Dali;
 
@@ -65,20 +66,13 @@ public:
    *
    * @return The Actor for the Physically Based Rendering.
    */
-  Actor &GetActor();
+  Actor& GetActor();
 
 private:
-
-  /**
-   * @brief Creates a cube geometry including texture coordinates.
-   *
-   * @return The geometry.
-   */
-  Geometry CreateGeometry();
 
   Actor mActor;
   TextureSet mTextureSet;
 };
 
-#endif // DALI_SCENE_LAUNCHER_MODELSKYBOX_H
+#endif // DALI_SCENE_LAUNCHER_MODEL_SKYBOX_H
 

@@ -19,11 +19,7 @@
 #include "ktx-loader.h"
 
 // EXTERNAL INCLUDES
-#include <dali/public-api/images/pixel.h>
-#include <dali/devel-api/images/pixel-data-devel.h>
 #include <memory.h>
-#include <stdio.h>
-#include <stdint.h>
 
 namespace SceneLauncher
 {
@@ -49,7 +45,7 @@ struct KtxFileHeader
 /**
  * Convert KTX format to Dali::Pixel::Format
  */
-bool ConvertPixelFormat(const uint32_t ktxPixelFormat, Dali::Pixel::Format& format)
+bool ConvertPixelFormat( const uint32_t ktxPixelFormat, Dali::Pixel::Format& format )
 {
   switch( ktxPixelFormat )
   {
