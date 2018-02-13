@@ -15,45 +15,56 @@
  *
  */
 
+// CLASS HEADER
+#include "scene-file-parser.h"
+
 // EXTERNAL INCLUDES
 #include <dali-toolkit/devel-api/builder/json-parser.h>
-#include <dali-toolkit/dali-toolkit.h>
 
-#include <fstream>
 #include <sstream>
 #include <dirent.h>
 #include <sys/stat.h>
 
-#include "scene-file-parser.h"
-#include "model-pbr.h"
+// INTERNAL INCLUDES
+#include "dli-loader.h"
 
-using namespace Dali;
 using namespace Dali::Toolkit;
 
 namespace
 {
+const std::string DLI_EXT = ".dli";
+const size_t DLI_EXT_SIZE = DLI_EXT.size();
+const std::string SLASH( "/" );
 
-const Vector3 MODEL_DEFAULT_SCALE( Vector3::ONE );
-const Vector3 SKYBOX_DEFAULT_SCALE( Vector3::ONE );
+/**
+ * @brief Insensitive case compare function.
+ *
+ * @param[in] a, compare string
+ * @param[in] b, compare string
+ * @return true if strings are equal
+ */
+bool CaseInsensitiveCharacterCompare( unsigned char a, unsigned char b )
+{
+  // Converts to lower case in the current locale.
+  return std::tolower( a ) == std::tolower( b );
+}
 
-const float CAMERA_DEFAULT_FOV(    60.0f );
-const float CAMERA_DEFAULT_NEAR(    0.1f );
-const float CAMERA_DEFAULT_FAR(  1000.0f );
-const Vector3 CAMERA_DEFAULT_POSITION( 0.0f, 0.0f, 3.5f );
-
-const std::string NAME_TOKEN( "name" );
-const std::string MODEL_TOKEN( "model" );
-const std::string MODEL_SCALE_FACTOR_TOKEN( "model-scale-factor" );
-const std::string ALBEDO_METALNESS_TOKEN( "albedo-metalness" );
-const std::string NORMAL_ROUGHNESS_TOKEN( "normal-roughness" );
-const std::string VERTEX_SHADER_TOKEN( "vertex-shader" );
-const std::string FRAGMENT_SHADER_TOKEN( "fragment-shader" );
-const std::string CUBEMAP_SPECULAR_TOKEN( "cubemap-specular" );
-const std::string CUBEMAP_DIFFUSE_TOKEN( "cubemap-diffuse" );
-const std::string CAMERA_DEFAULT_FOV_TOKEN( "camera-default-fov" );
-const std::string CAMERA_DEFAULT_NEAR_TOKEN( "camera-default-near" );
-const std::string CAMERA_DEFAULT_FAR_TOKEN( "camera-default-far" );
-const std::string CAMERA_DEFAULT_POSITION_TOKEN( "camera-default-position" );
+/**
+ * @brief return true if the lower cased ASCII strings are equal.
+ *
+ * @param[in] a, compare string
+ * @param[in] b, compare string
+ * @return true if strings are equal
+ */
+bool CaseInsensitiveStringCompare( const std::string& a, const std::string& b )
+{
+  bool result = false;
+  if( a.length() == b.length() )
+  {
+    result = std::equal( a.begin(), a.end(), b.begin(), &CaseInsensitiveCharacterCompare );
+  }
+  return result;
+}
 
 }  // namespace
 
@@ -61,35 +72,15 @@ namespace SceneLauncher
 {
 
 SceneFileParser::SceneFileParser()
-: mModelFileIndex( 0u ),
-  mViewModel( 0u )
+: mAsset()
 {
-
 }
 
 SceneFileParser::~SceneFileParser()
 {
-
 }
 
-bool SceneFileParser::CaseInsensitiveCharacterCompare( unsigned char a, unsigned char b )
-{
-  // Converts to lower case in the current locale.
-  return std::tolower( a ) == std::tolower( b );
-}
-
-
-bool SceneFileParser::CaseInsensitiveStringCompare( const std::string& a, const std::string& b )
-{
-  bool result = false;
-  if( a.length() == b.length() )
-  {
-    result = std::equal( a.begin(), a.end(), b.begin(), &SceneFileParser::CaseInsensitiveCharacterCompare );
-  }
-  return result;
-}
-
-void SceneFileParser::ReadPbrModelFolder( const char* const modelDirUrl )
+void SceneFileParser::ReadModelFolder( const char* const modelDirUrl )
 {
   DIR *dp;
   dp = opendir( modelDirUrl );
@@ -103,14 +94,10 @@ void SceneFileParser::ReadPbrModelFolder( const char* const modelDirUrl )
     throw DaliException( ASSERT_LOCATION, stream.str().c_str() );
   }
 
-  const std::string pbrExt = ".dalipbr";
-  const size_t pbrExtSize = pbrExt.size();
-  const std::string slash( "/" );
-
   struct dirent* dirp;
   while( ( dirp = readdir( dp ) ) )
   {
-    std::string filePath = std::string( modelDirUrl ) + slash + dirp->d_name;
+    std::string filePath = std::string( modelDirUrl ) + SLASH + dirp->d_name;
 
     struct stat fileStat;
     if( stat( filePath.c_str(), &fileStat ) || S_ISDIR( fileStat.st_mode ))
@@ -119,183 +106,25 @@ void SceneFileParser::ReadPbrModelFolder( const char* const modelDirUrl )
       continue;
     }
 
-    if( filePath.size() > pbrExtSize )
+    if( filePath.size() > DLI_EXT_SIZE )
     {
-      const std::string fileExtension = filePath.substr( filePath.size() - pbrExtSize );
-      if( CaseInsensitiveStringCompare( fileExtension, pbrExt ) )
+      const std::string fileExtension = filePath.substr( filePath.size() - DLI_EXT_SIZE );
+      if( CaseInsensitiveStringCompare( fileExtension, DLI_EXT ) )
       {
-        mPbrModelFiles.push_back( filePath );
+        mAsset.model = filePath;
       }
-    }
-  }
-
-  if( !mPbrModelFiles.empty() )
-  {
-    ParseModelFile( 0u );
-  }
-}
-
-void SceneFileParser::ParseVector3( const TreeNode& node, Vector3& vector3 )
-{
-  unsigned int offset = 0u;
-  for( TreeNode::ConstIterator it = node.CBegin(), endIt = node.CEnd(); it != endIt; ++it, ++offset )
-  {
-    const TreeNode& coord = (*it).second;
-    vector3.AsFloat()[offset] = coord.GetFloat();
-  }
-}
-
-void SceneFileParser::ParseModelFile( unsigned int fileIndex )
-{
-  if( fileIndex >= mPbrModelFiles.size() )
-  {
-    std::stringstream stream;
-    stream << "Model index "<< fileIndex << " out of bounds.";
-
-    throw DaliException( ASSERT_LOCATION, stream.str().c_str() );
-  }
-
-  std::string modelUrl = mPbrModelFiles[fileIndex];
-  std::ifstream ifs( modelUrl.c_str() );
-  std::string buffer( ( std::istreambuf_iterator<char>( ifs ) ),
-                      ( std::istreambuf_iterator<char>() ) );
-
-  JsonParser parser = JsonParser::New();
-  const bool result = parser.Parse( buffer );
-
-  mAssets.clear();
-
-  if( !result )
-  {
-    std::stringstream stream;
-
-    if( parser.ParseError() )
-    {
-      stream << "position: " << parser.GetErrorPosition() << ", line: " << parser.GetErrorLineNumber() << ", column: " << parser.GetErrorColumn() << ", description: " << parser.GetErrorDescription() << ".";
-    }
-
-    throw DaliException( ASSERT_LOCATION, stream.str().c_str() );
-  }
-
-  const TreeNode& root = ( *parser.GetRoot()->CBegin() ).second;
-
-  mAssets.resize( root.Size() );
-
-  unsigned int assetIndex = 0u;
-  for( TreeNode::ConstIterator modelIt = root.CBegin(), modelEndIt = root.CEnd(); modelIt != modelEndIt; ++modelIt, ++assetIndex )
-  {
-    const TreeNode& modelNode = (*modelIt).second;
-    SceneLauncher::Asset& asset = mAssets[assetIndex];
-
-    for( TreeNode::ConstIterator it = modelNode.CBegin(), endIt = modelNode.CEnd(); it != endIt; ++it )
-    {
-      const TreeNode& node = (*it).second;
-
-      const std::string name = node.GetName();
-
-      if( CaseInsensitiveStringCompare( name, NAME_TOKEN ) )
-      {
-        asset.name = node.GetString();
-      }
-      else if( CaseInsensitiveStringCompare( name, MODEL_TOKEN ) )
-      {
-        asset.model = node.GetString();
-      }
-      else if( CaseInsensitiveStringCompare( name, MODEL_SCALE_FACTOR_TOKEN ) )
-      {
-        ParseVector3( node, asset.modelScaleFactor );
-      }
-      else if( CaseInsensitiveStringCompare( name, ALBEDO_METALNESS_TOKEN ) )
-      {
-        asset.albedoMetalness = node.GetString();
-      }
-      else if( CaseInsensitiveStringCompare( name, NORMAL_ROUGHNESS_TOKEN ) )
-      {
-        asset.normalRoughness = node.GetString();
-      }
-      else if( CaseInsensitiveStringCompare( name, VERTEX_SHADER_TOKEN ) )
-      {
-        asset.vertexShader = node.GetString();
-      }
-      else if( CaseInsensitiveStringCompare( name, FRAGMENT_SHADER_TOKEN ) )
-      {
-        asset.fragmentShader = node.GetString();
-      }
-      else if( CaseInsensitiveStringCompare( name, CUBEMAP_SPECULAR_TOKEN ) )
-      {
-        asset.cubeSpecular = node.GetString();
-      }
-      else if( CaseInsensitiveStringCompare( name, CUBEMAP_DIFFUSE_TOKEN ) )
-      {
-        asset.cubeDiffuse = node.GetString();
-      }
-      else if( CaseInsensitiveStringCompare( name, CAMERA_DEFAULT_FOV_TOKEN ) )
-      {
-        asset.cameraFov = node.GetFloat();
-      }
-      else if( CaseInsensitiveStringCompare( name, CAMERA_DEFAULT_NEAR_TOKEN ) )
-      {
-        asset.cameraNear = node.GetFloat();
-      }
-      else if( CaseInsensitiveStringCompare( name, CAMERA_DEFAULT_FAR_TOKEN ) )
-      {
-        asset.cameraFar = node.GetFloat();
-      }
-      else if( CaseInsensitiveStringCompare( name, CAMERA_DEFAULT_POSITION_TOKEN ) )
-      {
-        Vector3 camPosition;
-        ParseVector3( node, camPosition );
-        asset.cameraMatrix = Matrix::IDENTITY;
-        asset.cameraMatrix.SetTranslation( camPosition );
-      }
-    }
-    if( ( asset.model.rfind(".dli") + 4) == asset.model.length())
-    {
-      asset.objModel = false;
     }
   }
 }
 
-void SceneFileParser::LoadNextModel()
+Asset& SceneFileParser::GetAsset()
 {
-  ++mViewModel;
-  if( mViewModel >= mAssets.size() )
-  {
-    ++mModelFileIndex;
-    mModelFileIndex %= mPbrModelFiles.size();
-
-    mViewModel = 0;
-
-    ParseModelFile( mModelFileIndex );
-  }
+  return mAsset;
 }
 
-const Asset& SceneFileParser::GetAsset() const
+const std::string& SceneFileParser::GetCurrentModelFile() const
 {
-  return mAssets[mViewModel];
-}
-
-std::string SceneFileParser::GetCurrentModelFile() const
-{
-  std::string file;
-
-  if( mModelFileIndex < mPbrModelFiles.size() )
-  {
-    file = mPbrModelFiles[mModelFileIndex];
-  }
-
-  return file;
-}
-
-void SceneFileParser::SetCameraParameters( const DliCameraParameters &camera )
-{
-  mAssets[mViewModel].cameraFar = camera.cameraFar;
-  mAssets[mViewModel].cameraNear = camera.cameraNear;
-  mAssets[mViewModel].cameraMatrix = camera.cameraMatrix;
-  mAssets[mViewModel].cameraFov = camera.cameraFov;
-  mAssets[mViewModel].enablePerspective = camera.enablePerspective;
-  mAssets[mViewModel].cameraOrthographicSize = camera.cameraOrthographicSize;
-
+  return mAsset.model;
 }
 
 } // namespace SceneLauncher

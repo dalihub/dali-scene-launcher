@@ -18,107 +18,17 @@
 #ifndef DALI_DEMO_SCENE_FILE_PARSER_H
 #define DALI_DEMO_SCENE_FILE_PARSER_H
 
-#include <dali-toolkit/devel-api/builder/json-parser.h>
-#include "dli-loader.h"
-
-using namespace Dali;
-using namespace Dali::Toolkit;
-
+//INTERNAL INCLUDES
+#include "asset.h"
 
 namespace SceneLauncher
 {
 
-class ModelPbr;
-
-struct Asset
-{
-  Asset()
-  : hourActors(),
-    minActors(),
-    secActors(),
-    name(),
-    model(),
-    albedoMetalness(),
-    normalRoughness(),
-    vertexShader(),
-    fragmentShader(),
-    cubeSpecular(),
-    cubeDiffuse(),
-    cameraMatrix( Matrix::IDENTITY ),
-    cameraOrthographicSize( -1.0f, 1.0f, 1.0f, -1.0 ),
-    modelScaleFactor( Vector3::ONE ),
-    cameraFov( 60.f ),
-    cameraNear( 0.1f ),
-    cameraFar( 1000.f ),
-    MaxLOD( 8.f ),
-    objModel(true),
-    enablePerspective(true)
-  {}
-
-  ~Asset()
-  {}
-
-  std::vector<std::string> hourActors;
-  std::vector<std::string> minActors;
-  std::vector<std::string> secActors;
-  std::string name;
-  std::string model;
-  std::string albedoMetalness;
-  std::string normalRoughness;
-  std::string vertexShader;
-  std::string fragmentShader;
-  std::string cubeSpecular;
-  std::string cubeDiffuse;
-  Matrix cameraMatrix;
-  Vector4 cameraOrthographicSize;
-  Vector3 modelScaleFactor;
-  float cameraFov;
-  float cameraNear;
-  float cameraFar;
-  float MaxLOD;
-  bool objModel;
-  bool enablePerspective;
-};
+// Forward declarations
+struct DliCameraParameters;
 
 class SceneFileParser
 {
-
-private:
-
-  /**
-   * @brief Insensitive case compare function.
-   *
-   * @param[in] a, compare string
-   * @param[in] b, compare string
-   * @return true if strings are equal
-   */
-  static bool CaseInsensitiveCharacterCompare( unsigned char a, unsigned char b );
-
-  /**
-   * @brief return true if the lower cased ASCII strings are equal.
-   *
-   * @param[in] a, compare string
-   * @param[in] b, compare string
-   * @return true if strings are equal
-   */
-  bool CaseInsensitiveStringCompare( const std::string& a, const std::string& b );
-
-  /**
-   * @brief get a vector3 from parsed node
-   *
-   * @param[in] node, parsed node
-   * @param[out] vector3, vector read.
-   */
-  void ParseVector3( const TreeNode& node, Vector3& vector3 );
-
-  /**
-   * @brief From a list of files, get the assets from the corresponding index file.
-   *
-   * @param[in] index, index of file
-   */
-  void ParseModelFile( unsigned int index );
-
-
 public:
 
   /**
@@ -135,6 +45,13 @@ public:
   ~SceneFileParser();
 
   /**
+   * @brief Parse the selected folder and load the first file
+   *
+   * @param[out] modelDirUrl, path to folder.
+   */
+  void ReadModelFolder( const char* const modelDirUrl );
+
+  /**
    * @brief Get assets from the next array asset or next files according to the case
    */
   void LoadNextModel();
@@ -144,33 +61,17 @@ public:
    *
    * @return An asset
    */
-  const Asset& GetAsset() const;
-
-  /**
-   * @brief Set camera parameters.
-   *
-   */
-  void SetCameraParameters(const DliCameraParameters &camera);
-
-  /**
-   * @brief Parse the selected folder and load the first file
-   *
-   * @param[out] modelDirUrl, path to folder.
-   */
-  void ReadPbrModelFolder( const char* const modelDirUrl );
+  Asset& GetAsset();
 
   /**
    * @return The current model file.
    */
-  std::string GetCurrentModelFile() const;
+  const std::string& GetCurrentModelFile() const;
 
 private:
-  unsigned int mModelFileIndex;
-  unsigned int mViewModel;
-  std::vector<std::string> mPbrModelFiles;
-  std::vector<Asset> mAssets;
+  Asset mAsset;
 };
 
 } // namespace SceneLauncher
 
-#endif /* DALI_DEMO_EXAMPLES_SCENE_LAUNCHER_SCENE_FILE_PARSER_H_ */
+#endif // DALI_DEMO_SCENE_FILE_PARSER_H

@@ -32,6 +32,9 @@ using namespace Dali;
 namespace SceneLauncher
 {
 
+// Forward declarations
+struct Asset;
+
 class ModelPbr
 {
 public:
@@ -58,14 +61,12 @@ public:
    * A renderer is created with the geometry and the shader and it's set to the an actor that can be retrieved by calling GetActor().
    * The @p position and @p size is set to the actor.
    *
-   * @param[in] modelUrl The url of model.
+   * @param[in,out] asset Asset with the url of model. This function sets in the asset the camera parameters.
    * @param[in] position The position of the actor.
-   * @param[in] size The size of the actor.
-   * @param[in] camera pointer to load the camera from file.
-   * @param[in] pointer to an array of array of animations from file.
-   * @param[in] pointer to an array animations names to be loaded.
+   * @param[out] animations Vector of array of animations from file.
+   * @param[out] animationsName Vector of animations names to be loaded.
    */
-  void Init( const std::string& modelUrl, const Vector3& position, const Vector3& size, DliCameraParameters *camera, std::vector<std::vector<Animation>> *animations, std::vector<std::string> *animationsName );
+  void Init( Asset& asset, const Vector3& position, std::vector<std::vector<Animation>>& animations, std::vector<std::string>& animationsName );
 
   /**
    * @brief Clears the previously allocated PBR model resources.
@@ -90,7 +91,7 @@ public:
    *
    * @return true if uniforms exist in shader, else return false.
    */
-  bool GetUniform(std::string property, Property::Value& value, int shaderIndex );
+  bool GetUniform( const std::string& property, Property::Value& value, int shaderIndex );
 
   /**
    * @brief Set Shader uniform in all shaders it has this uniform name
@@ -98,7 +99,7 @@ public:
    * @param[in] property Uniform name.
    * @param[in] value To be set in the shaders.
    */
-  void SetShaderUniform( std::string property, const Property::Value& value );
+  void SetShaderUniform( const std::string& property, const Property::Value& value );
 
   /**
    * @brief Set Shader uniform in all shaders it has this uniform name with animation
@@ -108,7 +109,7 @@ public:
    * @param[in] alpha Animation function.
    * @param[in] etime Animation period.
    */
-  void SetShaderAnimationUniform( std::string property, const Property::Value& value, AlphaFunction alpha, TimePeriod etime );
+  void SetShaderAnimationUniform( const std::string& property, const Property::Value& value, AlphaFunction alpha, TimePeriod etime );
 
   /**
    * @brief Retrieves the Skybox Texture from the file format
@@ -127,7 +128,7 @@ public:
    * @param[in] actorSize, used to set the boundary box for touch/click events for this node.
    * @param[in] name of the node.
    */
-  static Actor CreateNode( Shader shader, int blend, TextureSet textureSet, Geometry geometry, Vector3 actorSize, const std::string& name );
+  static Actor CreateNode( Shader shader, int blend, TextureSet textureSet, Geometry geometry, const Vector3& actorSize, const std::string& name );
 
 private:
 

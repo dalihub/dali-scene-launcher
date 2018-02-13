@@ -635,11 +635,11 @@ bool DliLoader::LoadAnimation( Actor toActor, std::vector<Animation> *animArray,
   return true;
 }
 
-void DliLoader::GetCameraParameters( unsigned int eidx, DliCameraParameters* camera )
+void DliLoader::GetCameraParameters( unsigned int eidx, CameraParameters& camera )
 {
   const TreeNode* cameras = mParser.GetRoot()->GetChild( "cameras" );
 
-  if( ( NULL == cameras ) || ( NULL == camera ) )
+  if( nullptr == cameras )
   {
     return;
   }
@@ -648,17 +648,17 @@ void DliLoader::GetCameraParameters( unsigned int eidx, DliCameraParameters* cam
   const TreeNode* parameter;
   if(node)
   {
-    ReadFloat(node->GetChild( "fov" ), camera->cameraFov );
-    ReadFloat(node->GetChild( "near" ), camera->cameraNear );
-    ReadFloat(node->GetChild( "far" ), camera->cameraFar );
-    if(ReadVector( node->GetChild( "orthographic" ), camera->cameraOrthographicSize.AsFloat(), 4u ))
+    ReadFloat(node->GetChild( "fov" ), camera.cameraFov );
+    ReadFloat(node->GetChild( "near" ), camera.cameraNear );
+    ReadFloat(node->GetChild( "far" ), camera.cameraFar );
+    if(ReadVector( node->GetChild( "orthographic" ), camera.cameraOrthographicSize.AsFloat(), 4u ))
     {
-      camera->enablePerspective = false;
+      camera.enablePerspective = false;
     }
 
     if((parameter = node->GetChild( "matrix" )))
     {
-      ReadVector( node->GetChild( "matrix" ), camera->cameraMatrix.AsFloat(), 16u );
+      ReadVector( node->GetChild( "matrix" ), camera.cameraMatrix.AsFloat(), 16u );
     }
   }
 }

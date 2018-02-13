@@ -26,6 +26,9 @@
 #include <dali-toolkit/devel-api/builder/json-parser.h>
 #include <dali-toolkit/devel-api/builder/builder.h>
 
+// INTERNAL INCLUDES
+#include "asset.h"
+
 using namespace Dali;
 using namespace Dali::Toolkit;
 
@@ -43,28 +46,6 @@ struct RendererOptions
   int blend;
 };
 
-struct DliCameraParameters
-{
-  DliCameraParameters()
-  : cameraMatrix( Matrix::IDENTITY ),
-    cameraOrthographicSize( -1.0f , 1.0f, 1.0f, -1.0f ),
-    cameraFov( 60.f ),
-    cameraNear( 0.1f ),
-    cameraFar( 1000.f ),
-    enablePerspective(true)
-  {}
-
-  ~DliCameraParameters()
-  {}
-
-  Matrix cameraMatrix;
-  Vector4 cameraOrthographicSize;
-  float cameraFov;
-  float cameraNear;
-  float cameraFar;
-  bool enablePerspective;
-};
-
 class DliLoader
 {
 public:
@@ -78,7 +59,7 @@ public:
 
   bool LoadAnimation( Actor toActor, std::vector<Animation> *animArray, const std::string& animationName );
 
-  void GetCameraParameters( unsigned int eidx, DliCameraParameters* camera );
+  void GetCameraParameters( unsigned int eidx, CameraParameters& camera );
 
   std::string GetParseError() const;
 
