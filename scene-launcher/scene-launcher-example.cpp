@@ -26,8 +26,6 @@ namespace
 
 const char* MODEL_DIR_URL = SCENE_LAUNCHER_MODEL_DIR "scenes";
 
-const std::string ASSET_MODEL_DIR = SCENE_LAUNCHER_MODEL_DIR;
-
 const Vector3 CAMERA_DEFAULT_POSITION( 0.0f, 0.0f, 3.5f );
 
 const float TEXT_AUTO_SCROLL_SPEED = 200.f;
@@ -96,7 +94,7 @@ void Scene3dLauncher::Create( Application& application )
   try
   {
     // Read models from the filesystem
-    mSceneParser.ReadPbrModelFolder( MODEL_DIR_URL );
+    mSceneParser.ReadModelFolder( MODEL_DIR_URL );
 
     CreateModel();
   }
@@ -266,7 +264,7 @@ void Scene3dLauncher::InitPbrActor()
 {
   const SceneLauncher::Asset& asset = mSceneParser.GetAsset();
   SceneLauncher::DliCameraParameters camera;
-  mModel.Init( ASSET_MODEL_DIR + asset.model, Vector3::ZERO, asset.modelScaleFactor, &camera, &mAnimations, &mAnimationsName );
+  mModel.Init( asset.model, Vector3::ZERO, asset.modelScaleFactor, &camera, &mAnimations, &mAnimationsName );
 
   mModel.GetActor().SetOrientation( mModelOrientation );
   mSceneParser.SetCameraParameters( camera );
