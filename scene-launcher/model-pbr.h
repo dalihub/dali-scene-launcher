@@ -25,6 +25,9 @@
 #include <dali/public-api/rendering/shader.h>
 #include <dali/public-api/rendering/texture-set.h>
 
+// INTERNAL INCLUDES
+#include "utils.h"
+
 using namespace Dali;
 
 namespace SceneLauncher
@@ -36,6 +39,11 @@ struct Asset;
 class ModelPbr
 {
 public:
+  enum CloneOptions: SceneLauncher::CloneOptions::Type
+  {
+    GET_SKYBOX_TEXTURE = SceneLauncher::CloneOptions::FIRST_USER_OPTION
+  };
+
   /**
    * @brief Constructor.
    * Does nothing.
@@ -115,6 +123,22 @@ public:
    * @return Skybox texture.
    */
   Texture GetSkyboxTexture();
+
+  /**
+   * @brief Clone the actors and their renderers. Geometry and Shader references will be shared.
+   * Optionally, the vector of shader references and the skybox texture may also be shared.
+   * @param other The ModelPbr instance to duplicate into.
+   * @param cloneOptions A bitmask constructed from any combination of ::CloneOptions::Values and
+   *    ModelPbr::CloneOptions values.
+   */
+  void Duplicate(ModelPbr& other, SceneLauncher::CloneOptions::Type cloneOptions = SceneLauncher::CloneOptions::NONE) const;
+
+  /**
+   * @brief Adds the given texture to each actor's renderer's texture set.
+   * @param texture Texture to attach.
+   * @param sampler Sampler to associate with @a texture.
+   */
+  void AttachTexture(Texture texture, Sampler sampler);
 
   /**
    * @brief Create a node with actor, mesh and renderer
