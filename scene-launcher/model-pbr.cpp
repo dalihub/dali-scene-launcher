@@ -22,6 +22,8 @@
 #include <dali/public-api/rendering/renderer.h>
 #include <dali/devel-api/actors/actor-devel.h>
 
+#include <set>
+
 // INTERNAL INCLUDES
 #include "asset.h"
 #include "dli-loader.h"
@@ -158,6 +160,40 @@ void ModelPbr::SetShaderAnimationUniform( const std::string& property, const Pro
 Texture ModelPbr::GetSkyboxTexture()
 {
   return mSkyboxTexture;
+}
+
+void ModelPbr::Duplicate(ModelPbr& other, SceneLauncher::CloneOptions::Type cloneOptions) const
+{
+  other.mActor = CloneActor(mActor, cloneOptions);
+  if (MaskMatch(cloneOptions, GET_SHADERS))
+  {
+    other.mShaderArray.assign(mShaderArray.begin(), mShaderArray.end());
+  }
+
+  if (MaskMatch(cloneOptions, GET_SKYBOX_TEXTURE))
+  {
+    other.mSkyboxTexture = mSkyboxTexture;
+  }
+}
+
+void ModelPbr::AttachTexture(Texture texture, Sampler sampler)
+{
+  std::set<TextureSet> textureSets;
+  auto fn = [&sampler, &texture, &textureSets](Actor a){
+    unsigned int numRenderers = a.GetRendererCount();
+    for(unsigned int i = 0; i < numRenderers; ++i)
+    {
+      TextureSet ts = a.GetRendererAt(i).GetTextures();
+      if (textureSets.insert(ts).second)
+      {
+        auto count = ts.GetTextureCount();
+        ts.SetTexture(count, texture);
+        ts.SetSampler(count, sampler);
+      }
+    }
+  };
+
+  VisitActor(mActor, fn);
 }
 
 Actor ModelPbr::CreateNode( Shader shader, int blend, TextureSet textureSet, Geometry geometry, const Vector3& actorSize, const std::string& name )
