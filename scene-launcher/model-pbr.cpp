@@ -160,6 +160,36 @@ Texture ModelPbr::GetSkyboxTexture()
   return mSkyboxTexture;
 }
 
+void ModelPbr::Duplicate(ModelPbr& other, ::CloneOptions::Type cloneOptions) const
+{
+  other.mActor = CloneActor(mActor, cloneOptions);
+  if(!MaskMatch(cloneOptions, ::CloneOptions::OMIT_SHADER))
+  {
+    other.mShaderArray.assign(mShaderArray.begin(), mShaderArray.end());
+  }
+
+  if(MaskMatch(cloneOptions, GET_SKYBOX_TEXTURE))
+  {
+    other.mSkyboxTexture = mSkyboxTexture;
+  }
+}
+
+void ModelPbr::AttachTexture(Texture texture, Sampler sampler)
+{
+  auto fn = [&sampler, &texture](Actor a){
+    unsigned int numRenderers = a.GetRendererCount();
+    for(unsigned int i = 0; i < numRenderers; ++i)
+    {
+      TextureSet ts = a.GetRendererAt(i).GetTextures();
+      auto count = ts.GetTextureCount();
+      ts.SetTexture(count, texture);
+      ts.SetSampler(count, sampler);
+    }
+  };
+
+  VisitActor(mActor, fn);
+}
+
 Actor ModelPbr::CreateNode( Shader shader, int blend, TextureSet textureSet, Geometry geometry, const Vector3& actorSize, const std::string& name )
 {
   Renderer renderer = Renderer::New( geometry, shader );

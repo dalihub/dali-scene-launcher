@@ -303,7 +303,8 @@ void Scene3dLauncher::InitActors()
     m3dRoot.Add( skyBoxActor );
   }
 
-  m3dRoot.Add( mModel.GetActor() );
+  Actor pbrModelActor = mModel.GetActor();
+  m3dRoot.Add( pbrModelActor );
 
   Matrix matCube( mCameraOrientationInv * mCubeOrientation );
   matCube.Transpose();
