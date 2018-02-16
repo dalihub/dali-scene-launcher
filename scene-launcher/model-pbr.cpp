@@ -20,7 +20,10 @@
 
 // EXTERNAL INCLUDES
 #include <dali/public-api/rendering/renderer.h>
+#include <dali/public-api/common/vector-wrapper.h>
 #include <dali/devel-api/actors/actor-devel.h>
+
+#include <algorithm>
 
 // INTERNAL INCLUDES
 #include "asset.h"
@@ -158,6 +161,46 @@ void ModelPbr::SetShaderAnimationUniform( const std::string& property, const Pro
 Texture ModelPbr::GetSkyboxTexture()
 {
   return mSkyboxTexture;
+}
+
+void ModelPbr::Duplicate(ModelPbr& other, SceneLauncher::CloneOptions::Type cloneOptions) const
+{
+  other.mActor = CloneActor(mActor, cloneOptions);
+  if (MaskMatch(cloneOptions, GET_SHADERS))
+  {
+    other.mShaderArray.assign(mShaderArray.begin(), mShaderArray.end());
+  }
+
+  if (MaskMatch(cloneOptions, GET_SKYBOX_TEXTURE))
+  {
+    other.mSkyboxTexture = mSkyboxTexture;
+  }
+}
+
+void ModelPbr::AttachTexture(Texture texture, Sampler sampler)
+{
+  std::vector<TextureSet> textureSets;
+  textureSets.reserve(16);
+
+  auto fn = [&sampler, &texture, &textureSets](Actor a){
+    unsigned int numRenderers = a.GetRendererCount();
+    for(unsigned int i = 0; i < numRenderers; ++i)
+    {
+      TextureSet ts = a.GetRendererAt(i).GetTextures();
+
+      auto iInsert = std::lower_bound(textureSets.begin(), textureSets.end(), ts);
+      if (iInsert == textureSets.end() || *iInsert != ts)
+      {
+        auto count = ts.GetTextureCount();
+        ts.SetTexture(count, texture);
+        ts.SetSampler(count, sampler);
+
+        textureSets.insert(iInsert, ts);
+      }
+    }
+  };
+
+  VisitActor(mActor, fn);
 }
 
 Actor ModelPbr::CreateNode( Shader shader, int blend, TextureSet textureSet, Geometry geometry, const Vector3& actorSize, const std::string& name )
