@@ -169,25 +169,26 @@ Actor ModelPbr::CreateNode( Shader shader, int blend, TextureSet textureSet, Geo
     renderer.SetTextures( textureSet );
   }
 
-  if( blend == 1 ) //to use mask textures with blend
+  switch( blend )
   {
+  case 1: //to use mask textures with blend
     renderer.SetProperty( Renderer::Property::DEPTH_WRITE_MODE, DepthWriteMode::OFF );
     renderer.SetProperty( Renderer::Property::DEPTH_TEST_MODE, DepthTestMode::OFF );
 
     renderer.SetProperty( Renderer::Property::FACE_CULLING_MODE, FaceCullingMode::NONE );
     renderer.SetProperty( Renderer::Property::BLEND_MODE, BlendMode::ON );
-  }
-  else if( blend == 2 ) //to use "Shadow layers"
-  {
+    break;
+
+  case 2: //to use "Shadow layers"
     renderer.SetProperty( Renderer::Property::DEPTH_WRITE_MODE, DepthWriteMode::OFF );
     renderer.SetProperty( Renderer::Property::DEPTH_TEST_MODE, DepthTestMode::ON );
 
     renderer.SetProperty( Renderer::Property::FACE_CULLING_MODE, FaceCullingMode::NONE );
     renderer.SetProperty( Renderer::Property::BLEND_MODE, BlendMode::ON );
     renderer.SetProperty( Renderer::Property::BLEND_FACTOR_SRC_RGB, BlendFactor::ONE_MINUS_DST_ALPHA );
-  }
-  else if( blend == 3 )
-  {
+    break;
+
+  case 3:
     // The stencil plane is only for stencilling.
     renderer.SetProperty( Renderer::Property::RENDER_MODE, RenderMode::STENCIL );
 
@@ -203,9 +204,9 @@ Actor ModelPbr::CreateNode( Shader shader, int blend, TextureSet textureSet, Geo
     renderer.SetProperty( Renderer::Property::DEPTH_WRITE_MODE, DepthWriteMode::OFF );
     // We test the depth buffer as we want the stencil to only exist underneath the cube.
     renderer.SetProperty( Renderer::Property::DEPTH_TEST_MODE, DepthTestMode::ON );
-  }
-  else if( blend == 4 )
-  {
+    break;
+
+  case 4:
     // Also enable the stencil buffer, as we will be testing against it to only draw to areas within the stencil.
     renderer.SetProperty( Renderer::Property::RENDER_MODE, RenderMode::COLOR_STENCIL );
     renderer.SetProperty( Renderer::Property::BLEND_MODE, BlendMode::ON );
@@ -220,15 +221,25 @@ Actor ModelPbr::CreateNode( Shader shader, int blend, TextureSet textureSet, Geo
     renderer.SetProperty( Renderer::Property::STENCIL_FUNCTION_MASK, 0xff );
     // Don't write to the stencil.
     renderer.SetProperty( Renderer::Property::STENCIL_MASK, 0x00 );
-  }
-  else //use default renderer options
-  {
+    break;
+
+  case 5: // depth tested alpha blended
+    renderer.SetProperty( Renderer::Property::DEPTH_WRITE_MODE, DepthWriteMode::OFF );
+    renderer.SetProperty( Renderer::Property::DEPTH_TEST_MODE, DepthTestMode::ON );
+
+    renderer.SetProperty( Renderer::Property::FACE_CULLING_MODE, FaceCullingMode::NONE );
+    renderer.SetProperty( Renderer::Property::BLEND_MODE, BlendMode::ON );
+    renderer.SetProperty( Renderer::Property::BLEND_FACTOR_SRC_ALPHA, BlendFactor::ONE_MINUS_DST_ALPHA );
+    break;
+
+  default: //use default renderer options
     // Face culling is enabled to hide the backwards facing sides of the model
     // This is sufficient to render a single object; for more complex scenes depth-testing might be required
     renderer.SetProperty( Renderer::Property::DEPTH_TEST_MODE, DepthTestMode::ON );
     renderer.SetProperty( Renderer::Property::DEPTH_WRITE_MODE, DepthWriteMode::ON );
     renderer.SetProperty( Renderer::Property::DEPTH_FUNCTION, DepthFunction::LESS_EQUAL );
     renderer.SetProperty( Renderer::Property::FACE_CULLING_MODE, FaceCullingMode::BACK );
+    break;
   }
 
   Actor actor = Actor::New();
