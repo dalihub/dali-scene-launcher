@@ -21,10 +21,13 @@
 // EXTERNAL INCLUDES
 #include <dali/integration-api/debug.h>
 
+// INTERNAL INCLUDES
+#include "application-resources.h"
+
 namespace
 {
 
-const char* MODEL_DIR_URL = SCENE_LAUNCHER_MODEL_DIR "scenes";
+const std::string SCENES_DIR( "scenes" );
 
 const Vector3 CAMERA_DEFAULT_POSITION( 0.0f, 0.0f, 3.5f );
 
@@ -61,6 +64,8 @@ Scene3dLauncher::~Scene3dLauncher()
 
 void Scene3dLauncher::Create( Application& application )
 {
+  Dali::Integration::Log::LogMessage(Dali::Integration::Log::DebugInfo, "-->Scene3dLauncher::Create\n" );
+
   // Disable indicator
   Dali::Window winHandle = application.GetWindow();
   winHandle.ShowIndicator( Dali::Window::INVISIBLE );
@@ -94,7 +99,7 @@ void Scene3dLauncher::Create( Application& application )
   try
   {
     // Read models from the filesystem
-    mSceneFileParser.ReadModelFolder( MODEL_DIR_URL );
+    mSceneFileParser.ReadModelFolder( ( ApplicationResources::Get().GetModelsPath() + SCENES_DIR ).c_str() );
 
     CreateModel();
   }
@@ -117,6 +122,8 @@ void Scene3dLauncher::Create( Application& application )
 
   mDoubleTapTime = Timer::New(150);
   mDoubleTapTime.TickSignal().Connect( this, &Scene3dLauncher::OnDoubleTapTime );
+
+  Dali::Integration::Log::LogMessage(Dali::Integration::Log::DebugInfo, "<--Scene3dLauncher::Create\n" );
 }
 
 bool Scene3dLauncher::OnDoubleTapTime()

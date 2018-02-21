@@ -24,14 +24,13 @@
 #include <fstream>
 
 // INTERNAL INCLUDES
+#include "application-resources.h"
 #include "asset.h"
 #include "model-pbr.h"
 #include "ktx-loader.h"
 
 namespace
 {
-const std::string ASSET_SHADER_DIR = SCENE_LAUNCHER_SHADER_DIR;
-const std::string ASSET_TEXTURE_DIR = SCENE_LAUNCHER_IMAGE_DIR;
 
 AlphaFunction GetAlphaFunction( const std::string& alphaFunctionValue )
 {
@@ -803,7 +802,7 @@ bool DliLoader::LoadShaderArray( std::vector<Shader>& shaderArray )
     std::string fragment;
     ReadString( node->GetChild( "vertex" ), vertex );
     ReadString( node->GetChild( "fragment" ), fragment );
-    Shader shader = LoadShaders( ASSET_SHADER_DIR + vertex, ASSET_SHADER_DIR + fragment );
+    Shader shader = LoadShaders( ApplicationResources::Get().GetShadersPath() + vertex, ApplicationResources::Get().GetShadersPath() + fragment );
 
     if( !shader )
     {
@@ -963,7 +962,7 @@ void DliLoader::CreateSkyboxTexture( const std::string& skyBoxTexturePath, Textu
   if( !skyBoxTexturePath.empty() )
   {
     CubeData skybox;
-    const bool result = LoadCubeMapFromKtxFile( ASSET_TEXTURE_DIR + skyBoxTexturePath, skybox );
+    const bool result = LoadCubeMapFromKtxFile( ApplicationResources::Get().GetImagesPath() + skyBoxTexturePath, skybox );
 
     if( !result )
     {
@@ -988,7 +987,7 @@ void DliLoader::CreateEnvironmentTextures( const std::string& cubeDiffuse, const
   bool result = false;
   if( !cubeDiffuse.empty() )
   {
-    result = LoadCubeMapFromKtxFile( ASSET_TEXTURE_DIR + cubeDiffuse, diffuse );
+    result = LoadCubeMapFromKtxFile( ApplicationResources::Get().GetImagesPath() + cubeDiffuse, diffuse );
 
     if( !result )
     {
@@ -1009,7 +1008,7 @@ void DliLoader::CreateEnvironmentTextures( const std::string& cubeDiffuse, const
   if( !cubeSpecular.empty() )
   {
     CubeData specular;
-    result = LoadCubeMapFromKtxFile( ASSET_TEXTURE_DIR + cubeSpecular, specular);
+    result = LoadCubeMapFromKtxFile( ApplicationResources::Get().GetImagesPath() + cubeSpecular, specular);
 
     if( !result )
     {
@@ -1034,7 +1033,7 @@ void DliLoader::CreateTextures(std::string strTexture[4], Texture eTexture[4], b
   {
     if( strTexture[i].empty() )
       return;
-    pixelData = SyncImageLoader::Load( ASSET_TEXTURE_DIR + strTexture[i] );
+    pixelData = SyncImageLoader::Load( ApplicationResources::Get().GetImagesPath() + strTexture[i] );
 
     if( !pixelData )
     {
