@@ -21,10 +21,13 @@
 // EXTERNAL INCLUDES
 #include <dali/integration-api/debug.h>
 
+// INTERNAL INCLUDES
+#include "application-resources.h"
+
 namespace
 {
 
-const char* MODEL_DIR_URL = SCENE_LAUNCHER_MODEL_DIR "scenes";
+const std::string SCENES_DIR( "scenes" );
 
 const Vector3 CAMERA_DEFAULT_POSITION( 0.0f, 0.0f, 3.5f );
 
@@ -94,7 +97,7 @@ void Scene3dLauncher::Create( Application& application )
   try
   {
     // Read models from the filesystem
-    mSceneFileParser.ReadModelFolder( MODEL_DIR_URL );
+    mSceneFileParser.ReadModelFolder( ( ApplicationResources::Get().GetModelsPath() + SCENES_DIR ).c_str() );
 
     CreateModel();
   }
