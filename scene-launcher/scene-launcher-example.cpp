@@ -23,6 +23,9 @@
 
 // INTERNAL INCLUDES
 #include "application-resources.h"
+#include "utils.h"
+
+using namespace SceneLauncher;
 
 namespace
 {
@@ -32,6 +35,94 @@ const std::string SCENES_DIR( "scenes" );
 const Vector3 CAMERA_DEFAULT_POSITION( 0.0f, 0.0f, 3.5f );
 
 const float TEXT_AUTO_SCROLL_SPEED = 200.f;
+
+#if defined SHADOWMAPS_RECEIVE
+const unsigned int SHADOWMAP_SIZE = 1024;
+
+void CalculateOrthographicProjection(float left, float right, float top, float bottom, float near, float far, Matrix& matrixOut)
+{
+  float* data = matrixOut.AsFloat();
+  float rightLessLeft = left - right; // NOTE: We've rotated the view 180 degrees in Y, so we need to flip these.
+  float topLessBottom = top - bottom;
+  float farLessNear = far - near;
+  data[0] = 2.0f / rightLessLeft;
+  data[1] = .0f;
+  data[2] = .0f;
+  data[3] = .0f;
+  data[4] = .0f;
+  data[5] = 2.0f / topLessBottom;
+  data[6] = .0f;
+  data[7] = .0f;
+  data[8] = .0f;
+  data[9] = .0f;
+  data[10] = 2.0f / farLessNear;
+  data[11] = .0f;
+  data[12] = (right + left) / rightLessLeft;
+  data[13] = (top + bottom) / topLessBottom;
+  data[14] = (far + near) / -farLessNear;
+  data[15] = 1;
+}
+
+#endif
+
+#if defined SHADOWMAPS_DEBUG
+Geometry NewUnitQuadWithWholeTexture(bool flipY)
+{
+  // Create geometry -- unit square with whole of the texture mapped to it.
+  struct Vertex
+  {
+    Vector3 aPosition;
+    Vector2 aUv0;
+  };
+
+  Vertex vertexData[] = {
+    { Vector3(-1.0f, 1.0f, .0f), Vector2(.0f, 1.0f) },
+    { Vector3(1.0f, 1.0f, .0f), Vector2(1.0f, 1.0f) },
+    { Vector3(-1.0f, -1.0f, .0f), Vector2(.0f, .0f) },
+    { Vector3(1.0f, -1.0f, .0f), Vector2(1.0f, .0f) },
+  };
+
+  if (flipY)
+  {
+    std::swap(vertexData[0].aUv0, vertexData[2].aUv0);
+    std::swap(vertexData[1].aUv0, vertexData[3].aUv0);
+  }
+
+  PropertyBuffer vbo = PropertyBuffer::New( Property::Map()
+    .Add("aPosition", Property::VECTOR3)
+    .Add("aUv0", Property::VECTOR2));
+  vbo.SetData(vertexData, std::extent<decltype(vertexData)>::value);
+
+  Geometry geom = Geometry::New();
+  geom.AddVertexBuffer(vbo);
+  geom.SetType( Geometry::TRIANGLE_STRIP );
+  return geom;
+}
+
+Actor CreateTexturedQuadActor(Shader shader, Texture texture, float size, bool flipY)
+{
+  TextureSet textures = TextureSet::New();
+  textures.SetTexture(0, texture);
+
+  // Create geometry and renderer.
+  Geometry geom = NewUnitQuadWithWholeTexture(flipY);
+  Renderer renderer = Renderer::New( geom, shader );
+  renderer.SetProperty(Renderer::Property::FACE_CULLING_MODE, FaceCullingMode::BACK);
+  renderer.SetTextures(textures);
+
+  float w = size;
+  float h = size * texture.GetHeight() / texture.GetWidth();
+
+  // Create actor.
+  Actor actor = Actor::New();
+  actor.SetName("TexturedQuad");
+  actor.SetSize( Vector3(w, h, 1.0f));
+  actor.AddRenderer(renderer);
+  actor.SetVisible(true);
+
+  return actor;
+}
+#endif
 
 } // namespace
 
@@ -74,28 +165,127 @@ void Scene3dLauncher::Create( Application& application )
 
   // Creating root and camera actor for rendertask for 3D Scene rendering
   mUiRoot = Actor::New();
-  m3dRoot = Actor::New();
-  CameraActor cameraUi = CameraActor::New( stage.GetSize() );
-  cameraUi.SetAnchorPoint(AnchorPoint::CENTER);
-  cameraUi.SetParentOrigin(ParentOrigin::CENTER);
-  RenderTask rendertask = Stage::GetCurrent().GetRenderTaskList().CreateTask();
-  rendertask.SetCameraActor( cameraUi );
-  rendertask.SetSourceActor( mUiRoot );
-  rendertask.SetExclusive( true );
-
   mUiRoot.SetAnchorPoint(AnchorPoint::TOP_LEFT);
   mUiRoot.SetParentOrigin(ParentOrigin::TOP_LEFT);
   mUiRoot.SetSize(stage.GetSize());
 
+  m3dRoot = Actor::New();
   m3dRoot.SetAnchorPoint(AnchorPoint::CENTER);
   m3dRoot.SetParentOrigin(ParentOrigin::CENTER);
 
-  stage.Add( cameraUi );
+#if defined SHADOWMAPS_RECEIVE
+  mShadowRoot = Actor::New();
+  mShadowRoot.SetName("Shadow Root");
+  mShadowRoot.SetAnchorPoint(AnchorPoint::CENTER);
+  mShadowRoot.SetParentOrigin(ParentOrigin::CENTER);
+#endif
+
+  RenderTaskList renderTasks = stage.GetRenderTaskList();
+  RenderTask mainPass = renderTasks.GetTask(0);
+  mainPass.SetInputEnabled(false);
+  mainPass.SetExclusive(true);
+
+  mMainCamera = mainPass.GetCameraActor();
+  mMainCamera.SetAnchorPoint(AnchorPoint::CENTER);
+  mMainCamera.SetParentOrigin(ParentOrigin::CENTER);
+
+  RenderTask uiPass = renderTasks.CreateTask();
+  CameraActor uiCamera = CameraActor::New( stage.GetSize() );
+  uiCamera.SetAnchorPoint(AnchorPoint::CENTER);
+  uiCamera.SetParentOrigin(ParentOrigin::CENTER);
+
+  uiPass.SetCameraActor( uiCamera );
+  uiPass.SetSourceActor( mUiRoot );
+  uiPass.SetExclusive( true );
+
+#if defined SHADOWMAPS_RECEIVE
+  mShadowRenderTargetTexture = Texture::New(TextureType::TEXTURE_2D, Pixel::Format::RGB888,
+      SHADOWMAP_SIZE, SHADOWMAP_SIZE);  // NOTE: no depth format with DALi.
+  mShadowRenderTarget = FrameBuffer::New(SHADOWMAP_SIZE, SHADOWMAP_SIZE,
+      FrameBuffer::Attachment::DEPTH);  // NOTE: we'll still have to specify a depth attachment for depth testing.
+  mShadowRenderTarget.AttachColorTexture(mShadowRenderTargetTexture);
+
+  mShadowCamera = CameraActor::New();
+  mShadowCamera.SetName("Shadow Camera");
+  mShadowCamera.SetAnchorPoint(AnchorPoint::CENTER);
+  mShadowCamera.SetParentOrigin(ParentOrigin::CENTER);
+
+  RenderTask shadowPass = stage.GetRenderTaskList().CreateTask();
+  shadowPass.SetCameraActor( mShadowCamera );
+  shadowPass.SetSourceActor( mShadowRoot );
+  shadowPass.SetInputEnabled(false);
+  shadowPass.SetExclusive(true);
+
+  shadowPass.SetFrameBuffer(mShadowRenderTarget);
+  shadowPass.SetViewportSize(Vector2(SHADOWMAP_SIZE, SHADOWMAP_SIZE));
+  shadowPass.SetClearEnabled(true);
+  shadowPass.SetClearColor(Vector4::ONE); // NOTE: clear to normalised far.
+#endif
+
+  stage.Add( mMainCamera );
+  stage.Add( uiCamera );
+#if defined SHADOWMAPS_RECEIVE
+  stage.Add( mShadowCamera );
+#endif
+
   stage.Add( mUiRoot );
   stage.Add( m3dRoot );
+#if defined SHADOWMAPS_RECEIVE
+  stage.Add( mShadowRoot );
+
+#if defined SHADOWMAPS_DEBUG
+  // Render shadowmap in a quad on UI.
+  // Vertex shader
+  const char* VERTEX_SHADER_FLAT = "#version 300 es\n"
+      DALI_COMPOSE_SHADER(
+
+  uniform   mediump mat4 uMvpMatrix;\n  // DALI shader builtin
+  uniform   mediump vec3 uSize;\n // DALi shader builtin
+
+  in mediump vec3 aPosition;\n // DALi shader builtin
+  in mediump vec2 aUv0;\n // DALi shader builtin
+
+  out mediump vec2 vUv0;\n
+
+  void main()
+  {
+    mediump vec4 vertexPosition = vec4(aPosition, 1.0);
+    vertexPosition.xyz *= uSize;
+
+    gl_Position = uMvpMatrix * vertexPosition;
+    vUv0 = aUv0;
+  });
+
+  // Fragment shader
+  const char* FRAGMENT_SHADER_FLAT =  "#version 300 es\n"
+      DALI_COMPOSE_SHADER(
+  uniform sampler2D uTexture0;\n
+
+  in mediump vec2 vUv0;\n
+
+  out mediump vec4 FragColor;\n
+
+  void main()
+  {
+    FragColor = texture2D( uTexture0, vUv0 );
+  });
+
+  // Create quad and add it to UI
+  Shader plainOldShader = Shader::New(VERTEX_SHADER_FLAT, FRAGMENT_SHADER_FLAT);
+  Actor shadowDebugActor = CreateTexturedQuadActor(plainOldShader, mShadowRenderTargetTexture, 100.0f, false);
+  shadowDebugActor.SetAnchorPoint( AnchorPoint::BOTTOM_CENTER);
+  shadowDebugActor.SetParentOrigin( ParentOrigin::BOTTOM_CENTER);
+  mUiRoot.Add( shadowDebugActor);
+#endif  // SHADOWMAPS_DEBUG
+#endif
 
   try
   {
+#if defined SHADOWMAPS_CAST
+    mShadowShader = CreateShader(ApplicationResources::Get().GetShadersPath() + SCENES_DIR + "/depth_prepass_variance.vsh",
+      ApplicationResources::Get().GetShadersPath() + SCENES_DIR + "/depth_prepass_variance.fsh");
+#endif
+
     // Read models from the filesystem
     mSceneFileParser.ReadModelFolder( ( ApplicationResources::Get().GetModelsPath() + SCENES_DIR ).c_str() );
 
@@ -152,11 +342,14 @@ bool Scene3dLauncher::OnTouch( Actor actor, const TouchData& touch )
     }
     case PointState::MOTION:
     {
+      const Vector2& point = touch.GetScreenPosition(0);
+#if defined PARALLAX_TILT
+      SetTilt(mStartTouch - point); // -(point - mStartTouch) as the tilt moves the scene in the opposite direction.
+#else
       const Stage stage = Stage::GetCurrent();
       const Size& size = stage.GetSize();
       const float scaleX = size.width;
       const float scaleY = size.height;
-      const Vector2& point = touch.GetScreenPosition(0);
       if( ( mStartTouch.x < ( scaleX * 0.3f ) ) && ( point.x < ( scaleX * 0.3f ) ) )
       {
         mZoomLevel += ( mStartTouch.y - point.y ) / ( scaleY * 0.9f );
@@ -214,10 +407,15 @@ bool Scene3dLauncher::OnTouch( Actor actor, const TouchData& touch )
 
         mPointZ = point;
       }
+#endif
       break;
     }
     case PointState::UP:
     {
+#if defined PARALLAX_TILT
+      SetTilt(Vector2::ZERO);
+#endif
+
       mDoubleTapTime.Start();
       mDoubleTap = true;
       break;
@@ -249,6 +447,19 @@ void Scene3dLauncher::InitPbrActor()
   mModel.GetActor().SetOrientation( mModelOrientation );
 }
 
+#if defined SHADOWMAPS_RECEIVE
+void Scene3dLauncher::InitShadowActor()
+{
+  // Clone the actor hierarchy for shadow casting.
+  mModel.Duplicate(mShadowModel, CloneOptions::OMIT_TEXTURES | CloneOptions::CONSTRAIN_XFORM);
+
+  // Gather casters
+  GatherShadowCasters(mShadowModel.GetActor());
+
+  mShadowRoot.Add(mShadowModel.GetActor());
+}
+#endif
+
 void Scene3dLauncher::InitActors()
 {
   Stage stage = Stage::GetCurrent();
@@ -262,18 +473,17 @@ void Scene3dLauncher::InitActors()
 
   mCameraPosition = asset.camera.cameraMatrix.GetTranslation3();
 
-  CameraActor camera3d = stage.GetRenderTaskList().GetTask(0).GetCameraActor();
-  camera3d.SetInvertYAxis( true );
-  camera3d.SetPosition( mCameraPosition );
+  mMainCamera.SetInvertYAxis( true );
+  mMainCamera.SetPosition( mCameraPosition );
   if( asset.camera.enablePerspective )
   {
-    camera3d.SetNearClippingPlane( asset.camera.cameraNear );
-    camera3d.SetFarClippingPlane( asset.camera.cameraFar );
-    camera3d.SetFieldOfView( Radian( Degree( asset.camera.cameraFov ) ) );
+    mMainCamera.SetNearClippingPlane( asset.camera.cameraNear );
+    mMainCamera.SetFarClippingPlane( asset.camera.cameraFar );
+    mMainCamera.SetFieldOfView( Radian( Degree( asset.camera.cameraFov ) ) );
   }
   else
   {
-    camera3d.SetOrthographicProjection( asset.camera.cameraOrthographicSize.x,
+    mMainCamera.SetOrthographicProjection( asset.camera.cameraOrthographicSize.x,
                                         asset.camera.cameraOrthographicSize.y,
                                         asset.camera.cameraOrthographicSize.z,
                                         asset.camera.cameraOrthographicSize.w,
@@ -287,7 +497,7 @@ void Scene3dLauncher::InitActors()
   Quaternion viewQuaternion( Dali::ANGLE_180, Vector3::YAXIS );
   Quaternion camOrientation( asset.camera.cameraMatrix );
   camOrientation = camOrientation * viewQuaternion;
-  camera3d.SetOrientation( camOrientation );
+  mMainCamera.SetOrientation( camOrientation );
   mCameraOrientationInv = camOrientation;
   mCameraOrientationInv.Conjugate();
 
@@ -312,24 +522,66 @@ void Scene3dLauncher::InitActors()
   Matrix matCube( mCameraOrientationInv * mCubeOrientation );
   matCube.Transpose();
   mModel.SetShaderUniform("uCubeMatrix" , matCube );
+
+#if defined SHADOWMAPS_RECEIVE
+#if defined PARALLAX_TILT
+  GatherTiltables(mShadowModel.GetActor());
+#endif
+
+  // TODO: make the light position, direction and orthographic size data driven / smart.
+  float size = 1.5f;
+  SetShadowCameraOrthographicProjection(-size, size, size, -size, asset.camera.cameraNear, asset.camera.cameraFar, false);
+
+  SetShadowCameraPositionOrientation(Vector3(0, 2, -5),
+      Quaternion(Dali::ANGLE_90 * .25f, Vector3::XAXIS));
+
+  UpdateShadowCastersNearFar(mShadowCamera);
+
+  mModel.AttachTexture(mShadowRenderTargetTexture, Sampler::New());
+
+  GatherShadowReceivers(pbrModelActor);
+  UpdateShadowReceiversLightSpaceTransform();
+#elif defined SHADOWMAPS_CAST
+  GatherShadowCasters(pbrModelActor);
+  UpdateShadowCastersNearFar(mMainCamera);
+#endif
 }
 
 void Scene3dLauncher::ClearModel()
 {
   mSkybox.Clear();
   mModel.Clear();
+#if defined SHADOWMAPS_RECEIVE
+  mShadowModel.Clear();
+#endif
 }
 
 void Scene3dLauncher::CreateModel()
 {
+  UnparentAndReset( mModel.GetActor() );
+#if defined SHADOWMAPS_RECEIVE
+  UnparentAndReset( mShadowModel.GetActor() );
+#endif
   UnparentAndReset( mErrorMessage );
+
+#if defined SHADOWMAPS_CAST
+  mShadowCasters.clear();
+#endif
+#if defined SHADOWMAPS_RECEIVE
+  mShadowReceivers.clear();
+#endif
 
   // Init Pbr actor
   InitPbrActor();
 
+#if defined SHADOWMAPS_RECEIVE
+  // Init Shadow actor
+  InitShadowActor();
+#endif
 
   // Initialise Main Actors
   InitActors();
+
   if( mAnimations.size() > 0)
   {
     PlayAnimation( mAnimations[0] );
@@ -366,6 +618,126 @@ void Scene3dLauncher::PlayAnimation( std::vector<Animation>& animationList )
     (*it).Play();
   }
 }
+
+#if defined PARALLAX_TILT
+void Scene3dLauncher::SetTilt(Vector2 tilt)
+{
+  tilt *= .005f;
+  //tilt.x *= -1.0f;
+  for(auto& t: mTiltables)
+  {
+    t.actor.SetProperty(t.uTilt, tilt);
+  }
+}
+
+void Scene3dLauncher::GatherTiltables(Actor actor)
+{
+  auto fn = [this](Actor a) {
+    if(a.GetRendererCount() > 0)
+    {
+      Tiltable t = { a, a.RegisterProperty("uTilt", Vector2::ZERO) };
+      mTiltables.push_back(t);
+    }
+  };
+
+  VisitActor(actor, fn);
+}
+#endif
+
+#if defined SHADOWMAPS_CAST
+void Scene3dLauncher::GatherShadowCasters(Actor actor)
+{
+  TextureSet noTextures = TextureSet::New();
+  auto fn = [this, &noTextures](Actor a) {
+    if(a.GetRendererCount() > 0)
+    {
+      ShadowCaster sc = { a, a.RegisterProperty("uNearFar", Vector2::ZERO) };
+
+      for(unsigned int i = 0; i < a.GetRendererCount(); ++i)
+      {
+        Renderer r = a.GetRendererAt(i);
+        r.SetTextures(noTextures);
+        r.SetShader(mShadowShader);
+        r.SetProperty(Renderer::Property::FACE_CULLING_MODE, FaceCullingMode::FRONT);
+      }
+
+      mShadowCasters.push_back(sc);
+    }
+  };
+
+  VisitActor(actor, fn);
+}
+
+void Scene3dLauncher::UpdateShadowCastersNearFar(CameraActor cam)
+{
+  Vector2 nearFar { cam.GetNearClippingPlane(),
+    1.0f / (cam.GetFarClippingPlane() - cam.GetNearClippingPlane()) };
+  for(auto& t: mShadowCasters)
+  {
+    t.actor.SetProperty(t.uNearFar, nearFar);
+  }
+}
+#endif
+
+#if defined SHADOWMAPS_RECEIVE
+void Scene3dLauncher::GatherShadowReceivers(Actor actor)
+{
+  auto fn = [this](Actor a) {
+    if(a.GetRendererCount() > 0)
+    {
+      ShadowReceiver sr = { a,
+          a.RegisterProperty("uInverseShadowmapSize", Vector2::ONE),
+          a.RegisterProperty("uLightSpaceTransform", Matrix::IDENTITY),
+          a.RegisterProperty("uLightDir", -Vector3::YAXIS)};
+      mShadowReceivers.push_back(sr);
+    }
+  };
+
+  VisitActor(actor, fn);
+}
+
+void Scene3dLauncher::UpdateShadowReceiversLightSpaceTransform()
+{
+  Matrix mtxView = mShadowCameraWorld;
+  mtxView.Invert();
+
+  Matrix mtxLightSpaceTransform = mtxView;
+  Matrix::Multiply(mtxLightSpaceTransform, mtxView, mShadowCameraProjection);
+
+  Vector3 lightDir = Quaternion(mtxView).Rotate(Vector3::ZAXIS);
+
+  Vector2 inverseTextureSize = Vector2(1.0f / mShadowRenderTargetTexture.GetWidth(),
+      1.0f / mShadowRenderTargetTexture.GetHeight());
+
+  for(auto& t: mShadowReceivers)
+  {
+    t.actor.SetProperty(t.uInverseShadowmapSize, inverseTextureSize);
+    t.actor.SetProperty(t.uLightSpaceTransform, mtxLightSpaceTransform);
+    t.actor.SetProperty(t.uLightDir, lightDir);
+  }
+}
+
+void Scene3dLauncher::SetShadowCameraOrthographicProjection(float left, float right,
+    float top, float bottom, float near, float far, bool flipY)
+{
+  mShadowCamera.SetInvertYAxis(flipY);
+  mShadowCamera.SetOrthographicProjection(left, right, top, bottom, near, far);
+
+  if (flipY)
+  {
+    std::swap(top, bottom);
+  }
+  CalculateOrthographicProjection(left, right, bottom, top, near, far, mShadowCameraProjection);
+}
+
+void Scene3dLauncher::SetShadowCameraPositionOrientation(const Vector3& position, const Quaternion& orientation)
+{
+  mShadowCameraWorld.SetTransformComponents(Vector3::ONE, orientation, position);
+
+  mShadowCamera.SetPosition(position);
+  mShadowCamera.SetOrientation(orientation);
+}
+#endif
 
 // Entry point for Linux & Tizen applications
 //
