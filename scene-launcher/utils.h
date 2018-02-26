@@ -19,6 +19,7 @@
 
 #include <dali/public-api/actors/actor.h>
 #include <dali/public-api/rendering/renderer.h>
+#include <cctype>
 
 namespace SceneLauncher
 {
@@ -28,6 +29,38 @@ inline
 bool MaskMatch(uint32_t value, uint32_t mask)
 {
   return (value & mask) == mask;
+}
+
+/**
+ * @brief Insensitive case compare function.
+ *
+ * @param[in] a, compare string
+ * @param[in] b, compare string
+ * @return true if strings are equal
+ */
+inline
+bool CaseInsensitiveCharacterCompare( unsigned char a, unsigned char b )
+{
+  // Converts to lower case in the current locale.
+  return std::tolower( a ) == std::tolower( b );
+}
+
+/**
+ * @brief return true if the lower cased ASCII strings are equal.
+ *
+ * @param[in] a, compare string
+ * @param[in] b, compare string
+ * @return true if strings are equal
+ */
+inline
+bool CaseInsensitiveStringCompare( const std::string& a, const std::string& b )
+{
+  bool result = false;
+  if( a.length() == b.length() )
+  {
+    result = std::equal( a.begin(), a.end(), b.begin(), &CaseInsensitiveCharacterCompare );
+  }
+  return result;
 }
 
 ///@brief Makes a number of calls to @a fn, passing to each one the given
