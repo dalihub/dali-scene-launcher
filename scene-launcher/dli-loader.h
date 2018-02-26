@@ -30,6 +30,7 @@
 
 // INTERNAL INCLUDES
 #include "asset.h"
+#include "lighting-mode.h"
 
 using namespace Dali;
 using namespace Dali::Toolkit;
@@ -55,8 +56,6 @@ struct RendererOptions
 
 class DliLoader
 {
-public:
-
 public:
 
   ///@brief Given a path @a modelDirUrl, return the full path of the first .dli we find, or throw
@@ -88,7 +87,7 @@ private:
 
   bool LoadGeometryArray();
 
-  void AddNode( Actor toActor, const TreeNode* addnode, const std::vector<Shader>& shaderArray );
+  void AddNode( Actor toActor, const TreeNode* addnode, const std::vector<Shader>& shaderArray, LightingMode::Type lightingMode );
 
   void LoadScripts();
 
