@@ -19,6 +19,7 @@
 
 #include <dali/public-api/actors/actor.h>
 #include <dali/public-api/rendering/renderer.h>
+#include <cctype>
 
 namespace SceneLauncher
 {
