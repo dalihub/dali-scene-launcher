@@ -30,6 +30,7 @@
 
 // INTERNAL INCLUDES
 #include "asset.h"
+#include "lighting-mode.h"
 
 using namespace Dali;
 using namespace Dali::Toolkit;
@@ -55,6 +56,7 @@ struct RendererOptions
 class DliLoader
 {
 public:
+  static const std::string LIGHTING_MODE_PROPERTY;
 
 public:
 
@@ -85,7 +87,7 @@ private:
 
   bool LoadGeometryArray();
 
-  void AddNode( Actor toActor, const TreeNode* addnode, const std::vector<Shader>& shaderArray );
+  void AddNode( Actor toActor, const TreeNode* addnode, const std::vector<Shader>& shaderArray, LightingMode::Type shadowMode );
 
   void LoadScripts();
 
