@@ -52,6 +52,17 @@ struct RendererOptions
 class DliLoader
 {
 public:
+  ///@brief Valid values for nodes elements, to enable part or whole of shadows functionality.
+  ///@note Usable as a bitmask to determine the role of a node's in shadowing.
+  enum class ShadowMode
+  {
+    OFF = 0x00,
+    CAST_ONLY = 0x01,
+    RECEIVE_ONLY = 0x02,
+    ON = 0x03
+  };
+
+  static const char* const SHADOW_MODE_PROPERTY;
 
   DliLoader();
   ~DliLoader();
@@ -74,7 +85,7 @@ private:
 
   bool LoadGeometryArray();
 
-  void AddNode( Actor toActor, const TreeNode* addnode, const std::vector<Shader>& shaderArray );
+  void AddNode( Actor toActor, const TreeNode* addnode, const std::vector<Shader>& shaderArray, ShadowMode shadowMode );
 
   void CreateSkyboxTexture( const std::string& skyBoxTexturePath, Texture& skyboxTexture );
 

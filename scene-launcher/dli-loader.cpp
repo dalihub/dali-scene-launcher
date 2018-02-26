@@ -310,9 +310,45 @@ bool ReadFile(unsigned char*& efileContent, std::string directory, std::string f
 
 }//namespace
 
-
 namespace SceneLauncher
 {
+namespace
+{
+
+const char* const kShadowMode[] =
+{
+  "off",
+  "cast-only",
+  "receive-only",
+  "on"
+};
+
+static_assert(std::extent<decltype(kShadowMode)>::value == static_cast<int>(DliLoader::ShadowMode::ON) + 1,
+  "Mismatch in number of enum / string ShadowMode values.");
+
+DliLoader::ShadowMode InterpretShadowMode(std::string value)
+{
+  auto iEnd = kShadowMode + std::extent<decltype(kShadowMode)>::value;
+  auto iFind = std::find_if(kShadowMode, iEnd, [value](const char* rhs) {
+    return CaseInsensitiveStringCompare(value, rhs);
+  });
+
+  auto result = DliLoader::ShadowMode::OFF;
+  if (iFind != iEnd)
+  {
+    result = static_cast<DliLoader::ShadowMode>(std::distance(kShadowMode, iFind));
+  }
+  else
+  {
+    DALI_LOG_WARNING("Failed to interpret %s value '%s'.", DliLoader::SHADOW_MODE_PROPERTY,
+      value.c_str());
+  }
+  return result;
+}
+
+}//namespace
+
+const char* const DliLoader::SHADOW_MODE_PROPERTY = "shadowMode";
 
 DliLoader::DliLoader()
 : mNodes( NULL )
@@ -361,7 +397,7 @@ bool DliLoader::CreateScene( std::vector<Shader>& shaderArray, Actor toActor, Te
   int starting_node = itn->GetInteger();
 
   inodes = Tidx(mNodes, starting_node);
-  AddNode( toActor, inodes, shaderArray );
+  AddNode( toActor, inodes, shaderArray, ShadowMode::OFF );
 
   return true;
 }
@@ -845,7 +881,7 @@ bool DliLoader::LoadGeometryArray()
   return true;
 }
 
-void DliLoader::AddNode( Actor toActor, const TreeNode *addnode, const std::vector<Shader>& shaderArray )
+void DliLoader::AddNode( Actor toActor, const TreeNode *addnode, const std::vector<Shader>& shaderArray, ShadowMode shadowMode )
 {
   const TreeNode *itn = NULL;
   Actor actor;
@@ -856,27 +892,23 @@ void DliLoader::AddNode( Actor toActor, const TreeNode *addnode, const std::vect
     actorSize = Vector3( floatVec[0], floatVec[1], floatVec[2] );
   }
 
+  std::string nodeName;
+  ReadString( addnode->GetChild( "name" ), nodeName );
+
   if( !( itn = addnode->GetChild( "mesh" ) ) )
   {
-
     actor = Actor::New();
     actor.SetAnchorPoint( AnchorPoint::CENTER );
     actor.SetParentOrigin( ParentOrigin::CENTER );
     actor.SetPosition( Vector3() );
     actor.SetSize( actorSize );
-    const TreeNode *itname = addnode->GetChild( "name" );
-    if( itname )
-    {
-      actor.SetName( itname->GetString() );
-    }
+    actor.SetName(nodeName);
   }
   else
   {
-    std::string nodeName;
     int shaderIdx = 0;
     int materialIndex = 0;
     int meshIndex = itn->GetInteger();
-    ReadString( addnode->GetChild( "name" ), nodeName );
     ReadInt( addnode->GetChild( "shader" ), shaderIdx );
     ReadInt( addnode->GetChild( "material" ), materialIndex );
 
@@ -888,6 +920,36 @@ void DliLoader::AddNode( Actor toActor, const TreeNode *addnode, const std::vect
                                   nodeName );
   }
 
+  // Attempt to read shadow mode. It's optional.
+  if ( auto node = addnode->GetChild(SHADOW_MODE_PROPERTY) )  // setting from parent explicitly overridden?
+  {
+    if( node->GetType() == TreeNode::STRING )
+    {
+      shadowMode = InterpretShadowMode(node->GetString());
+    }
+    else if( node->GetType() == TreeNode::INTEGER )
+    {
+      int value = node->GetInteger();
+      if (value >= static_cast<int>(ShadowMode::OFF) &&
+          value <= static_cast<int>(ShadowMode::ON))
+      {
+        shadowMode = static_cast<ShadowMode>(value);
+      }
+      else
+      {
+        DALI_LOG_WARNING("Ignoring invalid %s value (%d) in '%s'.", SHADOW_MODE_PROPERTY,
+          value, nodeName.c_str());
+      }
+    }
+    else  //... but if present, it has to be valid type.
+    {
+      DALI_LOG_WARNING("Ignoring invalid %s type in '%s' (string or integer expected).",
+        SHADOW_MODE_PROPERTY, nodeName.c_str());
+    }
+  }
+  actor.RegisterProperty(SHADOW_MODE_PROPERTY, static_cast<int>(shadowMode));
+
+  // Read transform.
   ReadAnglePosition(addnode, actor );
 
   if( actor )
@@ -906,7 +968,7 @@ void DliLoader::AddNode( Actor toActor, const TreeNode *addnode, const std::vect
       for( unsigned int i = 0; i < children.Size(); ++i )
       {
         const TreeNode *inodes = Tidx( mNodes, children[i] );
-        AddNode( actor, inodes, shaderArray );
+        AddNode( actor, inodes, shaderArray, shadowMode );
       }
     }
   }
