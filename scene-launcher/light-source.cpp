@@ -40,7 +40,12 @@ void LightSource::SetModel(ModelPbr& model)
   VisitActor(model.GetActor(), [&receivers](Actor a) {
     if (a.GetRendererCount() > 0)
     {
-      receivers.push_back({ a, a.RegisterProperty("uLightDirection", -Vector3::YAXIS) });
+      Property::Index propLightingMode = a.GetPropertyIndex(LightingMode::PROPERTY_NAME);
+      auto lightingMode = a.GetProperty<int>(propLightingMode);
+      if (lightingMode == LightingMode::LIT || lightingMode == LightingMode::LIT_SOLID)
+      {
+        receivers.push_back({ a, a.RegisterProperty("uLightDirection", -Vector3::YAXIS) });
+      }
     }
   });
 

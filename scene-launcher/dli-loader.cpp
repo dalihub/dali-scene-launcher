@@ -316,7 +316,6 @@ bool ReadFile(unsigned char*& efileContent, std::string directory, std::string f
 
 }//namespace
 
-
 namespace SceneLauncher
 {
 
@@ -408,7 +407,7 @@ bool DliLoader::CreateScene( std::vector<Shader>& shaderArray, Actor toActor, Te
   int starting_node = itn->GetInteger();
 
   inodes = Tidx(mNodes, starting_node);
-  AddNode( toActor, inodes, shaderArray );
+  AddNode( toActor, inodes, shaderArray, LightingMode::UNLIT );
 
   LoadScripts();
 
@@ -928,7 +927,7 @@ bool DliLoader::LoadGeometryArray()
   return true;
 }
 
-void DliLoader::AddNode( Actor toActor, const TreeNode *addnode, const std::vector<Shader>& shaderArray )
+void DliLoader::AddNode( Actor toActor, const TreeNode *addnode, const std::vector<Shader>& shaderArray, LightingMode::Type lightingMode )
 {
   const TreeNode *itn = NULL;
   Actor actor;
@@ -939,27 +938,23 @@ void DliLoader::AddNode( Actor toActor, const TreeNode *addnode, const std::vect
     actorSize = Vector3( floatVec[0], floatVec[1], floatVec[2] );
   }
 
+  std::string nodeName;
+  ReadString( addnode->GetChild( "name" ), nodeName );
+
   if( !( itn = addnode->GetChild( "mesh" ) ) )
   {
-
     actor = Actor::New();
     actor.SetAnchorPoint( AnchorPoint::CENTER );
     actor.SetParentOrigin( ParentOrigin::CENTER );
     actor.SetPosition( Vector3() );
     actor.SetSize( actorSize );
-    const TreeNode *itname = addnode->GetChild( "name" );
-    if( itname )
-    {
-      actor.SetName( itname->GetString() );
-    }
+    actor.SetName(nodeName);
   }
   else
   {
-    std::string nodeName;
     int shaderIdx = 0;
     int materialIndex = 0;
     int meshIndex = itn->GetInteger();
-    ReadString( addnode->GetChild( "name" ), nodeName );
     ReadInt( addnode->GetChild( "shader" ), shaderIdx );
     ReadInt( addnode->GetChild( "material" ), materialIndex );
 
@@ -971,6 +966,39 @@ void DliLoader::AddNode( Actor toActor, const TreeNode *addnode, const std::vect
                                   nodeName );
   }
 
+  // Attempt to read shadow mode. It's optional.
+  if ( auto node = addnode->GetChild(LightingMode::PROPERTY_NAME) )  // overriding setting from parent?
+  {
+    if( node->GetType() == TreeNode::STRING )
+    {
+      if (!LightingMode::InterpretValue(node->GetString(), lightingMode))
+      {
+        DALI_LOG_WARNING("Failed to interpret %s value '%s', keeping '%s'.\n", LightingMode::PROPERTY_NAME,
+          value.c_str(), GetValue(lightingMode));
+      }
+    }
+    else if( node->GetType() == TreeNode::INTEGER )
+    {
+      int value = node->GetInteger();
+      if (LightingMode::GetValue(static_cast<LightingMode::Type>(value)))
+      {
+        lightingMode = static_cast<LightingMode::Type>(value);
+      }
+      else
+      {
+        DALI_LOG_WARNING("Ignoring invalid %s value (%d) in '%s'.\n", LightingMode::PROPERTY_NAME,
+          value, nodeName.c_str());
+      }
+    }
+    else  //... but if present, it has to be valid type.
+    {
+      DALI_LOG_WARNING("Ignoring invalid %s type in '%s' (string or integer expected).\n",
+          LIGHTING_MODE_PROPERTY.c_str(), nodeName.c_str());
+    }
+  }
+  actor.RegisterProperty(LightingMode::PROPERTY_NAME, static_cast<int>(lightingMode));
+
+  // Read transform.
   ReadAnglePosition(addnode, actor );
 
   if( actor )
@@ -989,7 +1017,7 @@ void DliLoader::AddNode( Actor toActor, const TreeNode *addnode, const std::vect
       for( unsigned int i = 0; i < children.Size(); ++i )
       {
         const TreeNode *inodes = Tidx( mNodes, children[i] );
-        AddNode( actor, inodes, shaderArray );
+        AddNode( actor, inodes, shaderArray, lightingMode );
       }
     }
   }
