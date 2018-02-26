@@ -27,6 +27,7 @@
 
 // INTERNAL INCLUDES
 #include "dli-loader.h"
+#include "utils.h"
 
 using namespace Dali::Toolkit;
 
@@ -35,36 +36,6 @@ namespace
 const std::string DLI_EXT = ".dli";
 const size_t DLI_EXT_SIZE = DLI_EXT.size();
 const std::string SLASH( "/" );
-
-/**
- * @brief Insensitive case compare function.
- *
- * @param[in] a, compare string
- * @param[in] b, compare string
- * @return true if strings are equal
- */
-bool CaseInsensitiveCharacterCompare( unsigned char a, unsigned char b )
-{
-  // Converts to lower case in the current locale.
-  return std::tolower( a ) == std::tolower( b );
-}
-
-/**
- * @brief return true if the lower cased ASCII strings are equal.
- *
- * @param[in] a, compare string
- * @param[in] b, compare string
- * @return true if strings are equal
- */
-bool CaseInsensitiveStringCompare( const std::string& a, const std::string& b )
-{
-  bool result = false;
-  if( a.length() == b.length() )
-  {
-    result = std::equal( a.begin(), a.end(), b.begin(), &CaseInsensitiveCharacterCompare );
-  }
-  return result;
-}
 
 }  // namespace
 
