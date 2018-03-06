@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017 Samsung Electronics Co., Ltd.
+ * Copyright (c) 2018 Samsung Electronics Co., Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -106,7 +106,16 @@ void GetSceneNodes(Scene3D &scene_data, Node3D *parent, const aiScene *scene, ai
 
         }
         node->m_Positions.assign( (Vector3*) mesh->mVertices, (Vector3*) (mesh->mVertices + mesh->mNumVertices));
-        node->m_Normals.assign( (Vector3*) mesh->mNormals, (Vector3*) (mesh->mNormals + mesh->mNumVertices) );
+
+        if( !mesh->HasNormals() )
+        {
+            cout << "No Normals" << endl;
+        }
+        else
+        {
+            node->m_Normals.assign( (Vector3*) mesh->mNormals, (Vector3*) (mesh->mNormals + mesh->mNumVertices) );
+        }
+
         if(!mesh->HasTextureCoords(0))
         {
             cout << "No textures" << endl;
