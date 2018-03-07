@@ -42,9 +42,11 @@ public:
   ~FileParser();
 
   /**
-   * @brief Parse the selected folder and load the first file
+   * @brief Parse the selected folder and sets the model file.
    *
-   * @param[out] modelDirUrl, path to folder.
+   * The model file can be retrieved by calling GetModelFile()
+   *
+   * @param[in] modelDirUrl, path to folder.
    */
   void ReadModelFolder( const char* const modelDirUrl );
 
@@ -59,6 +61,20 @@ public:
    * @return The current model file.
    */
   const std::string& GetModelFile() const;
+
+  /**
+   * @brief Parse the selected folder and sets the skin file
+   *
+   * The skin file can be retrieved by calling GetSkinFile()
+   *
+   * @param[in] skinUrl, path to folder.
+   */
+  void ReadSkinFolder( const char* const skinUrl );
+
+  /**
+   * @return The current skin file.
+   */
+  const std::string& GetSkinFile() const;
 
 private:
   Asset mAsset;

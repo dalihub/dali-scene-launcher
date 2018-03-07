@@ -78,6 +78,7 @@ struct Asset
   std::string fragmentShader;
   std::string cubeSpecular;
   std::string cubeDiffuse;
+  std::string skinFile;
   Vector3 modelScaleFactor;
   float MaxLOD;
 };

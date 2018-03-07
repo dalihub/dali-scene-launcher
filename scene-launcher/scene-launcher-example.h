@@ -84,6 +84,11 @@ public:
    */
   void CreateModel();
 
+  /**
+   * @brief Creates a skin.
+   */
+  void CreateSkin();
+
   void DisplayError( const std::string& errorMessage );
 
   void PlayAnimation( std::vector<Animation>& animationList );

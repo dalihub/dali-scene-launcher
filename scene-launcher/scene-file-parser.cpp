@@ -32,8 +32,9 @@ using namespace Dali::Toolkit;
 
 namespace
 {
+
 const std::string DLI_EXT = ".dli";
-const size_t DLI_EXT_SIZE = DLI_EXT.size();
+const std::string PNG_EXT = ".png";
 const std::string SLASH( "/" );
 
 /**
@@ -66,6 +67,46 @@ bool CaseInsensitiveStringCompare( const std::string& a, const std::string& b )
   return result;
 }
 
+void ReadFolder( const char* const dirUrlStr, const std::string& extension, std::vector<std::string>& files )
+{
+  DIR *dp;
+  dp = opendir( dirUrlStr );
+
+  if( nullptr == dp )
+  {
+    std::stringstream stream;
+    stream << "Can't open " << std::string( dirUrlStr ) << " folder.";
+
+    // Error while opening the folder.
+    throw DaliException( ASSERT_LOCATION, stream.str().c_str() );
+  }
+
+  const std::string dirUrl = std::string( dirUrlStr ) + SLASH;
+  const size_t extensionSize = extension.size();
+
+  struct dirent* dirp;
+  while( ( dirp = readdir( dp ) ) )
+  {
+    std::string filePath = dirUrl + dirp->d_name;
+
+    struct stat fileStat;
+    if( stat( filePath.c_str(), &fileStat ) || S_ISDIR( fileStat.st_mode ))
+    {
+      // Do nothing if it fails to retrieve the file info or if the file is a folder.
+      continue;
+    }
+
+    if( filePath.size() > extensionSize )
+    {
+      const std::string fileExtension = filePath.substr( filePath.size() - extensionSize );
+      if( CaseInsensitiveStringCompare( fileExtension, extension ) )
+      {
+        files.push_back( filePath );
+      }
+    }
+  }
+}
+
 }  // namespace
 
 namespace SceneLauncher
@@ -82,38 +123,12 @@ FileParser::~FileParser()
 
 void FileParser::ReadModelFolder( const char* const modelDirUrl )
 {
-  DIR *dp;
-  dp = opendir( modelDirUrl );
+  std::vector<std::string> files;
+  ReadFolder( modelDirUrl, DLI_EXT, files );
 
-  if( NULL == dp )
+  if( !files.empty() )
   {
-    std::stringstream stream;
-    stream << "Can't open " << std::string( modelDirUrl ) << " folder.";
-
-    // Error while opening the folder.
-    throw DaliException( ASSERT_LOCATION, stream.str().c_str() );
-  }
-
-  struct dirent* dirp;
-  while( ( dirp = readdir( dp ) ) )
-  {
-    std::string filePath = std::string( modelDirUrl ) + SLASH + dirp->d_name;
-
-    struct stat fileStat;
-    if( stat( filePath.c_str(), &fileStat ) || S_ISDIR( fileStat.st_mode ))
-    {
-      // Do nothing if it fails to retrieve the file info or if the file is a folder.
-      continue;
-    }
-
-    if( filePath.size() > DLI_EXT_SIZE )
-    {
-      const std::string fileExtension = filePath.substr( filePath.size() - DLI_EXT_SIZE );
-      if( CaseInsensitiveStringCompare( fileExtension, DLI_EXT ) )
-      {
-        mAsset.model = filePath;
-      }
-    }
+    mAsset.model = files[0];
   }
 }
 
@@ -125,6 +140,29 @@ Asset& FileParser::GetAsset()
 const std::string& FileParser::GetModelFile() const
 {
   return mAsset.model;
+}
+
+void FileParser::ReadSkinFolder( const char* const skinUrl )
+{
+  std::vector<std::string> files;
+  try
+  {
+    ReadFolder( skinUrl, PNG_EXT, files );
+  }
+  catch( DaliException& e )
+  {
+    // Nothing to do. The folder may not exist.
+  }
+
+  if( !files.empty() )
+  {
+    mAsset.skinFile = files[0];
+  }
+}
+
+const std::string& FileParser::GetSkinFile() const
+{
+  return mAsset.skinFile;
 }
 
 } // namespace SceneLauncher

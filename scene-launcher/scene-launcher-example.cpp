@@ -33,6 +33,48 @@ const Vector3 CAMERA_DEFAULT_POSITION( 0.0f, 0.0f, 3.5f );
 
 const float TEXT_AUTO_SCROLL_SPEED = 200.f;
 
+#define MAKE_SHADER(A)#A
+
+const char* VERTEX_SHADER_STR = MAKE_SHADER(
+precision mediump float;
+
+in vec3 aPosition;
+in vec2 aTexCoord;
+
+out vec2 vUV;
+
+uniform vec3 uSize;
+uniform mat4 uMvpMatrix;
+
+void main()
+{
+
+  vec4 vPosition = vec4( aPosition * uSize, 1.0 );
+  gl_Position = uMvpMatrix * vPosition;
+
+  vUV = aTexCoord;
+}
+);
+
+const char* FRAGMENT_SHADER_STR = MAKE_SHADER(
+precision mediump float;
+
+uniform sampler2D sAlbedo;
+
+in vec2 vUV;
+
+out vec4 FragColor;
+
+void main()
+{
+  FragColor = texture( sAlbedo, vUV.st );
+}
+);
+
+const std::string SHADER_VERSION("#version 300 es\n");
+std::string VERTEX_SHADER = SHADER_VERSION + std::string( VERTEX_SHADER_STR );
+std::string FRAGMENT_SHADER = SHADER_VERSION + std::string( FRAGMENT_SHADER_STR );
+
 } // namespace
 
 Scene3dLauncher::Scene3dLauncher( Application& application )
@@ -130,6 +172,22 @@ void Scene3dLauncher::Create( Application& application )
 
   // Second stage initialization. It calls an OnConnect() function in Lua and does the KeyEventSignal connection to an OnKeyEvent() function in Lua.
   mLuaApplicationHelper.Initialize();
+
+  // Load a skin.
+  mSceneFileParser.ReadSkinFolder( ( ApplicationResources::Get().GetSkinsPath() ).c_str() );
+
+  try
+  {
+    CreateSkin();
+  }
+  catch( DaliException& e )
+  {
+    // Nothing to do!
+  }
+  catch( ... )
+  {
+    DALI_LOG_ERROR( "Unknown error while loading %s\n", mSceneFileParser.GetSkinFile().c_str() );
+  }
 }
 
 bool Scene3dLauncher::OnDoubleTapTime()
@@ -337,6 +395,73 @@ void Scene3dLauncher::CreateModel()
   {
     PlayAnimation( mAnimations[0] );
   }
+}
+
+void Scene3dLauncher::CreateSkin()
+{
+  struct Vertex
+  {
+    Vector3 aPosition;
+    Vector2 aTexCoord;
+  };
+  Vertex vertices[] =
+  {
+    { Vector3( -0.5f,-0.5f, 0.0f ), Vector2( 0.0f, 1.0f ) },
+    { Vector3(  0.5f,-0.5f, 0.0f ), Vector2( 1.0f, 1.0f ) },
+    { Vector3( -0.5f, 0.5f, 0.0f ), Vector2( 0.0f, 0.0f ) },
+    { Vector3(  0.5f, 0.5f, 0.0f ), Vector2( 1.0f, 0.0f ) }
+  };
+
+  Property::Map property;
+  property.Insert( "aPosition", Property::VECTOR3 );
+  property.Insert( "aTexCoord", Property::VECTOR2 );
+
+  PropertyBuffer vertexBuffer = PropertyBuffer::New( property );
+
+  vertexBuffer.SetData( vertices, sizeof( vertices ) / sizeof( Vertex ) );
+
+  Geometry geometry = Geometry::New();
+  geometry.AddVertexBuffer( vertexBuffer );
+
+  geometry.SetType( Geometry::TRIANGLE_STRIP );
+
+  Shader shader = Shader::New( VERTEX_SHADER, FRAGMENT_SHADER );
+
+  Renderer renderer = Renderer::New( geometry, shader );
+  renderer.SetProperty( Renderer::Property::DEPTH_WRITE_MODE, DepthWriteMode::OFF );
+  renderer.SetProperty( Renderer::Property::DEPTH_TEST_MODE, DepthTestMode::OFF );
+
+  renderer.SetProperty( Renderer::Property::FACE_CULLING_MODE, FaceCullingMode::NONE );
+  renderer.SetProperty( Renderer::Property::BLEND_MODE, BlendMode::ON );
+  renderer.SetProperty( Renderer::Property::BLEND_FACTOR_SRC_ALPHA, BlendFactor::ONE_MINUS_DST_ALPHA );
+
+  const SceneLauncher::Asset& asset = mSceneFileParser.GetAsset();
+  PixelData pixelData = SyncImageLoader::Load( asset.skinFile );
+
+  if( !pixelData )
+  {
+    throw Dali::DaliException( ASSERT_LOCATION, "Failed to load skin texture." );
+  }
+
+  Texture texture = Texture::New( TextureType::TEXTURE_2D, pixelData.GetPixelFormat(), pixelData.GetWidth(), pixelData.GetHeight() );
+  texture.Upload( pixelData, 0, 0, 0, 0, pixelData.GetWidth(), pixelData.GetHeight() );
+
+  TextureSet textureSet = TextureSet::New();
+  textureSet.SetTexture( 0u , texture );
+
+  renderer.SetTextures( textureSet );
+
+  Actor actor = Actor::New();
+  actor.AddRenderer( renderer );
+
+  actor.SetAnchorPoint( AnchorPoint::CENTER );
+  actor.SetParentOrigin( ParentOrigin::CENTER );
+  actor.SetColor( Vector4::ONE );
+  actor.SetPosition( Vector3::ZERO );
+
+  actor.SetResizePolicy( ResizePolicy::FILL_TO_PARENT, Dimension::ALL_DIMENSIONS );
+
+  mUiRoot.Add( actor );
 }
 
 void Scene3dLauncher::DisplayError( const std::string& errorMessage )

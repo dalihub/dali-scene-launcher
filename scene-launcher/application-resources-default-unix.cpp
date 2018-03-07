@@ -33,6 +33,7 @@ struct ApplicationResources::Impl
   std::string mModelsPath;
   std::string mShadersPath;
   std::string mLuaScriptPath;
+  std::string mSkinsPath;
 };
 
 ApplicationResources& ApplicationResources::Get()
@@ -87,6 +88,15 @@ const std::string& ApplicationResources::GetLuaScriptsPath() const
     mImpl->mLuaScriptPath = SCENE_LAUNCHER_LUA_SCRIPTS_DIR;
   }
   return mImpl->mLuaScriptPath;
+}
+
+const std::string& ApplicationResources::GetSkinsPath() const
+{
+  if( mImpl->mSkinsPath.empty() )
+  {
+    mImpl->mSkinsPath = SCENE_LAUNCHER_SKINS_DIR;
+  }
+  return mImpl->mSkinsPath;
 }
 
 ApplicationResources::ApplicationResources()

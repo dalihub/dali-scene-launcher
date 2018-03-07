@@ -27,6 +27,7 @@ namespace
   const std::string MODELS_PATH("models/");
   const std::string SHADERS_PATH("shaders/");
   const std::string LUA_SCRIPTS_PATH("lua-scripts/");
+  const std::string SKINS_PATH("skins/");
 }
 
 struct ApplicationResources::Impl
@@ -44,6 +45,7 @@ struct ApplicationResources::Impl
   std::string mModelsPath;
   std::string mShadersPath;
   std::string mLuaScriptPath;
+  std::string mSkinsPath;
 };
 
 ApplicationResources& ApplicationResources::Get()
@@ -102,6 +104,15 @@ const std::string& ApplicationResources::GetLuaScriptsPath() const
     mImpl->mLuaScriptPath = GetResourcesPath() + LUA_SCRIPTS_PATH;
   }
   return mImpl->mLuaScriptPath;
+}
+
+const std::string& ApplicationResources::GetSkinsPath() const
+{
+  if( mImpl->mSkinsPath.empty() )
+  {
+    mImpl->mSkinsPath = GetResourcesPath() + SKINS_PATH;
+  }
+  return mImpl->mSkinsPath;
 }
 
 ApplicationResources::ApplicationResources()

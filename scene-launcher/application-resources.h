@@ -32,6 +32,7 @@ public:
   const std::string& GetModelsPath() const;
   const std::string& GetShadersPath() const;
   const std::string& GetLuaScriptsPath() const;
+  const std::string& GetSkinsPath() const;
 
 private:
   ApplicationResources();
