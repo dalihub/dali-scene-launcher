@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017 Samsung Electronics Co., Ltd.
+ * Copyright (c) 2018 Samsung Electronics Co., Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -53,14 +53,29 @@ void Scene3D::AddCamera(Camera3D &ecam)
     m_cameras.push_back(ecam);
 }
 
+void Scene3D::AddLight(Light& eLight)
+{
+    m_lights.push_back(eLight);
+}
+
 unsigned int Scene3D::GetNumCameras()
 {
     return m_cameras.size();
 }
 
+unsigned int Scene3D::GetNumLights() const
+{
+    return m_lights.size();
+}
+
 Camera3D* Scene3D::GetCamera(unsigned int idx)
 {
     return &m_cameras[idx];
+}
+
+Light* Scene3D::GetLight(unsigned int idx)
+{
+    return &m_lights[idx];
 }
 
 void Scene3D::AddAnimation(Animation3D &eanim)

@@ -2,7 +2,7 @@
 #define SCENE3D_H
 
 /*
- * Copyright (c) 2017 Samsung Electronics Co., Ltd.
+ * Copyright (c) 2018 Samsung Electronics Co., Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,6 +20,7 @@
 
 #include "Node3D.h"
 #include "Camera3D.h"
+#include "Light.h"
 #include "Animation3D.h"
 #include <vector>
 
@@ -33,10 +34,13 @@ class Scene3D
         virtual ~Scene3D();
         unsigned int GetNumNodes();
         unsigned int GetNumCameras();
+        unsigned int GetNumLights() const;
         unsigned int GetNumAnimations();
         Node3D* GetNode(unsigned int idx);
         void AddCamera(Camera3D &ecam);
         Camera3D* GetCamera(unsigned int idx);
+        void AddLight(Light& eLight);
+        Light* GetLight(unsigned int idx);
         void AddAnimation(Animation3D &eanim);
         bool HasAnimations();
         Animation3D* GetAnimation(unsigned int idx);
@@ -46,6 +50,7 @@ class Scene3D
         unsigned int index;
         vector<Node3D*> m_nodes;
         vector<Camera3D> m_cameras;
+        vector<Light> m_lights;
         vector<Animation3D> m_animations;
 
 };

@@ -207,6 +207,48 @@ void GetSceneCameras( Scene3D &scene_data, const aiScene *scene )
     }
 }
 
+aiNode* FindLeafNamed(const string& eName, aiNode* node)
+{
+    if(node->mNumMeshes == 0 &&
+        node->mNumChildren == 0 &&
+        node->mName.length == eName.size() &&
+        strncmp(node->mName.data, eName.c_str(), node->mName.length) == 0)
+    {
+        return node;
+    }
+    else
+    {
+        aiNode* result = nullptr;
+        auto iEnd = node->mChildren + node->mNumChildren;
+        for (auto i = node->mChildren; i != iEnd; ++i)
+        {
+            if (auto n = FindLeafNamed(eName, *i))
+            {
+                result = n;
+                break;
+            }
+        }
+        return result;
+    }
+}
+
+void GetSceneLights( Scene3D& scene_data, const aiScene* scene)
+{
+    for( unsigned int n = 0; n < scene->mNumLights; ++n)
+    {
+        const aiLight* aLight = scene->mLights[n];
+        string name(aLight->mName.data, aLight->mName.length);
+
+        Light light;
+        aiNode* node = FindLeafNamed( name, scene->mRootNode );
+        if (node)
+        {
+            light.SetMatrix(node->mTransformation);
+            scene_data.AddLight(light);
+        }
+    }
+}
+
 void GetAnimations( Scene3D &scene_data, const aiScene *scene )
 {
     if(!scene->HasAnimations())

@@ -1,5 +1,5 @@
-#ifndef LOADSCENE_H
-#define LOADSCENE_H
+#ifndef LIGHT_H
+#define LIGHT_H
 
 /*
  * Copyright (c) 2018 Samsung Electronics Co., Ltd.
@@ -18,11 +18,15 @@
  *
  */
 
-#include "Scene3D.h"
+#include <assimp/scene.h>
 
-void GetSceneNodes(Scene3D &scene_data, Node3D *parent, const aiScene *scene, aiNode *aNode);
-void GetSceneCameras( Scene3D &scene_data, const aiScene *scene );
-void GetSceneLights( Scene3D& scene_data, const aiScene* scene );
-void GetAnimations( Scene3D &scene_data, const aiScene *scene );
+class Light
+{
+public:
+  float m_Matrix[16];
 
-#endif // LOADSCENE_H
+  void SetMatrix(aiMatrix4x4 eMat);
+};
+
+
+#endif /* LIGHT_H */

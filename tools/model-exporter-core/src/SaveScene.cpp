@@ -26,6 +26,7 @@ void SaveNodes(Scene3D *scene, ostream &outDli);
 void SaveMeshes(Scene3D *scene, ostream &outDli, ostream &outBin,
     std::string fileNameBinPath);
 void SaveCameras(Scene3D *scene, ostream &outDli);
+void SaveLights(Scene3D *scene, ostream &outDli);
 void SaveMaterials(Scene3D *scene, ostream &outDli);
 void SaveEnvironment(Scene3D *scene, ostream &outDli);
 void SaveShaders(Scene3D *scene, ostream &outDli);
@@ -92,6 +93,11 @@ bool ConvertScene(Scene3D* scene, std::string fileNameBin, std::ostream& outDli,
   //Save Cameras
   outDli << "    \"cameras\" : [\n";
   SaveCameras(scene, outDli);
+  outDli << "    ], \n";
+
+  //Save Lights
+  outDli << "    \"lights\" : [\n";
+  SaveLights(scene, outDli);
   outDli << "    ], \n";
 
   //Save Materials
@@ -302,6 +308,24 @@ void SaveCameras(Scene3D *scene, ostream &outDli)
     {
       outDli << "        },\n";
     }
+  }
+}
+
+void SaveLights(Scene3D* scene, ostream& outDli)
+{
+  for (unsigned int i = 0; i < scene->GetNumLights(); ++i)
+  {
+    outDli << "        {\n";
+    outDli << "            \"matrix\": [ ";
+
+    const Light* light = scene->GetLight(i);
+    for(int j = 0; j < 15; ++j)
+    {
+      outDli << light->m_Matrix[j] << ", ";
+    }
+    outDli << light->m_Matrix[15] << "]\n";
+
+    outDli << "        }" << ((i + 1 == scene->GetNumLights()) ? "" : ",") << "\n";
   }
 }
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017 Samsung Electronics Co., Ltd.
+ * Copyright (c) 2018 Samsung Electronics Co., Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -108,6 +108,7 @@ jint Java_com_samsung_dali_modelexporter_ModelExporter_nativeExport(JNIEnv* env,
   Scene3D scene_data;
   GetSceneNodes(scene_data, nullptr, scene, scene->mRootNode);
   GetSceneCameras(scene_data, scene);
+  GetSceneLights(scene_data, scene);
   GetAnimations(scene_data, scene);
   SaveScene(&scene_data, outNameDli, outNameBin);
 
