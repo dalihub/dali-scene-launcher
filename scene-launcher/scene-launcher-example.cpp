@@ -268,6 +268,14 @@ void Scene3dLauncher::CreateModel(Asset& asset)
     // Get camera parameters.
     dliLoader.GetCameraParameters( 0, asset.camera );
 
+    // Set up light source.
+    LightParameters light;
+    if (dliLoader.GetLightParameters(0, light))
+    {
+      mLightSource.reset(new LightSource());
+      mLightSource->SetTransform(light.transform);
+    }
+
     // Process animations.
     for( const auto& animationName : mAnimationsName )
     {
@@ -356,6 +364,11 @@ void Scene3dLauncher::InitActors(const Asset& asset)
   Matrix matCube( mCameraOrientationInv * mCubeOrientation );
   matCube.Transpose();
   mModel.SetShaderUniform("uCubeMatrix" , matCube );
+
+  if (mLightSource)
+  {
+    mLightSource->SetModel(mModel);
+  }
 }
 
 void Scene3dLauncher::ClearModel()

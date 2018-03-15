@@ -661,6 +661,35 @@ void DliLoader::GetCameraParameters( unsigned int eidx, CameraParameters& camera
   }
 }
 
+bool DliLoader::GetLightParameters(unsigned int eidx, LightParameters& light)
+{
+  auto root = mParser.GetRoot();
+  if (!root)
+  {
+    return false;
+  }
+
+  auto lightRoot = root->GetChild("lights");
+  if (!lightRoot)
+  {
+    return false;
+  }
+
+  auto lightNode = Tidx(lightRoot, eidx);
+  if (!lightNode)
+  {
+    return false;
+  }
+
+  if (!ReadVector(lightNode->GetChild("matrix"), light.transform.AsFloat(), 16))
+  {
+    DALI_LOG_WARNING("Failed to parse light %d - \"matrix\" child with 16 floats expected.\n", eidx);
+    return false;
+  }
+
+  return true;
+}
+
 std::string DliLoader::GetParseError() const
 {
   std::stringstream stream;

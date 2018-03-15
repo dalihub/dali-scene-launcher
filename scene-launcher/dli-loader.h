@@ -39,6 +39,7 @@ namespace SceneLauncher
 
 // Forward declarations
 struct CameraParameters;
+struct LightParameters;
 
 struct RendererOptions
 {
@@ -72,6 +73,8 @@ public:
   bool LoadAnimation( Actor toActor, std::vector<Animation>& animArray, const std::string& animationName );
 
   void GetCameraParameters( unsigned int eidx, CameraParameters& camera );
+
+  bool GetLightParameters( unsigned int eidx, LightParameters& light );
 
   std::string GetParseError() const;
 
