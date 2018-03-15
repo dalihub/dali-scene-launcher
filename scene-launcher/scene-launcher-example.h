@@ -26,6 +26,7 @@
 #include "model-skybox.h"
 #include "lua-application-helper.h"
 #include "lua-interface.h"
+#include "light-source.h"
 #include "asset.h"
 
 using namespace Toolkit;
@@ -97,6 +98,9 @@ private:
 
   ModelSkybox mSkybox;
   SceneLauncher::ModelPbr mModel;
+
+  std::unique_ptr<SceneLauncher::LightSource> mLightSource;
+
   std::vector<std::vector<Animation>> mAnimations;
   std::vector<std::string> mAnimationsName;
 
