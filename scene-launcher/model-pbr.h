@@ -54,27 +54,9 @@ public:
   ~ModelPbr();
 
   /**
-   * @brief Initializes an Actor and its geometry for the Physically Based Rendering.
-   *
-   * @note Call InitTexture() before calling this method.
-   *
-   * It creates a geometry for the renderer.
-   * The @p modelUrl parameter needs to be set with a valid url pointing a file with a @e obj model.
-   *
-   * A renderer is created with the geometry and the shader and it's set to the an actor that can be retrieved by calling GetActor().
-   * The @p position and @p size is set to the actor.
-   *
-   * @param[in,out] asset Asset with the url of model. This function sets in the asset the camera parameters.
-   * @param[in] position The position of the actor.
-   * @param[out] animations Vector of array of animations from file.
-   * @param[out] animationsName Vector of animations names to be loaded.
-   * @param[out] scripts Vector of script's urls got from the dli file.
+   * @brief Initializes ModelPbr with the given actor, shaders and skybox texture for Physically Based Rendering.
    */
-  void Init( Asset& asset,
-             const Vector3& position,
-             std::vector<std::vector<Animation>>& animations,
-             std::vector<std::string>& animationsName,
-             std::vector<DliLoader::Script>& scripts );
+  void Init( Actor root, std::vector<Shader>&& shaderArray, Texture skyboxTexture );
 
   /**
    * @brief Clears the previously allocated PBR model resources.

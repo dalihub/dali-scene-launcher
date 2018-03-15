@@ -28,6 +28,9 @@
 
 #include <dali-toolkit/devel-api/builder/json-parser.h>
 
+// INTERNAL INCLUDES
+#include "asset.h"
+
 using namespace Dali;
 using namespace Dali::Toolkit;
 
@@ -53,12 +56,11 @@ class DliLoader
 {
 public:
 
-  struct Script
-  {
-    std::string url;
-  };
-
 public:
+
+  ///@brief Given a path @a modelDirUrl, return the full path of the first .dli we find, or throw
+  /// a DaliException if there is none.
+  static std::string GetFirstDliInFolder(const char* const modelDirUrl);
 
   DliLoader();
   ~DliLoader();

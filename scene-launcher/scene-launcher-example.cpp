@@ -23,6 +23,9 @@
 
 // INTERNAL INCLUDES
 #include "application-resources.h"
+#include "dli-loader.h"
+
+using namespace SceneLauncher;
 
 namespace
 {
@@ -37,7 +40,6 @@ const float TEXT_AUTO_SCROLL_SPEED = 200.f;
 
 Scene3dLauncher::Scene3dLauncher( Application& application )
 : mApplication( application ),
-  mSceneFileParser(),
   mLua(),
   mLuaApplicationHelper( application, mLua ),
   mDoubleTapTime(),
@@ -96,23 +98,21 @@ void Scene3dLauncher::Create( Application& application )
   stage.Add( mUiRoot );
   stage.Add( m3dRoot );
 
+  Asset asset;
   try
   {
-    // Read models from the filesystem
-    mSceneFileParser.ReadModelFolder( ( ApplicationResources::Get().GetModelsPath() + SCENES_DIR ).c_str() );
-
-    CreateModel();
+    CreateModel(asset);
   }
   catch( DaliException& e )
   {
     std::stringstream stream;
-    stream << "Error while loading " << mSceneFileParser.GetModelFile() << ". Error : " << std::string( e.condition );
+    stream << "Error while loading " << asset.dliPath << ". Error : " << std::string( e.condition );
 
     DisplayError( stream.str() );
   }
   catch( ... )
   {
-    DALI_LOG_ERROR( "Unknown error while loading %s\n", mSceneFileParser.GetModelFile().c_str() );
+    DALI_LOG_ERROR( "Unknown error while loading %s\n", asset.dliPath.c_str() );
   }
 
   // Respond to a click anywhere on the stage
@@ -123,7 +123,7 @@ void Scene3dLauncher::Create( Application& application )
 
   // Load lua scripts
   const std::string scriptDir( ApplicationResources::Get().GetLuaScriptsPath() );
-  for( const auto& script : mScripts )
+  for( const auto& script : asset.scripts )
   {
     mLua.LoadScriptFile( ( scriptDir + script.url ).c_str() );
   }
@@ -240,22 +240,61 @@ bool Scene3dLauncher::OnTouch( Actor actor, const TouchData& touch )
   return true;
 }
 
-void Scene3dLauncher::InitPbrActor()
+void Scene3dLauncher::CreateModel(Asset& asset)
 {
-  SceneLauncher::Asset& asset = mSceneFileParser.GetAsset();
-  mModel.Init( asset,
-               Vector3::ZERO,
-               mAnimations,
-               mAnimationsName,
-               mScripts );
+  UnparentAndReset( mErrorMessage );
 
-  mModel.GetActor().SetOrientation( mModelOrientation );
+  // Read models from the filesystem
+  asset.dliPath = DliLoader::GetFirstDliInFolder((ApplicationResources::Get().GetModelsPath() + SCENES_DIR).c_str());
+
+  //If it is a DLI file, ignore "shader" parameter
+  DliLoader dliLoader;
+  if( dliLoader.LoadObject( asset.dliPath ) )
+  {
+    // Parse ModelPbr bits.
+    Actor aRoot = Actor::New();
+    std::vector<Shader> shaderArray;
+    Texture skyboxTexture;
+    if (dliLoader.CreateScene( shaderArray, aRoot, skyboxTexture ))
+    {
+      aRoot.SetAnchorPoint( AnchorPoint::CENTER );
+      aRoot.SetParentOrigin( ParentOrigin::CENTER );
+      aRoot.SetPosition( Vector3::ZERO );
+      aRoot.SetSize( asset.modelScaleFactor );
+
+      mModel.Init(aRoot, std::move(shaderArray), skyboxTexture);
+    }
+
+    // Get camera parameters.
+    dliLoader.GetCameraParameters( 0, asset.camera );
+
+    // Process animations.
+    for( const auto& animationName : mAnimationsName )
+    {
+      std::vector<Animation> aniItem;
+      dliLoader.LoadAnimation( aRoot, aniItem, animationName );
+      mAnimations.push_back( aniItem );
+    }
+
+    // Get scripts.
+    asset.scripts = dliLoader.GetScripts();
+
+    // Initialise Main Actors and start animations, if any.
+    InitActors(asset);
+    if( mAnimations.size() > 0)
+    {
+      PlayAnimation( mAnimations[0] );
+    }
+  }
+  else
+  {
+    throw DaliException( ASSERT_LOCATION, dliLoader.GetParseError().c_str() );
+  }
 }
 
-void Scene3dLauncher::InitActors()
+void Scene3dLauncher::InitActors(const Asset& asset)
 {
   Stage stage = Stage::GetCurrent();
-  const SceneLauncher::Asset& asset = mSceneFileParser.GetAsset();
 
   if( mModel.GetSkyboxTexture() )
   {
@@ -310,6 +349,8 @@ void Scene3dLauncher::InitActors()
   }
 
   Actor pbrModelActor = mModel.GetActor();
+  pbrModelActor.SetOrientation( mModelOrientation );
+
   m3dRoot.Add( pbrModelActor );
 
   Matrix matCube( mCameraOrientationInv * mCubeOrientation );
@@ -321,22 +362,6 @@ void Scene3dLauncher::ClearModel()
 {
   mSkybox.Clear();
   mModel.Clear();
-}
-
-void Scene3dLauncher::CreateModel()
-{
-  UnparentAndReset( mErrorMessage );
-
-  // Init Pbr actor
-  InitPbrActor();
-
-
-  // Initialise Main Actors
-  InitActors();
-  if( mAnimations.size() > 0)
-  {
-    PlayAnimation( mAnimations[0] );
-  }
 }
 
 void Scene3dLauncher::DisplayError( const std::string& errorMessage )

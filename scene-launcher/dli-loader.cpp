@@ -22,6 +22,8 @@
 #include <dali/integration-api/debug.h>
 #include <dali-toolkit/public-api/image-loader/sync-image-loader.h>
 #include <fstream>
+#include <dirent.h>
+#include <sys/stat.h>
 
 // INTERNAL INCLUDES
 #include "application-resources.h"
@@ -32,6 +34,10 @@
 
 namespace
 {
+
+const std::string DLI_EXT( ".dli" );
+const size_t DLI_EXT_SIZE = DLI_EXT.size();
+const char SLASH = '/';
 
 AlphaFunction GetAlphaFunction( const std::string& alphaFunctionValue )
 {
@@ -313,6 +319,47 @@ bool ReadFile(unsigned char*& efileContent, std::string directory, std::string f
 
 namespace SceneLauncher
 {
+
+std::string DliLoader::GetFirstDliInFolder( const char* const modelDirUrl )
+{
+  DIR *dp;
+  dp = opendir( modelDirUrl );
+
+  if( NULL == dp )
+  {
+    std::stringstream stream;
+    stream << "Can't open " << std::string( modelDirUrl ) << " folder.";
+
+    // Error while opening the folder.
+    throw DaliException( ASSERT_LOCATION, stream.str().c_str() );
+  }
+
+  struct dirent* dirp;
+  while( ( dirp = readdir( dp ) ) )
+  {
+    std::string filePath = std::string( modelDirUrl ) + SLASH + dirp->d_name;
+
+    struct stat fileStat;
+    if( stat( filePath.c_str(), &fileStat ) || S_ISDIR( fileStat.st_mode ))
+    {
+      // Do nothing if it fails to retrieve the file info or if the file is a folder.
+      continue;
+    }
+
+    if( filePath.size() > DLI_EXT_SIZE )
+    {
+      const std::string fileExtension = filePath.substr( filePath.size() - DLI_EXT_SIZE );
+      if( CaseInsensitiveStringCompare( fileExtension, DLI_EXT ) )
+      {
+        return filePath;
+      }
+    }
+  }
+
+  std::stringstream stream;
+  stream << "No .dli found in '" << std::string( modelDirUrl ) << "'.";
+  throw DaliException( ASSERT_LOCATION, stream.str().c_str());
+}
 
 DliLoader::DliLoader()
 : mNodes( NULL )
@@ -626,7 +673,7 @@ std::string DliLoader::GetParseError() const
   return stream.str();
 }
 
-const std::vector<DliLoader::Script>& DliLoader::GetScripts() const
+const std::vector<Script>& DliLoader::GetScripts() const
 {
   return mScripts;
 }
