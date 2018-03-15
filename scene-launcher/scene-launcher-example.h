@@ -65,9 +65,9 @@ public:
   bool OnTouch( Actor actor, const TouchData& touch );
 
   /**
-   * @brief Initialise model geometry, shader, position and orientation
+   * @brief loads model and initialise textures.
    */
-  void InitPbrActor();
+  void CreateModel();
 
   /**
    * @brief Creates scene actors and setup camera parameters
@@ -78,11 +78,6 @@ public:
    * @brief Clear resources
    */
   void ClearModel();
-
-  /**
-   * @brief loads model and initialise textures.
-   */
-  void CreateModel();
 
   void DisplayError( const std::string& errorMessage );
 

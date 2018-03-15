@@ -23,11 +23,17 @@
 
 // INTERNAL INCLUDES
 #include "application-resources.h"
+#include "dli-loader.h"
+
+using namespace SceneLauncher;
 
 namespace
 {
 
 const std::string SCENES_DIR( "scenes" );
+
+const std::string DLI_EXT( ".dli" );
+const size_t DLI_EXT_SIZE = DLI_EXT.size();
 
 const Vector3 CAMERA_DEFAULT_POSITION( 0.0f, 0.0f, 3.5f );
 
@@ -240,22 +246,67 @@ bool Scene3dLauncher::OnTouch( Actor actor, const TouchData& touch )
   return true;
 }
 
-void Scene3dLauncher::InitPbrActor()
+void Scene3dLauncher::CreateModel()
 {
-  SceneLauncher::Asset& asset = mSceneFileParser.GetAsset();
-  mModel.Init( asset,
-               Vector3::ZERO,
-               mAnimations,
-               mAnimationsName,
-               mScripts );
+  UnparentAndReset( mErrorMessage );
 
-  mModel.GetActor().SetOrientation( mModelOrientation );
+  Asset& asset = mSceneFileParser.GetAsset();
+  if( asset.model.rfind( DLI_EXT ) + DLI_EXT_SIZE == asset.model.length() )
+  {
+    Actor aRoot = Actor::New();
+    aRoot.SetAnchorPoint( AnchorPoint::CENTER );
+    aRoot.SetParentOrigin( ParentOrigin::CENTER );
+    aRoot.SetPosition( Vector3::ZERO );
+    aRoot.SetSize( asset.modelScaleFactor );
+
+    //If it is a DLI file, ignore "shader" parameter
+    DliLoader dliLoader;
+    if( dliLoader.LoadObject( asset.model ) )
+    {
+      // Parse ModelPbr bits.
+      std::vector<Shader> shaderArray;
+      Texture skyboxTexture;
+      if (dliLoader.CreateScene( shaderArray, aRoot, skyboxTexture ))
+      {
+        mModel.Init(aRoot, std::move(shaderArray), skyboxTexture);
+      }
+
+      // Get camera parameters.
+      dliLoader.GetCameraParameters( 0, asset.camera );
+
+      // Process animations.
+      for( const auto& animationName : mAnimationsName )
+      {
+        std::vector<Animation> aniItem;
+        dliLoader.LoadAnimation( aRoot, aniItem, animationName );
+        mAnimations.push_back( aniItem );
+      }
+
+      // Get scripts.
+      mScripts = dliLoader.GetScripts();
+
+      // Initialise Main Actors and start animations, if any.
+      InitActors();
+      if( mAnimations.size() > 0)
+      {
+        PlayAnimation( mAnimations[0] );
+      }
+    }
+    else
+    {
+      throw DaliException( ASSERT_LOCATION, dliLoader.GetParseError().c_str() );
+    }
+  }
+  else
+  {
+    throw DaliException( ASSERT_LOCATION, "Model is wrong extension (.dli needed)");
+  }
 }
 
 void Scene3dLauncher::InitActors()
 {
   Stage stage = Stage::GetCurrent();
-  const SceneLauncher::Asset& asset = mSceneFileParser.GetAsset();
+  const Asset& asset = mSceneFileParser.GetAsset();
 
   if( mModel.GetSkyboxTexture() )
   {
@@ -310,6 +361,8 @@ void Scene3dLauncher::InitActors()
   }
 
   Actor pbrModelActor = mModel.GetActor();
+  pbrModelActor.SetOrientation( mModelOrientation );
+
   m3dRoot.Add( pbrModelActor );
 
   Matrix matCube( mCameraOrientationInv * mCubeOrientation );
@@ -321,22 +374,6 @@ void Scene3dLauncher::ClearModel()
 {
   mSkybox.Clear();
   mModel.Clear();
-}
-
-void Scene3dLauncher::CreateModel()
-{
-  UnparentAndReset( mErrorMessage );
-
-  // Init Pbr actor
-  InitPbrActor();
-
-
-  // Initialise Main Actors
-  InitActors();
-  if( mAnimations.size() > 0)
-  {
-    PlayAnimation( mAnimations[0] );
-  }
 }
 
 void Scene3dLauncher::DisplayError( const std::string& errorMessage )
