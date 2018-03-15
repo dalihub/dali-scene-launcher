@@ -50,6 +50,11 @@ struct CameraParameters
   bool enablePerspective;
 };
 
+struct LightParameters
+{
+  Matrix transform;
+};
+
 struct Script
 {
   std::string url;
