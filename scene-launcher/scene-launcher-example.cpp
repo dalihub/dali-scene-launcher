@@ -21,23 +21,73 @@
 // EXTERNAL INCLUDES
 #include <dali/integration-api/debug.h>
 
+#include <dirent.h>
+#include <sys/stat.h>
+
 // INTERNAL INCLUDES
 #include "application-resources.h"
+#include "dli-loader.h"
+
+using namespace SceneLauncher;
 
 namespace
 {
 
 const std::string SCENES_DIR( "scenes" );
 
+const std::string DLI_EXT( ".dli" );
+const size_t DLI_EXT_SIZE = DLI_EXT.size();
+const char SLASH = '/';
+
 const Vector3 CAMERA_DEFAULT_POSITION( 0.0f, 0.0f, 3.5f );
 
 const float TEXT_AUTO_SCROLL_SPEED = 200.f;
+
+std::string GetFirstDliInFolder( const char* const modelDirUrl )
+{
+  DIR *dp;
+  dp = opendir( modelDirUrl );
+
+  if( NULL == dp )
+  {
+    std::stringstream stream;
+    stream << "Can't open " << std::string( modelDirUrl ) << " folder.";
+
+    // Error while opening the folder.
+    throw DaliException( ASSERT_LOCATION, stream.str().c_str() );
+  }
+
+  struct dirent* dirp;
+  while( ( dirp = readdir( dp ) ) )
+  {
+    std::string filePath = std::string( modelDirUrl ) + SLASH + dirp->d_name;
+
+    struct stat fileStat;
+    if( stat( filePath.c_str(), &fileStat ) || S_ISDIR( fileStat.st_mode ))
+    {
+      // Do nothing if it fails to retrieve the file info or if the file is a folder.
+      continue;
+    }
+
+    if( filePath.size() > DLI_EXT_SIZE )
+    {
+      const std::string fileExtension = filePath.substr( filePath.size() - DLI_EXT_SIZE );
+      if( CaseInsensitiveStringCompare( fileExtension, DLI_EXT ) )
+      {
+        return filePath;
+      }
+    }
+  }
+
+  std::stringstream stream;
+  stream << "No .dli found in '" << std::string( modelDirUrl ) << "'.";
+  throw DaliException( ASSERT_LOCATION, stream.str().c_str());
+}
 
 } // namespace
 
 Scene3dLauncher::Scene3dLauncher( Application& application )
 : mApplication( application ),
-  mSceneFileParser(),
   mLua(),
   mLuaApplicationHelper( application, mLua ),
   mDoubleTapTime(),
@@ -96,23 +146,24 @@ void Scene3dLauncher::Create( Application& application )
   stage.Add( mUiRoot );
   stage.Add( m3dRoot );
 
+  Asset asset;
   try
   {
     // Read models from the filesystem
-    mSceneFileParser.ReadModelFolder( ( ApplicationResources::Get().GetModelsPath() + SCENES_DIR ).c_str() );
+    asset.dliPath = GetFirstDliInFolder((ApplicationResources::Get().GetModelsPath() + SCENES_DIR).c_str());
 
-    CreateModel();
+    CreateModel(asset);
   }
   catch( DaliException& e )
   {
     std::stringstream stream;
-    stream << "Error while loading " << mSceneFileParser.GetModelFile() << ". Error : " << std::string( e.condition );
+    stream << "Error while loading " << asset.dliPath << ". Error : " << std::string( e.condition );
 
     DisplayError( stream.str() );
   }
   catch( ... )
   {
-    DALI_LOG_ERROR( "Unknown error while loading %s\n", mSceneFileParser.GetModelFile().c_str() );
+    DALI_LOG_ERROR( "Unknown error while loading %s\n", asset.dliPath.c_str() );
   }
 
   // Respond to a click anywhere on the stage
@@ -123,7 +174,7 @@ void Scene3dLauncher::Create( Application& application )
 
   // Load lua scripts
   const std::string scriptDir( ApplicationResources::Get().GetLuaScriptsPath() );
-  for( const auto& script : mScripts )
+  for( const auto& script : asset.scripts )
   {
     mLua.LoadScriptFile( ( scriptDir + script.url ).c_str() );
   }
@@ -240,22 +291,65 @@ bool Scene3dLauncher::OnTouch( Actor actor, const TouchData& touch )
   return true;
 }
 
-void Scene3dLauncher::InitPbrActor()
+void Scene3dLauncher::CreateModel(Asset& asset)
 {
-  SceneLauncher::Asset& asset = mSceneFileParser.GetAsset();
-  mModel.Init( asset,
-               Vector3::ZERO,
-               mAnimations,
-               mAnimationsName,
-               mScripts );
+  UnparentAndReset( mErrorMessage );
 
-  mModel.GetActor().SetOrientation( mModelOrientation );
+  if( asset.dliPath.rfind( DLI_EXT ) + DLI_EXT_SIZE == asset.dliPath.length() )
+  {
+    Actor aRoot = Actor::New();
+    aRoot.SetAnchorPoint( AnchorPoint::CENTER );
+    aRoot.SetParentOrigin( ParentOrigin::CENTER );
+    aRoot.SetPosition( Vector3::ZERO );
+    aRoot.SetSize( asset.modelScaleFactor );
+
+    //If it is a DLI file, ignore "shader" parameter
+    DliLoader dliLoader;
+    if( dliLoader.LoadObject( asset.dliPath ) )
+    {
+      // Parse ModelPbr bits.
+      std::vector<Shader> shaderArray;
+      Texture skyboxTexture;
+      if (dliLoader.CreateScene( shaderArray, aRoot, skyboxTexture ))
+      {
+        mModel.Init(aRoot, std::move(shaderArray), skyboxTexture);
+      }
+
+      // Get camera parameters.
+      dliLoader.GetCameraParameters( 0, asset.camera );
+
+      // Process animations.
+      for( const auto& animationName : mAnimationsName )
+      {
+        std::vector<Animation> aniItem;
+        dliLoader.LoadAnimation( aRoot, aniItem, animationName );
+        mAnimations.push_back( aniItem );
+      }
+
+      // Get scripts.
+      asset.scripts = dliLoader.GetScripts();
+
+      // Initialise Main Actors and start animations, if any.
+      InitActors(asset);
+      if( mAnimations.size() > 0)
+      {
+        PlayAnimation( mAnimations[0] );
+      }
+    }
+    else
+    {
+      throw DaliException( ASSERT_LOCATION, dliLoader.GetParseError().c_str() );
+    }
+  }
+  else
+  {
+    throw DaliException( ASSERT_LOCATION, "Model is wrong extension (.dli needed)");
+  }
 }
 
-void Scene3dLauncher::InitActors()
+void Scene3dLauncher::InitActors(const Asset& asset)
 {
   Stage stage = Stage::GetCurrent();
-  const SceneLauncher::Asset& asset = mSceneFileParser.GetAsset();
 
   if( mModel.GetSkyboxTexture() )
   {
@@ -310,6 +404,8 @@ void Scene3dLauncher::InitActors()
   }
 
   Actor pbrModelActor = mModel.GetActor();
+  pbrModelActor.SetOrientation( mModelOrientation );
+
   m3dRoot.Add( pbrModelActor );
 
   Matrix matCube( mCameraOrientationInv * mCubeOrientation );
@@ -321,22 +417,6 @@ void Scene3dLauncher::ClearModel()
 {
   mSkybox.Clear();
   mModel.Clear();
-}
-
-void Scene3dLauncher::CreateModel()
-{
-  UnparentAndReset( mErrorMessage );
-
-  // Init Pbr actor
-  InitPbrActor();
-
-
-  // Initialise Main Actors
-  InitActors();
-  if( mAnimations.size() > 0)
-  {
-    PlayAnimation( mAnimations[0] );
-  }
 }
 
 void Scene3dLauncher::DisplayError( const std::string& errorMessage )

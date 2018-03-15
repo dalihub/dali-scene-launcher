@@ -30,6 +30,31 @@ bool MaskMatch(uint32_t value, uint32_t mask)
   return (value & mask) == mask;
 }
 
+///@brief Insensitive case compare function.
+///@param[in] a, compare string
+///@param[in] b, compare string
+///@return true if strings are equal
+inline
+bool CaseInsensitiveCharacterCompare( unsigned char a, unsigned char b )
+{
+  // Converts to lower case in the current locale.
+  return std::tolower( a ) == std::tolower( b );
+}
+
+///@return true if the lower cased ASCII strings are equal.
+///@param[in] a, compare string
+///@param[in] b, compare string
+inline
+bool CaseInsensitiveStringCompare( const std::string& a, const std::string& b )
+{
+  bool result = false;
+  if( a.length() == b.length() )
+  {
+    result = std::equal( a.begin(), a.end(), b.begin(), &CaseInsensitiveCharacterCompare );
+  }
+  return result;
+}
+
 ///@brief Makes a number of calls to @a fn, passing to each one the given
 /// @a actor then each of its children, in depth-first traversal.
 ///@note @a fn must not change the actor hierarchy during traversal.

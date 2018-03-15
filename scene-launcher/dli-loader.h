@@ -28,6 +28,9 @@
 
 #include <dali-toolkit/devel-api/builder/json-parser.h>
 
+// INTERNAL INCLUDES
+#include "asset.h"
+
 using namespace Dali;
 using namespace Dali::Toolkit;
 
@@ -52,11 +55,6 @@ struct RendererOptions
 class DliLoader
 {
 public:
-
-  struct Script
-  {
-    std::string url;
-  };
 
 public:
 

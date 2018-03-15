@@ -626,7 +626,7 @@ std::string DliLoader::GetParseError() const
   return stream.str();
 }
 
-const std::vector<DliLoader::Script>& DliLoader::GetScripts() const
+const std::vector<Script>& DliLoader::GetScripts() const
 {
   return mScripts;
 }

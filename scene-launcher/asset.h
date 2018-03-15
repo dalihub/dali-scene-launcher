@@ -50,12 +50,17 @@ struct CameraParameters
   bool enablePerspective;
 };
 
+struct Script
+{
+  std::string url;
+};
+
 struct Asset
 {
   Asset()
   : camera(),
     name(),
-    model(),
+    dliPath(),
     albedoMetalness(),
     normalRoughness(),
     vertexShader(),
@@ -71,7 +76,7 @@ struct Asset
 
   CameraParameters camera;
   std::string name;
-  std::string model;
+  std::string dliPath;
   std::string albedoMetalness;
   std::string normalRoughness;
   std::string vertexShader;
@@ -80,6 +85,7 @@ struct Asset
   std::string cubeDiffuse;
   Vector3 modelScaleFactor;
   float MaxLOD;
+  std::vector<Script> scripts;
 };
 
 } // namespace SceneLauncher

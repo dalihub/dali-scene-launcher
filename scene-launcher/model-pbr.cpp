@@ -27,13 +27,9 @@
 
 // INTERNAL INCLUDES
 #include "asset.h"
-#include "dli-loader.h"
 
 namespace
 {
-
-const std::string DLI_EXT( ".dli" );
-const size_t DLI_EXT_SIZE = DLI_EXT.size();
 
 struct Vertices
 {
@@ -58,41 +54,11 @@ ModelPbr::~ModelPbr()
 {
 }
 
-void ModelPbr::Init( Asset& asset,
-                     const Vector3& position,
-                     std::vector<std::vector<Animation>>& animations,
-                     std::vector<std::string>& animationsName,
-                     std::vector<DliLoader::Script>& scripts )
+void ModelPbr::Init(Actor root, std::vector<Shader>&& shaderArray, Texture skyboxTexture)
 {
-  mActor = Actor::New();
-  mActor.SetAnchorPoint( AnchorPoint::CENTER );
-  mActor.SetParentOrigin( ParentOrigin::CENTER );
-  mActor.SetPosition( position );
-  mActor.SetSize( asset.modelScaleFactor );
-
-  if( asset.model.rfind( DLI_EXT ) + DLI_EXT_SIZE == asset.model.length() )
-  {
-    //If it is a DLI file, ignore "shader" parameter
-    DliLoader dliLoader;
-    if( dliLoader.LoadObject( asset.model ) )
-    {
-      dliLoader.CreateScene( mShaderArray, mActor, mSkyboxTexture );
-      dliLoader.GetCameraParameters( 0, asset.camera );
-
-      for( const auto& animationName : animationsName )
-      {
-        std::vector<Animation> aniItem;
-        dliLoader.LoadAnimation( mActor, aniItem, animationName );
-        animations.push_back( aniItem );
-      }
-
-      scripts = dliLoader.GetScripts();
-    }
-    else
-    {
-      throw DaliException( ASSERT_LOCATION, dliLoader.GetParseError().c_str() );
-    }
-  }
+  mActor = root;
+  mShaderArray = shaderArray;
+  mSkyboxTexture = skyboxTexture;
 }
 
 void ModelPbr::Clear()

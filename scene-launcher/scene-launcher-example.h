@@ -23,10 +23,10 @@
 
 // INTERNAL INCLUDES
 #include "model-pbr.h"
-#include "scene-file-parser.h"
 #include "model-skybox.h"
 #include "lua-application-helper.h"
 #include "lua-interface.h"
+#include "asset.h"
 
 using namespace Toolkit;
 
@@ -65,24 +65,19 @@ public:
   bool OnTouch( Actor actor, const TouchData& touch );
 
   /**
-   * @brief Initialise model geometry, shader, position and orientation
+   * @brief loads model and initialise textures.
    */
-  void InitPbrActor();
+  void CreateModel(SceneLauncher::Asset& asset);
 
   /**
    * @brief Creates scene actors and setup camera parameters
    */
-  void InitActors();
+  void InitActors(const SceneLauncher::Asset& asset);
 
   /**
    * @brief Clear resources
    */
   void ClearModel();
-
-  /**
-   * @brief loads model and initialise textures.
-   */
-  void CreateModel();
 
   void DisplayError( const std::string& errorMessage );
 
@@ -91,7 +86,6 @@ public:
 private:
   Application& mApplication;
 
-  SceneLauncher::FileParser mSceneFileParser;
   SceneLauncher::Lua mLua;
   SceneLauncher::LuaApplicationHelper mLuaApplicationHelper;
 
@@ -105,8 +99,6 @@ private:
   SceneLauncher::ModelPbr mModel;
   std::vector<std::vector<Animation>> mAnimations;
   std::vector<std::string> mAnimationsName;
-
-  std::vector<SceneLauncher::DliLoader::Script> mScripts;
 
   Vector3 mCameraPosition;
   Vector2 mPointZ;
