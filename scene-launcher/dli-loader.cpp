@@ -869,6 +869,15 @@ bool DliLoader::LoadShaderArray( std::vector<Shader>& shaderArray )
           shader.RegisterProperty( pKeyChild.first, fNum[0] );
         }
       }
+      else if ( pKeyChild.second.GetType() == TreeNode::BOOLEAN )
+      {
+        DALI_LOG_WARNING("\"bool\" uniforms are handled as integers in shader");
+        bool bNum = false;
+        if ( ReadBool( &pKeyChild.second, bNum ) )
+        {
+          shader.RegisterProperty(pKeyChild.first, bNum ? 1 : 0);
+        }
+      }
       else if( ReadVector( &pKeyChild.second, fNum, 16 ) )
       {
         Matrix matrix( fNum );
@@ -955,6 +964,7 @@ void DliLoader::AddNode( Actor toActor, const TreeNode *addnode, const std::vect
     int shaderIdx = 0;
     int materialIndex = 0;
     int meshIndex = itn->GetInteger();
+    Vector4 uColor( Color::WHITE );
     ReadInt( addnode->GetChild( "shader" ), shaderIdx );
     ReadInt( addnode->GetChild( "material" ), materialIndex );
 
@@ -964,6 +974,11 @@ void DliLoader::AddNode( Actor toActor, const TreeNode *addnode, const std::vect
                                   mGeometryArray[meshIndex],
                                   actorSize,
                                   nodeName );
+    if ( !ReadVector( addnode->GetChild( "color" ), uColor.AsFloat(), 4 ) )
+    {
+      ReadVector( addnode->GetChild( "color" ), uColor.AsFloat(), 3 );
+    }
+    actor.SetColor( uColor );
   }
 
   // Attempt to read shadow mode. It's optional.
@@ -1000,6 +1015,7 @@ void DliLoader::AddNode( Actor toActor, const TreeNode *addnode, const std::vect
 
   // Read transform.
   ReadAnglePosition(addnode, actor );
+  ReadArcField(addnode, actor);
 
   if( actor )
   {
@@ -1150,6 +1166,7 @@ void DliLoader::CreateTextures(std::string strTexture[4], Texture eTexture[4], b
 
 bool DliLoader::LoadBuffer( const TreeNode* mesh, Geometry geometry, std::string& ebinFilename, unsigned char*& efileContent)
 {
+  bool flipV = false;
   int byteOffset = 0;
   int byteLength = 0;
   const TreeNode *temp = mesh->GetChild( "uri" );
@@ -1157,6 +1174,7 @@ bool DliLoader::LoadBuffer( const TreeNode* mesh, Geometry geometry, std::string
     return false;
 
   std::string strQuad("quad");
+  ReadBool(mesh->GetChild("flipV"), flipV);
 
   if( !strQuad.compare( temp->GetString() ) )
   {
@@ -1171,7 +1189,13 @@ bool DliLoader::LoadBuffer( const TreeNode* mesh, Geometry geometry, std::string
           { Vector3( -0.5f, 0.5f, 0.0f ), Vector2( 0.0f, 0.0f )},
           { Vector3(  0.5f, 0.5f, 0.0f ), Vector2( 1.0f, 0.0f )}
         };
-
+    if ( flipV )
+    {
+      vertices[0].aTexCoord.y = 1.0f - vertices[0].aTexCoord.y;
+      vertices[1].aTexCoord.y = 1.0f - vertices[1].aTexCoord.y;
+      vertices[2].aTexCoord.y = 1.0f - vertices[2].aTexCoord.y;
+      vertices[3].aTexCoord.y = 1.0f - vertices[3].aTexCoord.y;
+	}
     Property::Map property;
     property.Insert( "aPosition", Property::VECTOR3 );
     property.Insert( "aTexCoord", Property::VECTOR2 );
@@ -1264,6 +1288,15 @@ bool DliLoader::LoadBuffer( const TreeNode* mesh, Geometry geometry, std::string
   Property::Map textCoordMap;
   textCoordMap["aTexCoord"] = Property::VECTOR2;
   PropertyBuffer texCoordBuffer = PropertyBuffer::New( textCoordMap );
+  if ( flipV )
+  {
+    Vector2 *uvCoord = (Vector2*) ( &efileContent[byteOffset] );
+    int numOfUV = byteLength / (sizeof(Vector2));
+    for (int i = 0; i < numOfUV; i++, uvCoord++)
+    {
+      uvCoord->y = 1.0f - uvCoord->y;
+    }
+  }
   texCoordBuffer.SetData( &efileContent[byteOffset], byteLength / ( sizeof( Vector2 ) ) );
 
   temp = mesh->GetChild( "tangents" );
@@ -1309,6 +1342,37 @@ void DliLoader::ReadAnglePosition(const TreeNode* node, Actor &actor)
     }
   }
 
+}
+
+void DliLoader::ReadArcField(const TreeNode *addnode, Actor& actor)
+{
+  const TreeNode *arcInfo = addnode->GetChild("arc");
+  if (arcInfo)
+  {
+    bool uAntiAliasing = true;
+    float uRadius = 0.0f;
+    float fStartAngle = 0.0f;
+    float fEndAngle = 0.0f;
+    Vector2 uStartAngle( -1.0f, 0.0f );
+    Vector2 uEndAngle( 1.0f, 0.0f );
+
+    ReadBool(arcInfo->GetChild( "antiAliasing"), uAntiAliasing);
+    ReadFloat(arcInfo->GetChild( "radius"), uRadius);
+    if (ReadFloat(arcInfo->GetChild( "startAngle" ), fStartAngle ) )
+    {
+      uStartAngle.x = cosf( fStartAngle * Math::PI_OVER_180 );
+      uStartAngle.y = sinf( fStartAngle * Math::PI_OVER_180 );
+    }
+    if (ReadFloat(arcInfo->GetChild( "endAngle"), fEndAngle ) )
+    {
+      uEndAngle.x = cosf( fEndAngle * Math::PI_OVER_180 );
+      uEndAngle.y = sinf( fEndAngle * Math::PI_OVER_180 );
+    }
+    actor.RegisterProperty( "uAntiAliasing", uAntiAliasing ? 1 : 0 );
+    actor.RegisterProperty( "uRadius", uRadius);
+    actor.RegisterProperty( "uStartAngle", uStartAngle );
+    actor.RegisterProperty( "uEndAngle", uEndAngle );
+  }
 }
 
 } // namespace SceneLauncher

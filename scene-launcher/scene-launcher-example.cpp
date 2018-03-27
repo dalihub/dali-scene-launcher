@@ -30,8 +30,6 @@ using namespace SceneLauncher;
 namespace
 {
 
-const std::string SCENES_DIR( "scenes" );
-
 const Vector3 CAMERA_DEFAULT_POSITION( 0.0f, 0.0f, 3.5f );
 
 const float TEXT_AUTO_SCROLL_SPEED = 200.f;
@@ -245,7 +243,7 @@ void Scene3dLauncher::CreateModel(Asset& asset)
   UnparentAndReset( mErrorMessage );
 
   // Read models from the filesystem
-  asset.dliPath = DliLoader::GetFirstDliInFolder((ApplicationResources::Get().GetModelsPath() + SCENES_DIR).c_str());
+  asset.dliPath = DliLoader::GetFirstDliInFolder((ApplicationResources::Get().GetModelsPath() ).c_str());
 
   //If it is a DLI file, ignore "shader" parameter
   DliLoader dliLoader;

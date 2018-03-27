@@ -101,6 +101,8 @@ private:
 
   void ReadAnglePosition(const TreeNode* node, Actor& actor);
 
+  void ReadArcField(const TreeNode* node, Actor& actor);
+
   std::vector<Geometry> mGeometryArray;
   std::vector<TextureSet> mTextureSetArray;
   std::vector<RendererOptions> mRendererOptionsArray;
