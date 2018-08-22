@@ -82,7 +82,7 @@ public:
 
   void DisplayError( const std::string& errorMessage );
 
-  void PlayAnimation( std::vector<Animation>& animationList );
+  void PlayAnimation( const std::string& name );
 
 private:
   Application& mApplication;
@@ -101,8 +101,7 @@ private:
 
   std::unique_ptr<SceneLauncher::LightSource> mLightSource;
 
-  std::vector<std::vector<Animation>> mAnimations;
-  std::vector<std::string> mAnimationsName;
+  std::map<std::string, std::vector<Animation>> mAnimations;
 
   Vector3 mCameraPosition;
   Vector2 mPointZ;

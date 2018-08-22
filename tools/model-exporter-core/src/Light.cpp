@@ -23,3 +23,10 @@ void Light::SetMatrix(aiMatrix4x4 eMat)
     m_Matrix[14] = eMat.c4;
     m_Matrix[15] = eMat.d4;
 }
+
+void Light::SetDiffuseColor(aiColor3D color)
+{
+    m_DiffuseColor.x = color.r;
+    m_DiffuseColor.y = color.g;
+    m_DiffuseColor.z = color.b;
+}

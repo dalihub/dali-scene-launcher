@@ -19,13 +19,16 @@
  */
 
 #include <assimp/scene.h>
+#include "Vector3.h"
 
 class Light
 {
 public:
   float m_Matrix[16];
+  Vector3 m_DiffuseColor;
 
   void SetMatrix(aiMatrix4x4 eMat);
+  void SetDiffuseColor(aiColor3D color);
 };
 
 

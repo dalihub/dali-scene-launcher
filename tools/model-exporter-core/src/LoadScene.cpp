@@ -41,7 +41,7 @@ bool NodeIsCamera( const aiScene *scene, std::string eName )
 void GetSceneNodes(Scene3D &scene_data, Node3D *parent, const aiScene *scene, aiNode *aNode)
 {
 
-    Node3D *pnode;
+    Node3D *pnode = NULL;
     if(!aNode->mNumMeshes)
     {
         if(!aNode->mNumChildren)
@@ -106,16 +106,7 @@ void GetSceneNodes(Scene3D &scene_data, Node3D *parent, const aiScene *scene, ai
 
         }
         node->m_Positions.assign( (Vector3*) mesh->mVertices, (Vector3*) (mesh->mVertices + mesh->mNumVertices));
-
-        if( !mesh->HasNormals() )
-        {
-            cout << "No Normals" << endl;
-        }
-        else
-        {
-            node->m_Normals.assign( (Vector3*) mesh->mNormals, (Vector3*) (mesh->mNormals + mesh->mNumVertices) );
-        }
-
+        node->m_Normals.assign( (Vector3*) mesh->mNormals, (Vector3*) (mesh->mNormals + mesh->mNumVertices) );
         if(!mesh->HasTextureCoords(0))
         {
             cout << "No textures" << endl;
@@ -144,7 +135,6 @@ void GetSceneNodes(Scene3D &scene_data, Node3D *parent, const aiScene *scene, ai
         else
         {
             node->m_Tangents.assign( (Vector3*) mesh->mTangents, (Vector3*) (mesh->mTangents + mesh->mNumVertices) );
-            node->m_Bitangents.assign( (Vector3*) mesh->mBitangents, (Vector3*) (mesh->mBitangents + mesh->mNumVertices) );
         }
     }
     for(unsigned int c = 0; c < aNode->mNumChildren; c++ )
@@ -244,6 +234,7 @@ void GetSceneLights( Scene3D& scene_data, const aiScene* scene)
         if (node)
         {
             light.SetMatrix(node->mTransformation);
+            light.SetDiffuseColor(aLight->mColorDiffuse);
             scene_data.AddLight(light);
         }
     }

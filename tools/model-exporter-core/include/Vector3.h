@@ -3,7 +3,7 @@
 
 #include <math.h>
 /*
- * Copyright (c) 2017 Samsung Electronics Co., Ltd.
+ * Copyright (c) 2018 Samsung Electronics Co., Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -33,11 +33,18 @@ struct Vector3
             float temp = sqrtf( x*x + y*y + z*z );
             x /= temp;
             y /= temp;
-            y /= temp;
+            z /= temp;
         }
-        float x;
-        float y;
-        float z;
+
+        union
+        {
+             struct {
+                float x;
+                float y;
+                float z;
+             };
+             float data[3];
+        };
 };
 
 #endif // VECTOR3_H

@@ -326,11 +326,7 @@ std::string DliLoader::GetFirstDliInFolder( const char* const modelDirUrl )
 
   if( NULL == dp )
   {
-    std::stringstream stream;
-    stream << "Can't open " << std::string( modelDirUrl ) << " folder.";
-
-    // Error while opening the folder.
-    throw DaliException( ASSERT_LOCATION, stream.str().c_str() );
+    ExceptionFlinger(ASSERT_LOCATION) << "Can't open " << std::string( modelDirUrl ) << " folder.";
   }
 
   struct dirent* dirp;
@@ -355,9 +351,8 @@ std::string DliLoader::GetFirstDliInFolder( const char* const modelDirUrl )
     }
   }
 
-  std::stringstream stream;
-  stream << "No .dli found in '" << std::string( modelDirUrl ) << "'.";
-  throw DaliException( ASSERT_LOCATION, stream.str().c_str());
+  ExceptionFlinger(ASSERT_LOCATION) << "No .dli found in '" << std::string( modelDirUrl ) << "'.";
+  return std::string(); // to appease gcc
 }
 
 DliLoader::DliLoader()
@@ -414,221 +409,231 @@ bool DliLoader::CreateScene( std::vector<Shader>& shaderArray, Actor toActor, Te
   return true;
 }
 
-bool DliLoader::LoadAnimation( Actor toActor, std::vector<Animation>& animArray, const std::string& animationName )
+bool DliLoader::LoadAnimation( Actor toActor, std::map<std::string, std::vector<Animation>>& animHashArray )
 {
   const TreeNode* root = mParser.GetRoot();
-  const TreeNode* animations = root->GetChild( "animations" );
+  const TreeNode* animations = root->GetChild("animations");
 
-  if( nullptr == animations )
-  {
-    return false;
-  }
-  animations = animations->GetChild( animationName.c_str() );
-
-  if( nullptr == animations )
+  if (nullptr == animations)
   {
     return false;
   }
 
-  for( TreeNode::ConstIterator animIt = ( *animations ).CBegin(); animIt != ( *animations ).CEnd(); ++animIt )
+  for (TreeNode::ConstIterator animVectorIt = animations->CBegin(); animVectorIt != animations->CEnd(); ++animVectorIt)
   {
-    Animation animation( Animation::New( 0.0f ) );
-    float duration = 0.0f;
-    float durationSum = 0.0f;
-    const TreeNode &animNode = (*animIt).second;
-    if( ReadFloat( animNode.GetChild( "duration" ), duration ) )
-    {
-      animation.SetDuration( duration );
-    }
+    const TreeNode& animVectorNode = (*animVectorIt).second;
+    std::string animVectorName;
+    ReadString(animVectorNode.GetChild("name"), animVectorName);
 
-    bool looping;
-    if( ReadBool( animNode.GetChild( "loop" ), looping ) )
+    std::vector<Animation> animVector;
+    const TreeNode& animVectorNodeit = *animVectorNode.GetChild("animation");
+    for (TreeNode::ConstIterator animIt = animVectorNodeit.CBegin(); animIt != animVectorNodeit.CEnd(); ++animIt)
     {
-      animation.SetLooping( looping );
-    }
+      Animation animation(Animation::New(0.0f));
+      float duration = 0.0f;
+      float durationSum = 0.0f;
+      const TreeNode &animNode = (*animIt).second;
+      if (ReadFloat(animNode.GetChild("duration"), duration))
+      {
+        animation.SetDuration(duration);
+      }
 
-    std::string endAction;
-    if( ReadString( animNode.GetChild( "endAction" ), endAction ) )
-    {
-      if( "BAKE" == endAction )
+      int loopCount;
+      if (ReadInt(animNode.GetChild("loopCount"), loopCount))
       {
-        animation.SetEndAction( Animation::Bake );
+        // if count is zero, then it is same as SetLooping(true) i.e. repeat forever.
+        animation.SetLoopCount(loopCount);
       }
-      else if( "DISCARD" == endAction )
+      bool looping;
+      if (ReadBool(animNode.GetChild("loop"), looping))
       {
-        animation.SetEndAction( Animation::Discard );
+        // it resets the loop count and should not be used with SetLoopCount(int)
+        animation.SetLooping(looping);
       }
-      else if( "BAKE_FINAL" == endAction )
-      {
-        animation.SetEndAction( Animation::BakeFinal );
-      }
-    }
-    std::string disconnectAction;
-    if( ReadString( animNode.GetChild( "disconnectAction" ), disconnectAction ) )
-    {
-      if( "BAKE" == endAction )
-      {
-        animation.SetDisconnectAction( Animation::Bake );
-      }
-      else if( "DISCARD" == endAction )
-      {
-        animation.SetDisconnectAction( Animation::Discard );
-      }
-      else if( "BAKE_FINAL" == endAction )
-      {
-        animation.SetDisconnectAction( Animation::BakeFinal );
-      }
-    }
-    const TreeNode *propertiesNode = animNode.GetChild( "properties" );
 
-    if(propertiesNode)
-    {
-      for( TreeNode::ConstIterator iter = ( *propertiesNode ).CBegin(); iter != ( *propertiesNode ).CEnd(); ++iter )
+      std::string endAction;
+      if (ReadString(animNode.GetChild("endAction"), endAction))
       {
-        const TreeNode::KeyNodePair& pKeyChild = *iter;
-        Actor animActor;
-        Property::Value propValue;
-        Property::Index propIndex = Property::INVALID_INDEX;
-        std::string actorName;
-        std::string actorProperty;
-        if( !ReadString( pKeyChild.second.GetChild( "actor" ), actorName ) )
+        if ("BAKE" == endAction)
         {
-          continue;
+          animation.SetEndAction(Animation::Bake);
         }
-        if( ReadString( pKeyChild.second.GetChild( "property" ), actorProperty ) )
+        else if ("DISCARD" == endAction)
         {
-          animActor = toActor.FindChildByName( actorName );
-          if( !animActor )
+          animation.SetEndAction(Animation::Discard);
+        }
+        else if ("BAKE_FINAL" == endAction)
+        {
+          animation.SetEndAction(Animation::BakeFinal);
+        }
+      }
+      std::string disconnectAction;
+      if (ReadString(animNode.GetChild("disconnectAction"), disconnectAction))
+      {
+        if ("BAKE" == endAction)
+        {
+          animation.SetDisconnectAction(Animation::Bake);
+        }
+        else if ("DISCARD" == endAction)
+        {
+          animation.SetDisconnectAction(Animation::Discard);
+        }
+        else if ("BAKE_FINAL" == endAction)
+        {
+          animation.SetDisconnectAction(Animation::BakeFinal);
+        }
+      }
+      const TreeNode *propertiesNode = animNode.GetChild("properties");
+
+      if (propertiesNode)
+      {
+        for (TreeNode::ConstIterator iter = (*propertiesNode).CBegin(); iter != (*propertiesNode).CEnd(); ++iter)
+        {
+          const TreeNode::KeyNodePair& pKeyChild = *iter;
+          Actor animActor;
+          Property::Value propValue;
+          Property::Index propIndex = Property::INVALID_INDEX;
+          std::string actorName;
+          std::string actorProperty;
+          if (!ReadString(pKeyChild.second.GetChild("actor"), actorName))
           {
             continue;
           }
-          propIndex = animActor.GetPropertyIndex( actorProperty );
-          if( propIndex == Property::INVALID_INDEX )
+          if (ReadString(pKeyChild.second.GetChild("property"), actorProperty))
           {
-              throw DaliException( ASSERT_LOCATION, "Cannot find property on object\n");
+            animActor = toActor.FindChildByName(actorName);
+            if (!animActor)
+            {
               continue;
+            }
+            propIndex = animActor.GetPropertyIndex(actorProperty);
+            if (propIndex == Property::INVALID_INDEX)
+            {
+              throw DaliException(ASSERT_LOCATION, "Cannot find property on object\n");
+              continue;
+            }
           }
-        }
 
-        // these are the defaults
-        AlphaFunction alphaFunction( AlphaFunction::DEFAULT );
-        TimePeriod timePeriod( 0.0f );
-        bool timeDefined = false;
+          // these are the defaults
+          AlphaFunction alphaFunction(AlphaFunction::DEFAULT);
+          TimePeriod timePeriod(0.0f);
+          bool timeDefined = false;
 
-        timeDefined = ReadTimePeriod( pKeyChild.second.GetChild( "timePeriod" ), timePeriod );
+          timeDefined = ReadTimePeriod(pKeyChild.second.GetChild("timePeriod"), timePeriod);
 
-        durationSum = std::max( durationSum, timePeriod.delaySeconds + timePeriod.durationSeconds );
+          durationSum = std::max(durationSum, timePeriod.delaySeconds + timePeriod.durationSeconds);
 
-        std::string alphaFunctionValue;
-        if( ReadString( pKeyChild.second.GetChild( "alphaFunction" ), alphaFunctionValue ) )
-        {
-          alphaFunction = GetAlphaFunction(alphaFunctionValue);
-        }
-        if( const TreeNode* keyFrameChild = pKeyChild.second.GetChild( "keyFrames" ) )
-        {
-          DALI_ASSERT_ALWAYS( !actorProperty.empty()  && "Animation must specify a property name" );
-          Property prop = Property( animActor, propIndex );
-          KeyFrames keyframes = KeyFrames::New();
-
-          const TreeNode::ConstIterator endIter = keyFrameChild->CEnd();
-          for( TreeNode::ConstIterator iter = keyFrameChild->CBegin(); endIter != iter; ++iter )
+          std::string alphaFunctionValue;
+          if (ReadString(pKeyChild.second.GetChild("alphaFunction"), alphaFunctionValue))
           {
-            const TreeNode::KeyNodePair& kfKeyChild = *iter;
-            bool readResult;
-            float progress = 0.0f;
-            readResult = ReadFloat( kfKeyChild.second.GetChild( "progress" ), progress );
-            DALI_ASSERT_ALWAYS( readResult && "Key frame entry must have 'progress'" );
+            alphaFunction = GetAlphaFunction(alphaFunctionValue);
+          }
+          if (const TreeNode* keyFrameChild = pKeyChild.second.GetChild("keyFrames"))
+          {
+            DALI_ASSERT_ALWAYS(!actorProperty.empty() && "Animation must specify a property name");
+            Property prop = Property(animActor, propIndex);
+            KeyFrames keyframes = KeyFrames::New();
 
-            const TreeNode *kfValue = kfKeyChild.second.GetChild( "value" );
-            DALI_ASSERT_ALWAYS( kfValue && "Key frame entry must have 'value'" );
+            const TreeNode::ConstIterator endIter = keyFrameChild->CEnd();
+            for (TreeNode::ConstIterator iter = keyFrameChild->CBegin(); endIter != iter; ++iter)
+            {
+              const TreeNode::KeyNodePair& kfKeyChild = *iter;
+              bool readResult;
+              float progress = 0.0f;
+              readResult = ReadFloat(kfKeyChild.second.GetChild("progress"), progress);
+              DALI_ASSERT_ALWAYS(readResult && "Key frame entry must have 'progress'");
 
+              const TreeNode *kfValue = kfKeyChild.second.GetChild("value");
+              DALI_ASSERT_ALWAYS(kfValue && "Key frame entry must have 'value'");
+
+              try
+              {
+                propValue = GetPropertyValue(prop.object.GetPropertyType(prop.propertyIndex), *kfValue);
+              }
+              catch (...)
+              {
+                DALI_LOG_WARNING("Property:'%s' type does not match value type '%s'\n",
+                  (*property).c_str(),
+                  PropertyTypes::GetName(prop.object.GetPropertyType(prop.propertyIndex)));
+
+                throw;
+              }
+
+              AlphaFunction kfAlphaFunction(AlphaFunction::DEFAULT);
+              std::string alphaFuncStr;
+
+              if (ReadString(kfKeyChild.second.GetChild("alphaFunction"), alphaFuncStr))
+              {
+                kfAlphaFunction = GetAlphaFunction(alphaFuncStr);
+              }
+
+              keyframes.Add(progress, propValue, kfAlphaFunction);
+            }
+
+            if (timeDefined)
+            {
+              animation.AnimateBetween(prop, keyframes, alphaFunction, timePeriod);
+            }
+            else
+            {
+              animation.AnimateBetween(prop, keyframes, alphaFunction);
+            }
+
+          }
+          else
+          {
+            Property prop = Property(animActor, propIndex);
             try
             {
-              propValue = GetPropertyValue( prop.object.GetPropertyType(prop.propertyIndex), *kfValue );
+              const TreeNode *valueNode = pKeyChild.second.GetChild("value");
+              if (valueNode)
+              {
+                propValue = GetPropertyValue(prop.object.GetPropertyType(prop.propertyIndex), *valueNode);
+              }
+
             }
-            catch(...)
+            catch (...)
             {
-              DALI_LOG_WARNING( "Property:'%s' type does not match value type '%s'\n",
-                                (*property).c_str(),
-                                PropertyTypes::GetName(prop.object.GetPropertyType(prop.propertyIndex)) );
+              DALI_LOG_WARNING("Property:'%s' type does not match value type '%s'\n", actorProperty.c_str(),
+                PropertyTypes::GetName(prop.object.GetPropertyType(prop.propertyIndex)));
 
               throw;
             }
 
-            AlphaFunction kfAlphaFunction( AlphaFunction::DEFAULT );
-            std::string alphaFuncStr;
-
-            if( ReadString( kfKeyChild.second.GetChild( "alphaFunction" ), alphaFuncStr ) )
+            bool relative = false;
+            ReadBool(pKeyChild.second.GetChild("relative"), relative);
+            if (relative)
             {
-              kfAlphaFunction = GetAlphaFunction( alphaFuncStr );
-            }
-
-            keyframes.Add( progress, propValue, kfAlphaFunction );
-          }
-
-          if( timeDefined )
-          {
-            animation.AnimateBetween( prop, keyframes, alphaFunction, timePeriod );
-          }
-          else
-          {
-            animation.AnimateBetween( prop, keyframes, alphaFunction );
-          }
-
-        }
-        else
-        {
-          Property prop = Property( animActor, propIndex );
-          try
-          {
-            const TreeNode *valueNode = pKeyChild.second.GetChild( "value" );
-            if( valueNode )
-            {
-              propValue = GetPropertyValue( prop.object.GetPropertyType(prop.propertyIndex), *valueNode );
-            }
-
-          }
-          catch(...)
-          {
-            DALI_LOG_WARNING( "Property:'%s' type does not match value type '%s'\n", actorProperty.c_str(),
-                              PropertyTypes::GetName( prop.object.GetPropertyType(prop.propertyIndex) ) );
-
-            throw;
-          }
-
-          bool relative = false;
-          ReadBool( pKeyChild.second.GetChild( "relative" ), relative );
-          if( relative )
-          {
-            if( timeDefined )
-            {
-              animation.AnimateBy( prop, propValue, alphaFunction, timePeriod );
+              if (timeDefined)
+              {
+                animation.AnimateBy(prop, propValue, alphaFunction, timePeriod);
+              }
+              else
+              {
+                animation.AnimateBy(prop, propValue, alphaFunction);
+              }
             }
             else
             {
-              animation.AnimateBy( prop, propValue, alphaFunction );
+              if (timeDefined)
+              {
+                animation.AnimateTo(prop, propValue, alphaFunction, timePeriod);
+              }
+              else
+              {
+                animation.AnimateTo(prop, propValue, alphaFunction);
+              }
             }
-          }
-          else
-          {
-            if( timeDefined )
-            {
-              animation.AnimateTo( prop, propValue, alphaFunction, timePeriod );
-            }
-            else
-            {
-              animation.AnimateTo( prop, propValue, alphaFunction );
-            }
-          }
 
+          }
         }
+
       }
 
+      animVector.push_back( animation );
     }
-
-    animArray.push_back( animation );
+    animHashArray[ animVectorName ] = animVector;
   }
-
   return true;
 }
 
@@ -1196,7 +1201,7 @@ bool DliLoader::LoadBuffer( const TreeNode* mesh, Geometry geometry, std::string
     }
   }
   temp = mesh->GetChild( "attributes" );
-  if(temp->GetInteger() != 63)
+  if(!MaskMatch(temp->GetInteger(), 31))
   {
     // It is missing some of the attributes,
     // bit0, indices
@@ -1204,7 +1209,6 @@ bool DliLoader::LoadBuffer( const TreeNode* mesh, Geometry geometry, std::string
     // bit2, normals
     // bit3, textures
     // bit4, tangents
-    // bit5, bitangents
     return false;
   }
 

@@ -16,21 +16,40 @@
  */
 
 #include "SaveScene.h"
+#include "JsonWriter.h"
 #include <iostream>
 #include <fstream>
+#include <sstream>
 #include <string>
 
 using namespace std;
 
-void SaveNodes(Scene3D *scene, ostream &outDli);
-void SaveMeshes(Scene3D *scene, ostream &outDli, ostream &outBin,
+template <typename T>
+void WriteArrayData(const T* data, unsigned int n, JsonWriter& writer)
+{
+  const T* end = data + n;
+  while (data != end)
+  {
+    writer.WriteValue(nullptr, *data);
+    ++data;
+  }
+}
+
+template <unsigned int N, typename T>
+void WriteArrayData(const T(&data)[N], JsonWriter& writer)
+{
+    WriteArrayData(data, N, writer);
+}
+
+void SaveNodes(Scene3D *scene, JsonWriter& outDli);
+void SaveMeshes(Scene3D *scene, JsonWriter& outDli, ostream &outBin,
     std::string fileNameBinPath);
-void SaveCameras(Scene3D *scene, ostream &outDli);
-void SaveLights(Scene3D *scene, ostream &outDli);
-void SaveMaterials(Scene3D *scene, ostream &outDli);
-void SaveEnvironment(Scene3D *scene, ostream &outDli);
-void SaveShaders(Scene3D *scene, ostream &outDli);
-void SaveAnimations(Scene3D *scene, ostream &outDli);
+void SaveCameras(Scene3D *scene, JsonWriter& outDli);
+void SaveLights(Scene3D *scene, JsonWriter& outDli);
+void SaveMaterials(Scene3D *scene, JsonWriter& outDli);
+void SaveEnvironment(Scene3D *scene, JsonWriter& outDli);
+void SaveShaders(Scene3D *scene, JsonWriter& outDli);
+void SaveAnimations(Scene3D *scene, JsonWriter& outDli);
 
 bool SaveScene(Scene3D *scene, std::string fileNamePath,
     std::string fileNameBinPath)
@@ -77,117 +96,125 @@ bool ConvertScene(Scene3D* scene, std::string fileNameBin, std::ostream& outDli,
   }
 
   // Write scene data.
-  outDli << "{\n" << "    \"asset\" : { " << "\"version\" : \"1.0\"" << " },\n";
-  outDli << "    \"scene\" : 0,\n";
-  outDli << "    \"scenes\" : [ { \"nodes\" : [ 0 ] } ],\n";
+  JsonWriter writer(outDli, "  ");
+  writer.WriteObject(nullptr);
+
+  writer.WriteObject("asset", true);
+    writer.WriteValue("version", "1.0");
+  writer.CloseScope();
+
+  writer.WriteValue("scene", 0);
+
+  writer.WriteArray("scenes", true);
+    writer.WriteObject(nullptr, true);
+      writer.WriteArray("nodes", true);
+        writer.WriteValue(nullptr, 0);
+      writer.CloseScope();
+    writer.CloseScope();
+  writer.CloseScope();
 
   //Save Nodes
-  outDli << "    \"nodes\" : [\n";
-  SaveNodes(scene, outDli);
-  outDli << "    ], \n";
+  writer.WriteArray("nodes");
+  SaveNodes(scene, writer);
+  writer.CloseScope();
 
-  outDli << "    \"meshes\" : [\n";
-  SaveMeshes(scene, outDli, outBin, fileNameBin);
-  outDli << "    ], \n";
+  writer.WriteArray("meshes");
+  SaveMeshes(scene, writer, outBin, fileNameBin);
+  writer.CloseScope();
 
   //Save Cameras
-  outDli << "    \"cameras\" : [\n";
-  SaveCameras(scene, outDli);
-  outDli << "    ], \n";
+  writer.WriteArray("cameras");
+  SaveCameras(scene, writer);
+  writer.CloseScope();
 
   //Save Lights
-  outDli << "    \"lights\" : [\n";
-  SaveLights(scene, outDli);
-  outDli << "    ], \n";
+  writer.WriteArray("lights");
+  SaveLights(scene, writer);
+  writer.CloseScope();
 
   //Save Materials
-  outDli << "    \"materials\" : [\n";
-  SaveMaterials(scene, outDli);
-  outDli << "    ],\n";
+  writer.WriteArray("materials");
+  SaveMaterials(scene, writer);
+  writer.CloseScope();
 
   //Save Environment
-  outDli << "    \"environment\" : [\n";
-  SaveEnvironment(scene, outDli);
-  outDli << "    ],\n";
+  writer.WriteArray("environment");
+  SaveEnvironment(scene, writer);
+  writer.CloseScope();
 
   //Save Shaders
-  outDli << "    \"shaders\" : [\n";
-  SaveShaders(scene, outDli);
-  outDli << "    ]";
+  writer.WriteArray("shaders");
+  SaveShaders(scene, writer);
+  writer.CloseScope();
 
   //Save Animations
   if (scene->HasAnimations())
   {
-    outDli << ",\n    \"animations\" : {\n";
-    SaveAnimations(scene, outDli);
-    outDli << "\n    }";
+    writer.WriteArray("animations");
+    SaveAnimations(scene, writer);
+    writer.CloseScope();
   }
 
-  outDli << "\n}\n";
+  writer.CloseScope();
+  outDli << std::endl;
   return true;
 }
 
-void SaveNodes(Scene3D *scene, ostream &outDli)
+void SaveNodes(Scene3D *scene, JsonWriter& outDli)
 {
   unsigned int meshIdx = 0;
   for (unsigned int n = 0; n < scene->GetNumNodes(); n++)
   {
-    bool cflag = false;
-    outDli << "        {\n";
+    outDli.WriteObject(nullptr);
     Node3D *node = scene->GetNode(n);
     if (!node->m_Name.empty())
     {
-      outDli << "            \"name\": \"" << node->m_Name << "\"";
-      cflag = true;
+      outDli.WriteValue("name", node->m_Name.c_str());
     }
     if (!node->IsMatrixIdentity())
     {
-      if (cflag)
-        outDli << ",\n";
-
-      outDli << "            \"matrix\": [";
-      for (int i = 0; i < 15; i++)
+      outDli.WriteArray("matrix", true);
+      for (int i = 0; i < 16; i++)
       {
-        outDli << node->m_Matrix[i] << ", ";
+        outDli.WriteValue(nullptr, node->m_Matrix[i]);
       }
-      outDli << node->m_Matrix[15] << "]";
-      cflag = true;
+      outDli.CloseScope();
     }
     if (node->m_HasMesh)
     {
-      if (cflag)
-        outDli << ",\n";
-
-      outDli << "            \"mesh\": " << meshIdx++;
-      cflag = true;
+      outDli.WriteValue("mesh", meshIdx++);
     }
     if (node->m_Children.size() > 0)
     {
-      if (cflag)
-        outDli << ",\n";
+      outDli.WriteArray("children", true);
 
-      outDli << "            \"children\": [ ";
-
-      for (unsigned int i = 1; i < node->m_Children.size(); i++)
+      for (auto i: node->m_Children)
       {
-        outDli << node->m_Children[i - 1]->index << ", ";
+        outDli.WriteValue(nullptr, i->index);
       }
-      outDli << node->m_Children[node->m_Children.size() - 1]->index;
-      outDli << " ]";
-      cflag = true;
+      outDli.CloseScope();
     }
-    if (n == scene->GetNumNodes() - 1)
-    {
-      outDli << "\n        }\n";
-    }
-    else
-    {
-      outDli << "\n        },\n";
-    }
+
+    outDli.CloseScope();
   }
 }
 
-void SaveMeshes(Scene3D *scene, ostream &outDli, ostream &outBin,
+void WriteBufferInternal(const char* name, unsigned int offset, unsigned int size, JsonWriter& writer)
+{
+  writer.WriteObject(name, true);
+  writer.WriteValue("byteOffset", offset);
+  writer.WriteValue("byteLength", size);
+  writer.CloseScope();
+}
+
+template <typename T>
+void WriteBuffer(const char* name, unsigned int offset, unsigned int numElems, JsonWriter& writer, unsigned int& outLength)
+{
+  outLength = numElems * sizeof(T);
+  WriteBufferInternal(name, offset, outLength, writer);
+}
+
+void SaveMeshes(Scene3D *scene, JsonWriter& outDli, ostream &outBin,
     std::string fileNameBin)
 {
   unsigned int offset = 0;
@@ -195,277 +222,258 @@ void SaveMeshes(Scene3D *scene, ostream &outDli, ostream &outBin,
   unsigned int meshIdx = 0;
   for (unsigned int n = 0; n < scene->GetNumNodes(); n++)
   {
-
     Node3D *node = scene->GetNode(n);
 
     if (node->m_HasMesh)
     {
-      if (meshIdx)
-        outDli << "        ,{\n";
-      else
-        outDli << "        {\n";
+      outDli.WriteObject(nullptr);
       int attributes = 0;
       attributes |= (node->m_Indices.size() > 0) ? 1 : 0;
       attributes |= (node->m_Positions.size() > 0) ? 2 : 0;
       attributes |= (node->m_Normals.size() > 0) ? 4 : 0;
       attributes |= (node->m_Textures.size() > 0) ? 8 : 0;
       attributes |= (node->m_Tangents.size() > 0) ? 16 : 0;
-      attributes |= (node->m_Bitangents.size() > 0) ? 32 : 0;
-      outDli << "            \"uri\": \"" << fileNameBin << "\",\n";
-      outDli << "            \"attributes\": " << attributes << ",\n";
-      outDli << "            \"primitive\": \"TRIANGLES\"" << ",\n";
-      outDli << "            \"indices\": { ";
+
+      outDli.WriteValue("uri", fileNameBin.c_str());
+      outDli.WriteValue("attributes", attributes);
+      outDli.WriteValue("primitive", "TRIANGLES");
+
       offset += length;
-      outDli << "\"byteOffset\": " << offset << ", ";
-      length = node->m_Indices.size() * sizeof(unsigned short);
-      outDli << "\"byteLength\": " << length << " }";
+      WriteBuffer<unsigned short>("indices", offset, node->m_Indices.size(), outDli, length);
+
       outBin.write((char*) node->m_Indices.data(), length);
 
-      outDli << ",\n            \"positions\": { ";
       offset += length;
-      outDli << "\"byteOffset\": " << offset << ", ";
-      length = node->m_Positions.size() * sizeof(Vector3);
-      outDli << "\"byteLength\": " << length << " }";
+      WriteBuffer<Vector3>("positions", offset, node->m_Positions.size(), outDli, length);
+
       outBin.write((char*) node->m_Positions.data(), length);
 
       if (node->m_Normals.size())
       {
-        outDli << ",\n            \"normals\": { ";
         offset += length;
-        outDli << "\"byteOffset\": " << offset << ", ";
-        length = node->m_Normals.size() * sizeof(Vector3);
-        outDli << "\"byteLength\": " << length << " }";
+        WriteBuffer<Vector3>("normals", offset, node->m_Normals.size(), outDli, length);
+
         outBin.write((char*) node->m_Normals.data(), length);
       }
       if (node->m_Textures.size())
       {
-        outDli << ",\n            \"textures\": { ";
         offset += length;
-        outDli << "\"byteOffset\": " << offset << ", ";
-        length = node->m_Textures.size() * sizeof(Vector2);
-        outDli << "\"byteLength\": " << length << " }";
+        WriteBuffer<Vector2>("textures", offset, node->m_Textures.size(), outDli, length);
+
         outBin.write((char*) node->m_Textures.data(), length);
       }
 
       if (node->m_Tangents.size())
       {
-        outDli << ",\n            \"tangents\": { ";
         offset += length;
-        outDli << "\"byteOffset\": " << offset << ", ";
-        length = node->m_Tangents.size() * sizeof(Vector3);
-        outDli << "\"byteLength\": " << length << " }";
+        WriteBuffer<Vector3>("tangents", offset, node->m_Tangents.size(), outDli, length);
+
         outBin.write((char*) node->m_Tangents.data(), length);
       }
 
-      if (node->m_Bitangents.size())
-      {
-        outDli << ",\n            \"bitangents\": { ";
-        offset += length;
-        outDli << "\"byteOffset\": " << offset << ", ";
-        length = node->m_Bitangents.size() * sizeof(Vector3);
-        outDli << "\"byteLength\": " << length << " }";
-        outBin.write((char*) node->m_Bitangents.data(), length);
-      }
 
-      outDli << "\n        }\n";
+      outDli.CloseScope();
       meshIdx++;
     }
   }
 }
 
-void SaveCameras(Scene3D *scene, ostream &outDli)
+void SaveCameras(Scene3D *scene, JsonWriter& outDli)
 {
   if (!scene->GetNumCameras())
   {
-    outDli << "        {\n";
-    outDli << "            \"fov\": 60.0,\n";
-    outDli << "            \"near\": 0.1,\n";
-    outDli << "            \"far\": 1000.0,\n";
-    outDli
-        << "            \"matrix\": [1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 3.5, 1.0]\n";
-    outDli << "        }\n";
+    outDli.WriteObject(nullptr);
+    outDli.WriteValue("fov", 60.0);
+    outDli.WriteValue("near", 0.1);
+    outDli.WriteValue("far", 1000.0);
+
+    outDli.WriteArray("matrix", true);
+    const double matrix[] = { 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 3.5, 1.0 };
+    WriteArrayData(matrix, outDli);
+    outDli.CloseScope();
+
+    outDli.CloseScope();
   }
+
   for (unsigned int i = 0; i < scene->GetNumCameras(); i++)
   {
     Camera3D *cam = scene->GetCamera(i);
-    outDli << "        {\n";
-    outDli << "            \"fov\": " << cam->fov << ",\n";
-    outDli << "            \"near\": " << cam->near << ",\n";
-    outDli << "            \"far\": " << cam->far << ",\n";
-    outDli << "            \"matrix\": [";
+    outDli.WriteObject(nullptr);
+    outDli.WriteValue("fov", cam->fov);
+    outDli.WriteValue("near", cam->near);
+    outDli.WriteValue("far", cam->far);
 
-    for (int i = 0; i < 15; i++)
-    {
-      outDli << cam->m_Matrix[i] << ", ";
-    }
-    outDli << cam->m_Matrix[15] << "]\n";
+    outDli.WriteArray("matrix", true);
+    WriteArrayData(cam->m_Matrix, outDli);
+    outDli.CloseScope();
 
-    if (i == scene->GetNumCameras() - 1)
-    {
-      outDli << "        }\n";
-    }
-    else
-    {
-      outDli << "        },\n";
-    }
+    outDli.CloseScope();
   }
 }
 
-void SaveLights(Scene3D* scene, ostream& outDli)
+void SaveLights(Scene3D* scene, JsonWriter& outDli)
 {
   for (unsigned int i = 0; i < scene->GetNumLights(); ++i)
   {
-    outDli << "        {\n";
-    outDli << "            \"matrix\": [ ";
-
     const Light* light = scene->GetLight(i);
-    for(int j = 0; j < 15; ++j)
-    {
-      outDli << light->m_Matrix[j] << ", ";
-    }
-    outDli << light->m_Matrix[15] << "]\n";
 
-    outDli << "        }" << ((i + 1 == scene->GetNumLights()) ? "" : ",") << "\n";
+    outDli.WriteObject(nullptr);
+    outDli.WriteArray("matrix", true);
+    WriteArrayData(light->m_Matrix, outDli);
+    outDli.CloseScope();
+
+    outDli.WriteArray("color", true);
+    WriteArrayData(light->m_DiffuseColor.data, outDli);
+    outDli.CloseScope();
+
+    outDli.CloseScope();
   }
 }
 
-void SaveMaterials(Scene3D *scene, ostream &outDli)
+void SaveMaterials(Scene3D *scene, JsonWriter& outDli)
 {
-  outDli << "        {\n";
-  outDli << "            \"texture1\": \"scenes/Basic_albedo_metallic.png\",\n";
-  outDli << "            \"texture2\": \"scenes/Basic_normal_roughness.png\",\n";
-  outDli << "            \"mipmap\": \"true\",\n";
-  outDli << "            \"environment\": 1\n";
-  outDli << "        }\n";
+  outDli.WriteObject(nullptr);
+  outDli.WriteValue("texture1", "Basic_albedo_metallic.png");
+  outDli.WriteValue("texture2", "Basic_normal_roughness.png");
+  outDli.WriteValue("mipmap", true);
+  outDli.WriteValue("environment", 1);
+  outDli.CloseScope();
 }
 
-void SaveEnvironment(Scene3D *scene, ostream &outDli)
+void SaveEnvironment(Scene3D *scene, JsonWriter& outDli)
 {
-  outDli << "        {\n";
-  outDli << "        },\n";
-  outDli << "        {\n";
-  outDli
-      << "            \"cubeSpecular\": \"scenes/EnvironmentTest_Radiance.ktx\",\n";
-  outDli
-      << "            \"cubeDiffuse\": \"scenes/EnvironmentTest_Irradiance.ktx\"\n";
-  outDli << "        }\n";
+  outDli.WriteObject(nullptr);
+  outDli.CloseScope();
+  outDli.WriteObject(nullptr);
+  outDli.WriteValue("cubeSpecular", "EnvironmentTest_Radiance.ktx");
+  outDli.WriteValue("cubeDiffuse", "EnvironmentTest_Irradiance.ktx");
+  outDli.CloseScope();
 }
 
-void SaveShaders(Scene3D *scene, ostream &outDli)
+void SaveShaders(Scene3D *scene, JsonWriter& outDli)
 {
-  outDli << "        {\n";
-  outDli << "            \"vertex\": \"scenes/default_pbr_shader.vsh\",\n";
-  outDli << "            \"fragment\": \"scenes/default_pbr_shader.fsh\",\n";
-  outDli
-      << "            \"uCubeMatrix\": [ 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1 ],\n";
-  outDli << "            \"maxLOD\": 8\n";
-  outDli << "        }\n";
+  outDli.WriteObject(nullptr);
+  outDli.WriteValue("vertex", "default_pbr_shader.vsh");
+  outDli.WriteValue("fragment", "default_pbr_shader.fsh");
+  outDli.WriteArray("uCubeMatrix", true);
+  const double matrix[] = { 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1 };
+  WriteArrayData(matrix, outDli);
+  outDli.CloseScope();
+  outDli.WriteValue("uMaxLOD", 8);
+  outDli.CloseScope();
 }
 
-void SaveAnimations(Scene3D *scene, ostream &outDli)
+void SaveAnimations(Scene3D *scene, JsonWriter& outDli)
 {
   for (unsigned int a = 0; a < scene->GetNumAnimations(); a++)
   {
     Animation3D *animation = scene->GetAnimation(a);
-    bool keyComaFlag = false;
-    if (!a)
-    {
-      outDli << "      \"" << animation->Name << "\" : [ \n";
-    }
-    else
-    {
-      outDli << ",\n      \"" << animation->Name << "\" : [ \n";
-    }
+    outDli.WriteObject(nullptr);
+    outDli.WriteValue("name", animation->Name.c_str());
+    outDli.WriteArray("animation");
+
     for (unsigned int n = 0; n < animation->AnimNodesList.size(); n++)
     {
       NodeAnimation3D nodeAnim = animation->AnimNodesList[n];
 
       if (nodeAnim.Rotations.size())
       {
-        if (keyComaFlag)
-        {
-          outDli << ",\n";
-        }
-        keyComaFlag = true;
-        outDli << "        {\n";
-        outDli << "          \"properties\": [{\n";
-        outDli << "            \"actor\": \"" << nodeAnim.NodeName << "\",\n";
-        outDli << "            \"property\": \"orientation\",\n";
-        outDli << "            \"timePeriod\": { \"delay\": 0.0, \"duration\": "
-            << animation->Duration * animation->TicksPerSecond << " },\n";
-        outDli << "            \"keyFrames\": [\n";
+        outDli.WriteObject(nullptr);
+        outDli.WriteArray("properties", true);
+        outDli.WriteObject(nullptr);
+        outDli.WriteValue("actor", nodeAnim.NodeName.c_str());
+        outDli.WriteValue("property", "orientation");
+
+        outDli.WriteObject("timePeriod", true);
+        outDli.WriteValue("delay", 0.0);
+        outDli.WriteValue("duration", animation->Duration * animation->TicksPerSecond);
+        outDli.CloseScope();
+
+        outDli.WriteArray("keyFrames");
         for (unsigned int k = 0; k < nodeAnim.Rotations.size(); k++)
         {
-          NodeKey nkey = nodeAnim.Rotations[k];
-          if (k)
-            outDli << ",\n";
-          outDli << "              { \"progress\": "
-              << nkey.time / animation->Duration << ", \"value\": ["
-              << nkey.v[0] << ", " << nkey.v[1] << ", " << nkey.v[2] << ", "
-              << nkey.v[3] << "]}";
+          const NodeKey& nkey = nodeAnim.Rotations[k];
+          outDli.WriteObject(nullptr, true);
+          outDli.WriteValue("progress", nkey.time / animation->Duration);
+          outDli.WriteArray("value", true);
+          WriteArrayData(nkey.v, outDli);
+          outDli.CloseScope();
+          outDli.CloseScope();
         }
-        outDli << "\n            ]\n";
-        outDli << "          }],\n          \"loop\": true\n";
-        outDli << "        }";
+
+        outDli.CloseScope();
+        outDli.CloseScope();
+        outDli.CloseScope();
+        outDli.WriteValue("loop", true);
+        outDli.CloseScope();
       }
+
       if (nodeAnim.Positions.size())
       {
-        if (keyComaFlag)
-        {
-          outDli << ",\n";
-        }
+        outDli.WriteObject(nullptr);
+        outDli.WriteArray("properties", true);
+        outDli.WriteObject(nullptr);
+        outDli.WriteValue("actor", nodeAnim.NodeName.c_str());
+        outDli.WriteValue("property", "position");
 
-        keyComaFlag = true;
-        outDli << "        {\n";
-        outDli << "          \"properties\": [{\n";
-        outDli << "            \"actor\": \"" << nodeAnim.NodeName << "\",\n";
-        outDli << "            \"property\": \"position\",\n";
-        outDli << "            \"timePeriod\": { \"delay\": 0.0, \"duration\": "
-            << animation->Duration * animation->TicksPerSecond << " },\n";
-        outDli << "            \"keyFrames\": [\n";
+        outDli.WriteObject("timePeriod", true);
+        outDli.WriteValue("delay", 0.0);
+        outDli.WriteValue("duration", animation->Duration * animation->TicksPerSecond);
+        outDli.CloseScope();
+
+        outDli.WriteArray("keyFrames");
         for (unsigned int k = 0; k < nodeAnim.Positions.size(); k++)
         {
-          NodeKey nkey = nodeAnim.Positions[k];
-          if (k)
-            outDli << ",\n";
-          outDli << "              { \"progress\": "
-              << nkey.time / animation->Duration << ", \"value\": ["
-              << nkey.v[0] << ", " << nkey.v[1] << ", " << nkey.v[2] << "]}";
-        }
-        outDli << "\n            ]\n";
-        outDli << "          }],\n          \"loop\": true\n";
-        outDli << "        }";
-      }
-      if (nodeAnim.Scales.size())
-      {
-        if (keyComaFlag)
-        {
-          outDli << ",\n";
+          const NodeKey& nkey = nodeAnim.Positions[k];
+          outDli.WriteObject(nullptr, true);
+          outDli.WriteValue("progress", nkey.time / animation->Duration);
+          outDli.WriteArray("value", true);
+          WriteArrayData(nkey.v, 3, outDli);
+          outDli.CloseScope();
+          outDli.CloseScope();
         }
 
-        keyComaFlag = true;
-        outDli << "        {\n";
-        outDli << "          \"properties\": [{\n";
-        outDli << "            \"actor\": \"" << nodeAnim.NodeName << "\",\n";
-        outDli << "            \"property\": \"scale\",\n";
-        outDli << "            \"timePeriod\": { \"delay\": 0.0, \"duration\": "
-            << animation->Duration * animation->TicksPerSecond << " },\n";
-        outDli << "            \"keyFrames\": [\n";
+        outDli.CloseScope();
+        outDli.CloseScope();
+        outDli.CloseScope();
+        outDli.WriteValue("loop", true);
+        outDli.CloseScope();
+      }
+
+      if (nodeAnim.Scales.size())
+      {
+        outDli.WriteObject(nullptr);
+        outDli.WriteArray("properties", true);
+        outDli.WriteObject(nullptr);
+        outDli.WriteValue("actor", nodeAnim.NodeName.c_str());
+        outDli.WriteValue("property", "scale");
+
+        outDli.WriteObject("timePeriod", true);
+        outDli.WriteValue("delay", 0.0);
+        outDli.WriteValue("duration", animation->Duration * animation->TicksPerSecond);
+        outDli.CloseScope();
+
+        outDli.WriteArray("keyFrames");
         for (unsigned int k = 0; k < nodeAnim.Scales.size(); k++)
         {
           NodeKey nkey = nodeAnim.Scales[k];
-          if (k)
-            outDli << ",\n";
-          outDli << "              { \"progress\": "
-              << nkey.time / animation->Duration << ", \"value\": ["
-              << nkey.v[0] << ", " << nkey.v[1] << ", " << nkey.v[2] << "]}";
+          outDli.WriteObject(nullptr, true);
+          outDli.WriteValue("progress", nkey.time / animation->Duration);
+          outDli.WriteArray("value", true);
+          WriteArrayData(nkey.v, 3, outDli);
+          outDli.CloseScope();
+          outDli.CloseScope();
         }
-        outDli << "\n            ]\n";
-        outDli << "          }],\n          \"loop\": true\n";
-        outDli << "        }";
+
+        outDli.CloseScope();
+        outDli.CloseScope();
+        outDli.CloseScope();
+        outDli.WriteValue("loop", true);
+        outDli.CloseScope();
       }
     }
 
-    outDli << "\n      ]";
+    outDli.CloseScope();
+    outDli.CloseScope();
   }
 }

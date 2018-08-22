@@ -2,7 +2,7 @@
 #define NODE3D_H
 
 /*
- * Copyright (c) 2017 Samsung Electronics Co., Ltd.
+ * Copyright (c) 2018 Samsung Electronics Co., Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -46,7 +46,6 @@ class Node3D
         vector<Vector3> m_Positions;
         vector<Vector3> m_Normals;
         vector<Vector3> m_Tangents;
-        vector<Vector3> m_Bitangents;
         vector<Vector2> m_Textures;
         vector<unsigned short> m_Indices;
     protected:

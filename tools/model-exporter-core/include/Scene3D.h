@@ -39,7 +39,7 @@ class Scene3D
         Node3D* GetNode(unsigned int idx);
         void AddCamera(Camera3D &ecam);
         Camera3D* GetCamera(unsigned int idx);
-        void AddLight(Light& eLight);
+        void AddLight(const Light& eLight);
         Light* GetLight(unsigned int idx);
         void AddAnimation(Animation3D &eanim);
         bool HasAnimations();

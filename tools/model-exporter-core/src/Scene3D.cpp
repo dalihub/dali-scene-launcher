@@ -53,7 +53,7 @@ void Scene3D::AddCamera(Camera3D &ecam)
     m_cameras.push_back(ecam);
 }
 
-void Scene3D::AddLight(Light& eLight)
+void Scene3D::AddLight(const Light& eLight)
 {
     m_lights.push_back(eLight);
 }

@@ -26,6 +26,7 @@
 #include <dali/public-api/rendering/shader.h>
 #include <dali/public-api/rendering/texture-set.h>
 
+#include <dali/devel-api/common/map-wrapper.h>
 #include <dali-toolkit/devel-api/builder/json-parser.h>
 
 // INTERNAL INCLUDES
@@ -69,7 +70,7 @@ public:
 
   bool CreateScene( std::vector<Shader>& shaderArray, Actor toActor, Texture& skyboxTexture );
 
-  bool LoadAnimation( Actor toActor, std::vector<Animation>& animArray, const std::string& animationName );
+  bool LoadAnimation( Actor toActor, std::map<std::string, std::vector<Animation>>& animHashArray );
 
   void GetCameraParameters( unsigned int eidx, CameraParameters& camera );
 

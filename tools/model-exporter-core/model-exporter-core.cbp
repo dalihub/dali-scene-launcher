@@ -111,6 +111,7 @@
 		</Build>
 		<Unit filename="include/Animation3D.h" />
 		<Unit filename="include/Camera3D.h" />
+		<Unit filename="include/JsonWriter.h" />
 		<Unit filename="include/Light.h" />
 		<Unit filename="include/LoadScene.h" />
 		<Unit filename="include/Node3D.h" />
@@ -120,6 +121,7 @@
 		<Unit filename="include/Vector3.h" />
 		<Unit filename="src/Animation3D.cpp" />
 		<Unit filename="src/Camera3D.cpp" />
+		<Unit filename="src/JsonWriter.cpp" />
 		<Unit filename="src/Light.cpp" />
 		<Unit filename="src/LoadScene.cpp" />
 		<Unit filename="src/Node3D.cpp" />

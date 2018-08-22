@@ -14,50 +14,61 @@
  * limitations under the License.
  *
  */
-
-#include <iostream>
 #include <assimp/Importer.hpp>
 #include <assimp/scene.h>
 #include <assimp/postprocess.h>
+#include <iostream>
+#include <fstream>
 
 #include "Scene3D.h"
 #include "LoadScene.h"
 #include "SaveScene.h"
 
-using namespace std;
-
-int main(int argc, char* argv[])
+int main(int argc, char** argv)
 {
+  if (argc < 2)
+  {
+    std::cerr << "Missing input parameter." << std::endl;
+    return 1;
+  }
+
+  std::string inPath = argv[1];
   Assimp::Importer importer;
-  const aiScene *scene;
-  string fileName;
-  if(argc>1)
+
+  const aiScene* scene = importer.ReadFile(inPath,
+    aiProcess_CalcTangentSpace | aiProcess_SortByPType);
+  if (!scene)
   {
-    fileName = argv[1];
+    std::cerr << "Failed to process scene file '" << inPath << "'." << std::endl;
+    return 1;
   }
 
-  scene = importer.ReadFile( fileName,
-                             aiProcess_CalcTangentSpace |
-                             aiProcess_SortByPType );
-
-  if( !scene )
+  std::string outPath;
+  if (argc > 2)
   {
-    cout << importer.GetErrorString()<< endl;
-    return false;
+    outPath = argv[2];
   }
+  else
+  {
+    outPath = inPath;
+  }
+
+  outPath = outPath.substr(0, inPath.rfind('.'));
 
   Scene3D scene_data;
-
   GetSceneNodes(scene_data, nullptr, scene, scene->mRootNode);
   GetSceneCameras(scene_data, scene);
   GetSceneLights(scene_data, scene);
   GetAnimations(scene_data, scene);
 
-  string fname("TestWatch_007.dli");
-  string fnamebin("TestWatch_007.bin");
+  std::string outBin = outPath + ".bin";
+  std::ofstream ofsBin(outBin, ios::binary);
+  std::ofstream ofsDli(outPath + ".dli");
 
-  fname = fileName.substr(0, fileName.length()-4) + ".dli";
-  fnamebin = fileName.substr(0, fileName.length()-4) + ".bin";
-  SaveScene(&scene_data,fname,fnamebin);
-  return 0;
+  int result = 0;
+  if (!ConvertScene(&scene_data, outBin, ofsDli, ofsBin))
+  {
+    result = 1;
+  }
+  return result;
 }

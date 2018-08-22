@@ -30,8 +30,6 @@ using namespace SceneLauncher;
 namespace
 {
 
-const std::string SCENES_DIR( "scenes" );
-
 const Vector3 CAMERA_DEFAULT_POSITION( 0.0f, 0.0f, 3.5f );
 
 const float TEXT_AUTO_SCROLL_SPEED = 200.f;
@@ -45,8 +43,6 @@ Scene3dLauncher::Scene3dLauncher( Application& application )
   mDoubleTapTime(),
   m3dRoot(),
   mUiRoot(),
-  mAnimations(),
-  mAnimationsName(),
   mCameraPosition( CAMERA_DEFAULT_POSITION ),
   mCameraOrientationInv(),
   mModelOrientation(),
@@ -55,8 +51,6 @@ Scene3dLauncher::Scene3dLauncher( Application& application )
   mDoubleTap( false ),
   mRotateEnvironment( true )
 {
-  mAnimationsName.push_back("loaded");
-
   // Connect to the Application's Init signal
   mApplication.InitSignal().Connect( this, &Scene3dLauncher::Create );
 }
@@ -245,7 +239,7 @@ void Scene3dLauncher::CreateModel(Asset& asset)
   UnparentAndReset( mErrorMessage );
 
   // Read models from the filesystem
-  asset.dliPath = DliLoader::GetFirstDliInFolder((ApplicationResources::Get().GetModelsPath() + SCENES_DIR).c_str());
+  asset.dliPath = DliLoader::GetFirstDliInFolder((ApplicationResources::Get().GetModelsPath()).c_str());
 
   //If it is a DLI file, ignore "shader" parameter
   DliLoader dliLoader;
@@ -277,22 +271,15 @@ void Scene3dLauncher::CreateModel(Asset& asset)
     }
 
     // Process animations.
-    for( const auto& animationName : mAnimationsName )
-    {
-      std::vector<Animation> aniItem;
-      dliLoader.LoadAnimation( aRoot, aniItem, animationName );
-      mAnimations.push_back( aniItem );
-    }
+    dliLoader.LoadAnimation(aRoot, mAnimations);
 
     // Get scripts.
     asset.scripts = dliLoader.GetScripts();
 
     // Initialise Main Actors and start animations, if any.
     InitActors(asset);
-    if( mAnimations.size() > 0)
-    {
-      PlayAnimation( mAnimations[0] );
-    }
+
+    PlayAnimation("loaded");
   }
   else
   {
@@ -400,11 +387,16 @@ void Scene3dLauncher::DisplayError( const std::string& errorMessage )
   mUiRoot.Add( mErrorMessage );
 }
 
-void Scene3dLauncher::PlayAnimation( std::vector<Animation>& animationList )
+void Scene3dLauncher::PlayAnimation( const std::string& name )
 {
-  for(std::vector<Animation>::iterator it = animationList.begin(); it != animationList.end(); ++it)
+  auto iFind = mAnimations.find(name);
+  if (iFind != mAnimations.end())
   {
-    (*it).Play();
+    auto& anims = iFind->second;
+    for(auto& anim: anims)
+    {
+      anim.Play();
+    }
   }
 }
 
