@@ -1,6 +1,7 @@
 #ifndef DALI_SCENE_LAUNCHER_ASSET_H
 #define DALI_SCENE_LAUNCHER_ASSET_H
 
+
 /*
  * Copyright (c) 2018 Samsung Electronics Co., Ltd.
  *
