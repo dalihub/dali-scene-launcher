@@ -23,6 +23,7 @@
 
 namespace
 {
+  const std::string ENVIRONMENTS_PATH("environments/");
   const std::string IMAGES_PATH("images/");
   const std::string MODELS_PATH("models/");
   const std::string SHADERS_PATH("shaders/");
@@ -40,6 +41,7 @@ struct ApplicationResources::Impl
   }
 
   std::string mResourcesPath;
+  std::string mEnvironmentsPath;
   std::string mImagesPath;
   std::string mModelsPath;
   std::string mShadersPath;
@@ -64,6 +66,16 @@ const std::string& ApplicationResources::GetResourcesPath() const
   }
 
   return mImpl->mResourcesPath;
+}
+
+const std::string& ApplicationResources::GetEnvironmentsPath() const
+{
+  if( mImpl->mEnvironmentsPath.empty() )
+  {
+    mImpl->mEnvironmentsPath = GetResourcesPath() + ENVIRONMENTS_PATH;
+  }
+
+  return mImpl->mEnvironmentsPath;
 }
 
 const std::string& ApplicationResources::GetImagesPath() const

@@ -28,6 +28,7 @@ public:
   static ApplicationResources& Get();
 
   const std::string& GetResourcesPath() const;
+  const std::string& GetEnvironmentsPath() const;
   const std::string& GetImagesPath() const;
   const std::string& GetModelsPath() const;
   const std::string& GetShadersPath() const;

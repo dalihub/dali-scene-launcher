@@ -1060,7 +1060,7 @@ void DliLoader::CreateSkyboxTexture( const std::string& skyBoxTexturePath, Textu
   if( !skyBoxTexturePath.empty() )
   {
     CubeData skybox;
-    const bool result = LoadCubeMapFromKtxFile( ApplicationResources::Get().GetImagesPath() + skyBoxTexturePath, skybox );
+    const bool result = LoadCubeMapFromKtxFile( ApplicationResources::Get().GetEnvironmentsPath() + skyBoxTexturePath, skybox );
 
     if( !result )
     {
@@ -1085,7 +1085,7 @@ void DliLoader::CreateEnvironmentTextures( const std::string& cubeDiffuse, const
   bool result = false;
   if( !cubeDiffuse.empty() )
   {
-    result = LoadCubeMapFromKtxFile( ApplicationResources::Get().GetImagesPath() + cubeDiffuse, diffuse );
+    result = LoadCubeMapFromKtxFile( ApplicationResources::Get().GetEnvironmentsPath() + cubeDiffuse, diffuse );
 
     if( !result )
     {
@@ -1106,7 +1106,7 @@ void DliLoader::CreateEnvironmentTextures( const std::string& cubeDiffuse, const
   if( !cubeSpecular.empty() )
   {
     CubeData specular;
-    result = LoadCubeMapFromKtxFile( ApplicationResources::Get().GetImagesPath() + cubeSpecular, specular);
+    result = LoadCubeMapFromKtxFile( ApplicationResources::Get().GetEnvironmentsPath() + cubeSpecular, specular);
 
     if( !result )
     {

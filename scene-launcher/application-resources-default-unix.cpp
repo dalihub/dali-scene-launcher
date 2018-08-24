@@ -29,6 +29,7 @@ struct ApplicationResources::Impl
   }
 
   std::string mResourcesPath;
+  std::string mEnvironmentsPath;
   std::string mImagesPath;
   std::string mModelsPath;
   std::string mShadersPath;
@@ -49,6 +50,16 @@ const std::string& ApplicationResources::GetResourcesPath() const
   }
 
   return mImpl->mResourcesPath;
+}
+
+const std::string& ApplicationResources::GetEnvironmentsPath() const
+{
+  if( mImpl->mEnvironmentsPath.empty() )
+  {
+    mImpl->mEnvironmentsPath = SCENE_LAUNCHER_ENVIRONMENTS_DIR;
+  }
+
+  return mImpl->mEnvironmentsPath;
 }
 
 const std::string& ApplicationResources::GetImagesPath() const
