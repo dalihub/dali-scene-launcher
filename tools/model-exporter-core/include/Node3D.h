@@ -30,27 +30,22 @@ using namespace std;
 class Node3D
 {
     public:
-        Node3D(Node3D *eParent, bool hasMesh);
+        enum { INVALID_MESH = -1 };
+
+        Node3D(Node3D *eParent);
         virtual ~Node3D();
-        bool IsMatrixIdentity();
+        bool IsMatrixIdentity() const;
+        bool HasMesh() const;
 
         void SetMatrix(aiMatrix4x4 eMat);
-        unsigned int index;
+        unsigned int m_Index;
         string m_Name;
         Node3D *m_Parent;
-        bool m_HasMesh;
         float m_Matrix[16];
 
         vector<Node3D*> m_Children;
-///////////////////////////////////////////////////
-        vector<Vector3> m_Positions;
-        vector<Vector3> m_Normals;
-        vector<Vector3> m_Tangents;
-        vector<Vector2> m_Textures;
-        vector<unsigned short> m_Indices;
-    protected:
+        unsigned int m_MeshId = INVALID_MESH;
 
-    private:
 };
 
 #endif // NODE3D_H

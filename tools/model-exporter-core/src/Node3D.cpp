@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017 Samsung Electronics Co., Ltd.
+ * Copyright (c) 2018 Samsung Electronics Co., Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,18 +17,27 @@
 
 #include "Node3D.h"
 
-Node3D::Node3D(Node3D *eParent, bool hasMesh)
+namespace
+{
+const float IDENTITY[] = { 1.0f, .0f, .0f, .0f, .0f, 1.0f, .0f, .0f, .0f, .0f, 1.0f, .0f, .0f, .0f, .0f, 1.0f };
+}
+
+Node3D::Node3D(Node3D *eParent)
 {
     m_Parent = eParent;
-    m_HasMesh = hasMesh;
-    index = -1;
+    if (eParent)
+    {
+        eParent->m_Children.push_back(this);
+    }
+
+    m_Index = -1;
+    std::copy(std::begin(IDENTITY), std::end(IDENTITY), m_Matrix);
 }
 
 Node3D::~Node3D()
 {
     //dtor
 }
-
 
 void Node3D::SetMatrix(aiMatrix4x4 eMat)
 {
@@ -54,7 +63,7 @@ void Node3D::SetMatrix(aiMatrix4x4 eMat)
 
 }
 
-bool Node3D::IsMatrixIdentity()
+bool Node3D::IsMatrixIdentity() const
 {
     for(int i = 0; i < 16; i++)
     {
@@ -64,10 +73,16 @@ bool Node3D::IsMatrixIdentity()
             {
                 return false;
             }
-        }else if(m_Matrix[i] != 0.0f)
+        }
+        else if(m_Matrix[i] != 0.0f)
         {
             return false;
         }
     }
     return true;
+}
+
+bool Node3D::HasMesh() const
+{
+    return m_MeshId != INVALID_MESH;
 }

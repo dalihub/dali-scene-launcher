@@ -56,7 +56,10 @@ int main(int argc, char** argv)
   outPath = outPath.substr(0, inPath.rfind('.'));
 
   Scene3D scene_data;
-  GetSceneNodes(scene_data, nullptr, scene, scene->mRootNode);
+  MeshIds meshIds;
+  GetSceneNodes(scene_data, meshIds, nullptr, scene, scene->mRootNode);
+  PackSceneNodeMeshIds(scene_data, meshIds);
+  GetSceneMeshes(scene_data, meshIds, scene);
   GetSceneCameras(scene_data, scene);
   GetSceneLights(scene_data, scene);
   GetAnimations(scene_data, scene);
