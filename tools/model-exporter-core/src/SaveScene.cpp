@@ -16,6 +16,7 @@
  */
 
 #include "SaveScene.h"
+#include "Mesh.h"
 #include "JsonWriter.h"
 #include <iostream>
 #include <fstream>
@@ -41,6 +42,7 @@ void WriteArrayData(const T(&data)[N], JsonWriter& writer)
     WriteArrayData(data, N, writer);
 }
 
+void SaveMetadata(JsonWriter &outDli);
 void SaveNodes(Scene3D *scene, JsonWriter& outDli);
 void SaveMeshes(Scene3D *scene, JsonWriter& outDli, ostream &outBin,
     std::string fileNameBinPath);
@@ -162,7 +164,6 @@ bool ConvertScene(Scene3D* scene, std::string fileNameBin, std::ostream& outDli,
 
 void SaveNodes(Scene3D *scene, JsonWriter& outDli)
 {
-  unsigned int meshIdx = 0;
   for (unsigned int n = 0; n < scene->GetNumNodes(); n++)
   {
     outDli.WriteObject(nullptr);
@@ -180,9 +181,9 @@ void SaveNodes(Scene3D *scene, JsonWriter& outDli)
       }
       outDli.CloseScope();
     }
-    if (node->m_HasMesh)
+    if (node->HasMesh())
     {
-      outDli.WriteValue("mesh", meshIdx++);
+      outDli.WriteValue("mesh", node->m_MeshId);
     }
     if (node->m_Children.size() > 0)
     {
@@ -190,7 +191,7 @@ void SaveNodes(Scene3D *scene, JsonWriter& outDli)
 
       for (auto i: node->m_Children)
       {
-        outDli.WriteValue(nullptr, i->index);
+        outDli.WriteValue(nullptr, i->m_Index);
       }
       outDli.CloseScope();
     }
@@ -219,62 +220,57 @@ void SaveMeshes(Scene3D *scene, JsonWriter& outDli, ostream &outBin,
 {
   unsigned int offset = 0;
   unsigned int length = 0;
-  unsigned int meshIdx = 0;
-  for (unsigned int n = 0; n < scene->GetNumNodes(); n++)
+  for (unsigned int m = 0; m < scene->GetNumMeshes(); m++)
   {
-    Node3D *node = scene->GetNode(n);
+    const Mesh* mesh = scene->GetMesh(m);
 
-    if (node->m_HasMesh)
+    outDli.WriteObject(nullptr);
+    int attributes = 0;
+    attributes |= (mesh->m_Indices.size() > 0) ? 1 : 0;
+    attributes |= (mesh->m_Positions.size() > 0) ? 2 : 0;
+    attributes |= (mesh->m_Normals.size() > 0) ? 4 : 0;
+    attributes |= (mesh->m_Textures.size() > 0) ? 8 : 0;
+    attributes |= (mesh->m_Tangents.size() > 0) ? 16 : 0;
+
+    outDli.WriteValue("uri", fileNameBin.c_str());
+    outDli.WriteValue("attributes", attributes);
+    outDli.WriteValue("primitive", "TRIANGLES");
+
+    offset += length;
+    WriteBuffer<unsigned short>("indices", offset, mesh->m_Indices.size(), outDli, length);
+
+    outBin.write((char*) mesh->m_Indices.data(), length);
+
+    offset += length;
+    WriteBuffer<Vector3>("positions", offset, mesh->m_Positions.size(), outDli, length);
+
+    outBin.write((char*) mesh->m_Positions.data(), length);
+
+    if (mesh->m_Normals.size())
     {
-      outDli.WriteObject(nullptr);
-      int attributes = 0;
-      attributes |= (node->m_Indices.size() > 0) ? 1 : 0;
-      attributes |= (node->m_Positions.size() > 0) ? 2 : 0;
-      attributes |= (node->m_Normals.size() > 0) ? 4 : 0;
-      attributes |= (node->m_Textures.size() > 0) ? 8 : 0;
-      attributes |= (node->m_Tangents.size() > 0) ? 16 : 0;
-
-      outDli.WriteValue("uri", fileNameBin.c_str());
-      outDli.WriteValue("attributes", attributes);
-      outDli.WriteValue("primitive", "TRIANGLES");
-
       offset += length;
-      WriteBuffer<unsigned short>("indices", offset, node->m_Indices.size(), outDli, length);
+      WriteBuffer<Vector3>("normals", offset, mesh->m_Normals.size(), outDli, length);
 
-      outBin.write((char*) node->m_Indices.data(), length);
-
-      offset += length;
-      WriteBuffer<Vector3>("positions", offset, node->m_Positions.size(), outDli, length);
-
-      outBin.write((char*) node->m_Positions.data(), length);
-
-      if (node->m_Normals.size())
-      {
-        offset += length;
-        WriteBuffer<Vector3>("normals", offset, node->m_Normals.size(), outDli, length);
-
-        outBin.write((char*) node->m_Normals.data(), length);
-      }
-      if (node->m_Textures.size())
-      {
-        offset += length;
-        WriteBuffer<Vector2>("textures", offset, node->m_Textures.size(), outDli, length);
-
-        outBin.write((char*) node->m_Textures.data(), length);
-      }
-
-      if (node->m_Tangents.size())
-      {
-        offset += length;
-        WriteBuffer<Vector3>("tangents", offset, node->m_Tangents.size(), outDli, length);
-
-        outBin.write((char*) node->m_Tangents.data(), length);
-      }
-
-
-      outDli.CloseScope();
-      meshIdx++;
+      outBin.write((char*) mesh->m_Normals.data(), length);
     }
+
+    if (mesh->m_Textures.size())
+    {
+      offset += length;
+      WriteBuffer<Vector2>("textures", offset, mesh->m_Textures.size(), outDli, length);
+
+      outBin.write((char*) mesh->m_Textures.data(), length);
+    }
+
+    if (mesh->m_Tangents.size())
+    {
+      offset += length;
+      WriteBuffer<Vector3>("tangents", offset, mesh->m_Tangents.size(), outDli, length);
+
+      outBin.write((char*) mesh->m_Tangents.data(), length);
+    }
+
+    outDli.CloseScope();
   }
 }
 

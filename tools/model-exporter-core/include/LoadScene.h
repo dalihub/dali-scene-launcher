@@ -19,8 +19,29 @@
  */
 
 #include "Scene3D.h"
+#include <vector>
 
-void GetSceneNodes(Scene3D &scene_data, Node3D *parent, const aiScene *scene, aiNode *aNode);
+using MeshIds = std::vector<unsigned int>;
+
+///@brief Gets nodes from the aiScene and adds them to @a scene_data, except for
+/// camera nodes, which must have no children and no meshes, and match the name
+/// of a camera in aiScene.
+/// Dli nodes may have no more than 1 mesh; out of any aiNode's meshes, the
+/// first one is registered to the Dli node, then separate nodes are created with
+/// the rest of the meshes, and the same local transform, but with no name.
+/// The meshes are stored as indices into the mesh array of the aiScene. The
+/// indices of those actually used are written into the @a meshIds vector.
+void GetSceneNodes(Scene3D &scene_data, MeshIds& meshIds, Node3D *parent, const aiScene *scene, const aiNode *aNode);
+
+///@brief Meshes are registered on dli Node3Ds as indices into the mesh array
+/// of the aiScene. This function converts them into indices into @a meshIds,
+/// as these are the ones that are ultimately written.
+void PackSceneNodeMeshIds(Scene3D& scene_data, const MeshIds& meshIds);
+
+///@brief Gets the meshes whose indices are recorded into @a meshIds, from
+/// the aiScene and creates Mesh entries into @a scene_data.
+void GetSceneMeshes(Scene3D& scene_data, const MeshIds& meshIds, const aiScene *scene);
+
 void GetSceneCameras( Scene3D &scene_data, const aiScene *scene );
 void GetSceneLights( Scene3D& scene_data, const aiScene* scene );
 void GetAnimations( Scene3D &scene_data, const aiScene *scene );
