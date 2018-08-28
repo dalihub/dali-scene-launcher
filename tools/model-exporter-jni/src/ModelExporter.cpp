@@ -106,7 +106,10 @@ jint Java_com_samsung_dali_modelexporter_ModelExporter_nativeExport(JNIEnv* env,
   outNameDli += ".dli";
 
   Scene3D scene_data;
-  GetSceneNodes(scene_data, nullptr, scene, scene->mRootNode);
+  MeshIds meshIds;
+  GetSceneNodes(scene_data, meshIds, nullptr, scene, scene->mRootNode);
+  PackSceneNodeMeshIds(scene_data, meshIds);
+  GetSceneMeshes(scene_data, meshIds, scene);
   GetSceneCameras(scene_data, scene);
   GetSceneLights(scene_data, scene);
   GetAnimations(scene_data, scene);
@@ -138,8 +141,12 @@ jint Java_com_samsung_dali_modelexporter_ModelExporter_nativeConvert(
       + ".bin";
 
   Scene3D scene_data;
-  GetSceneNodes(scene_data, nullptr, scene, scene->mRootNode);
+  MeshIds meshIds;
+  GetSceneNodes(scene_data, meshIds, nullptr, scene, scene->mRootNode);
+  PackSceneNodeMeshIds(scene_data, meshIds);
+  GetSceneMeshes(scene_data, meshIds, scene);
   GetSceneCameras(scene_data, scene);
+  GetSceneLights(scene_data, scene);
   GetAnimations(scene_data, scene);
 
   std::ostringstream binStream(outNameBin, ios::binary);
