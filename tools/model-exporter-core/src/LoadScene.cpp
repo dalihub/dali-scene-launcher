@@ -15,12 +15,15 @@
  *
  */
 
-#include <iostream>
-#include <assimp/scene.h>
-#include <math.h>
-
 #include "LoadScene.h"
+#include "Mesh.h"
 
+#include <assimp/scene.h>
+
+#include <iostream>
+#include <math.h>
+#include <algorithm>
+#include <cassert>
 
 using namespace std;
 
@@ -38,110 +41,129 @@ bool NodeIsCamera( const aiScene *scene, std::string eName )
     return false;
 }
 
-void GetSceneNodes(Scene3D &scene_data, Node3D *parent, const aiScene *scene, aiNode *aNode)
+void SetNodeMeshAndUpdateIds(unsigned int id, Node3D& node, MeshIds& meshIds)
 {
+    node.m_MeshId = id;
 
-    Node3D *pnode = NULL;
-    if(!aNode->mNumMeshes)
+    auto iInsert = std::lower_bound(meshIds.begin(), meshIds.end(), id);
+    if (iInsert == meshIds.end() || *iInsert != id)
     {
-        if(!aNode->mNumChildren)
+        meshIds.insert(iInsert, id);
+    }
+}
+
+void GetSceneNodes(Scene3D &scene_data, MeshIds& meshIds, Node3D *parent, const aiScene *scene, const aiNode *aNode)
+{
+    if(0 == aNode->mNumMeshes && 0 == aNode->mNumChildren)
+    {
+        string camname(aNode->mName.data, aNode->mName.length);
+        if( NodeIsCamera( scene, camname ) )
         {
-            string camname;
-            camname.assign(aNode->mName.data,aNode->mName.length);
-            if( NodeIsCamera( scene, camname ) )
-            {
-                return;
-            }
-        }
-        pnode = new Node3D(parent, false);
-        pnode->m_Name.assign(aNode->mName.data,aNode->mName.length);
-        scene_data.AddNode(pnode);
-        pnode->SetMatrix(aNode->mTransformation);
-        if(parent)
-        {
-            parent->m_Children.push_back(pnode);
+            return;
         }
     }
 
+    Node3D *pnode = new Node3D(parent);
+    pnode->m_Name.assign(aNode->mName.data,aNode->mName.length);
+    pnode->SetMatrix(aNode->mTransformation);
+    scene_data.AddNode(pnode);
 
-    for( unsigned int n = 0; n < aNode->mNumMeshes; n++ )
+    if (aNode->mNumMeshes > 0)
     {
-        struct aiMesh *mesh = scene->mMeshes[aNode->mMeshes[n]];
-        Node3D *node = new Node3D(parent, true);
-        node->SetMatrix(aNode->mTransformation);
-        scene_data.AddNode(node);
-        if(!n)
+        auto meshId = aNode->mMeshes[0];
+        SetNodeMeshAndUpdateIds(meshId, *pnode, meshIds);
+
+        // Create an anonymous node each for the rest of the meshes, with the same transform.
+        for (unsigned int i = 1; i < aNode->mNumMeshes; ++i)
         {
-            pnode = node;
-            pnode->m_Name.assign(aNode->mName.data,aNode->mName.length);
-            if(parent)
-            {
-                parent->m_Children.push_back(pnode);
-            }
+            Node3D* node = new Node3D(parent);
+            node->SetMatrix(aNode->mTransformation);
+
+            SetNodeMeshAndUpdateIds(aNode->mMeshes[i], *node, meshIds);
+
+            scene_data.AddNode(node);
         }
-        for( unsigned int f = 0; f < mesh->mNumFaces; f++ )
+    }
+
+    for(unsigned int c = 0; c < aNode->mNumChildren; c++ )
+    {
+        GetSceneNodes(scene_data, meshIds, pnode, scene, aNode->mChildren[c]);
+    }
+}
+
+void PackSceneNodeMeshIds(Scene3D& scene_data, const MeshIds& meshIds)
+{
+    for (unsigned int i = 0; i < scene_data.GetNumNodes(); ++i)
+    {
+        auto node = scene_data.GetNode(i);
+        if (node->HasMesh())
+        {
+            auto iFind = std::lower_bound(meshIds.begin(), meshIds.end(), node->m_MeshId);
+            assert(iFind != meshIds.end());
+            node->m_MeshId = std::distance(meshIds.begin(), iFind);
+        }
+    }
+}
+
+void GetSceneMeshes(Scene3D& scene_data, const MeshIds& meshIds, const aiScene* scene)
+{
+    for (auto& i : meshIds)
+    {
+        struct aiMesh *mesh = scene->mMeshes[i];
+
+        Mesh* pmesh = new Mesh();
+        pmesh->m_Indices.reserve(mesh->mNumFaces * 3);
+        for (unsigned int f = 0; f < mesh->mNumFaces; f++)
         {
             struct aiFace *face = &mesh->mFaces[f];
-            if( (face->mNumIndices > 4) ||(face->mNumIndices < 3)) //Is not a triangle or quad
-            {
-                continue;
-            }
-            if( face->mNumIndices == 3 ) //Triangle
-            {
-                for(unsigned int i = 0; i < face->mNumIndices; i++ )
-                {
-                    unsigned short index = face->mIndices[i];
-                    node->m_Indices.push_back( index );
-                }
-            }
-            if( face->mNumIndices == 4 ) //Quads
-            {
-               node->m_Indices.push_back( face->mIndices[0] );
-               node->m_Indices.push_back( face->mIndices[1] );
-               node->m_Indices.push_back( face->mIndices[2] );
-               node->m_Indices.push_back( face->mIndices[3] );
-               node->m_Indices.push_back( face->mIndices[0] );
-               node->m_Indices.push_back( face->mIndices[2] );
-            }
 
+            assert(face->mNumIndices == 3);    // aiProcess_Triangulate
+            for (unsigned int i = 0; i < face->mNumIndices; i++)
+            {
+                unsigned short index = face->mIndices[i];
+                pmesh->m_Indices.push_back(index);
+            }
         }
-        node->m_Positions.assign( (Vector3*) mesh->mVertices, (Vector3*) (mesh->mVertices + mesh->mNumVertices));
-        node->m_Normals.assign( (Vector3*) mesh->mNormals, (Vector3*) (mesh->mNormals + mesh->mNumVertices) );
-        if(!mesh->HasTextureCoords(0))
+
+        pmesh->m_Positions.assign((Vector3*)mesh->mVertices, (Vector3*)(mesh->mVertices + mesh->mNumVertices));
+        pmesh->m_Normals.assign((Vector3*)mesh->mNormals, (Vector3*)(mesh->mNormals + mesh->mNumVertices));
+        if (!mesh->HasTextureCoords(0))
         {
             cout << "No textures" << endl;
         }
         else
         {
-            if( mesh->mNumUVComponents[0] == 2 )
+            if (mesh->mNumUVComponents[0] == 2)
             {
-                for(unsigned int co = 0; co < mesh->mNumVertices; co++)
+                pmesh->m_Textures.reserve(mesh->mNumVertices);
+                for (unsigned int co = 0; co < mesh->mNumVertices; co++)
                 {
                     Vector2 uv;
-                    uv.x = (mesh->mTextureCoords[0] + co)->x;
-                    uv.y = (mesh->mTextureCoords[0] + co)->y;
-                    node->m_Textures.push_back(uv);
+                    uv.x = mesh->mTextureCoords[0][co].x;
+                    uv.y = mesh->mTextureCoords[0][co].y;
+                    pmesh->m_Textures.push_back(uv);
                 }
-            }else
+            }
+            else
             {
                 cout << "3D textures coords, not supported" << endl;
                 //node->m_Textures3D.assign( (Vector3*) mesh->mTextureCoords[0], (Vector3*) (mesh->mTextureCoords[0] + mesh->mNumVertices) );
             }
         }
-        if( !mesh->mTangents)
+
+        if (!mesh->mTangents)
         {
             cout << "No tangents" << endl;
         }
         else
         {
-            node->m_Tangents.assign( (Vector3*) mesh->mTangents, (Vector3*) (mesh->mTangents + mesh->mNumVertices) );
+            pmesh->m_Tangents.assign((Vector3*)mesh->mTangents, (Vector3*)(mesh->mTangents + mesh->mNumVertices));
         }
-    }
-    for(unsigned int c = 0; c < aNode->mNumChildren; c++ )
-    {
-        GetSceneNodes(scene_data, pnode, scene, aNode->mChildren[c]);
+
+        scene_data.AddMesh(pmesh);
     }
 }
+
 aiNode *GetCameraNode( const aiScene *scene, aiNode *aNode )
 {
     if(!aNode->mNumMeshes)

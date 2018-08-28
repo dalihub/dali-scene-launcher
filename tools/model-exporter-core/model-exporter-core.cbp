@@ -114,6 +114,7 @@
 		<Unit filename="include/JsonWriter.h" />
 		<Unit filename="include/Light.h" />
 		<Unit filename="include/LoadScene.h" />
+		<Unit filename="include/Mesh.h" />
 		<Unit filename="include/Node3D.h" />
 		<Unit filename="include/SaveScene.h" />
 		<Unit filename="include/Scene3D.h" />

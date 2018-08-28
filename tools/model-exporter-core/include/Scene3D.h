@@ -26,17 +26,22 @@
 
 using namespace std;
 
+class Mesh;
+
 class Scene3D
 {
     public:
         Scene3D();
-        void AddNode(Node3D *enode);
         virtual ~Scene3D();
-        unsigned int GetNumNodes();
-        unsigned int GetNumCameras();
+        unsigned int GetNumNodes() const;
+        unsigned int GetNumMeshes() const;
+        unsigned int GetNumCameras() const;
         unsigned int GetNumLights() const;
-        unsigned int GetNumAnimations();
+        unsigned int GetNumAnimations() const;
+        void AddNode(Node3D *enode);
         Node3D* GetNode(unsigned int idx);
+        void AddMesh(Mesh* emesh);
+        Mesh* GetMesh(unsigned int idx) const;
         void AddCamera(Camera3D &ecam);
         Camera3D* GetCamera(unsigned int idx);
         void AddLight(const Light& eLight);
@@ -47,8 +52,8 @@ class Scene3D
     protected:
 
     private:
-        unsigned int index;
         vector<Node3D*> m_nodes;
+        vector<Mesh*> m_meshes;
         vector<Camera3D> m_cameras;
         vector<Light> m_lights;
         vector<Animation3D> m_animations;

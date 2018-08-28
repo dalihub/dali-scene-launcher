@@ -19,7 +19,6 @@
 
 Scene3D::Scene3D()
 {
-    index = 0;
 }
 
 Scene3D::~Scene3D()
@@ -33,19 +32,34 @@ Scene3D::~Scene3D()
 
 void Scene3D::AddNode(Node3D *enode)
 {
-    enode->index = index++;
+    enode->m_Index = m_nodes.size();
     m_nodes.push_back(enode);
 
 }
 
-unsigned int Scene3D::GetNumNodes()
+unsigned int Scene3D::GetNumNodes() const
 {
     return m_nodes.size();
+}
+
+unsigned int Scene3D::GetNumMeshes() const
+{
+	return m_meshes.size();
 }
 
 Node3D *Scene3D::GetNode(unsigned int idx)
 {
     return m_nodes[idx];
+}
+
+void Scene3D::AddMesh(Mesh* emesh)
+{
+	m_meshes.push_back(emesh);
+}
+
+Mesh* Scene3D::GetMesh(unsigned int idx) const
+{
+	return m_meshes[idx];
 }
 
 void Scene3D::AddCamera(Camera3D &ecam)
@@ -58,7 +72,7 @@ void Scene3D::AddLight(const Light& eLight)
     m_lights.push_back(eLight);
 }
 
-unsigned int Scene3D::GetNumCameras()
+unsigned int Scene3D::GetNumCameras() const
 {
     return m_cameras.size();
 }
@@ -82,7 +96,7 @@ void Scene3D::AddAnimation(Animation3D &eanim)
 {
     m_animations.push_back(eanim);
 }
-unsigned int Scene3D::GetNumAnimations()
+unsigned int Scene3D::GetNumAnimations() const
 {
     return m_animations.size();
 }
@@ -91,6 +105,7 @@ Animation3D* Scene3D::GetAnimation(unsigned int idx)
 {
     return &m_animations[idx];
 }
+
 bool Scene3D::HasAnimations()
 {
     bool anim = false;
