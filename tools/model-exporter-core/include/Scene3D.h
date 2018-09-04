@@ -40,6 +40,7 @@ class Scene3D
         unsigned int GetNumAnimations() const;
         void AddNode(Node3D *enode);
         Node3D* GetNode(unsigned int idx);
+        Node3D* FindNodeNamed(const std::string& name) const;
         void AddMesh(Mesh* emesh);
         Mesh* GetMesh(unsigned int idx) const;
         void AddCamera(Camera3D &ecam);

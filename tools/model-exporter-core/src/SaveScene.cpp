@@ -270,6 +270,19 @@ void SaveMeshes(Scene3D *scene, JsonWriter& outDli, ostream &outBin,
       outBin.write((char*) mesh->m_Tangents.data(), length);
     }
 
+      // write weights
+      if (!mesh->m_BoneIds.size())
+      {
+        offset += length;
+        WriteBuffer<Vector4>("bone_ids", offset, mesh->m_BoneIds.size(), outDli, length);
+
+        outBin.write(reinterpret_cast<const char*>(mesh->m_BoneIds.data()), length);
+
+        offset += length;
+        WriteBuffer<Vector4>("bone_weights", offset, mesh->m_BoneWeights.size(), outDli, length);
+
+        outBin.write(reinterpret_cast<const char*>(mesh->m_BoneWeights.data()), length);
+      }
     outDli.CloseScope();
   }
 }

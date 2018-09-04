@@ -160,6 +160,37 @@ void GetSceneMeshes(Scene3D& scene_data, const MeshIds& meshIds, const aiScene* 
             pmesh->m_Tangents.assign((Vector3*)mesh->mTangents, (Vector3*)(mesh->mTangents + mesh->mNumVertices));
         }
 
+        if (0 != mesh->mNumBones)   // Get skinning data
+        {
+            pmesh->m_BoneIds.resize(pmesh->m_Positions.size(), Vector4 { .0, .0, .0, .0 });
+            pmesh->m_BoneWeights.resize(pmesh->m_Positions.size(), Vector4 { .0, .0, .0, .0 });
+
+            std::vector<int> nextBone;
+            nextBone.resize(pmesh->m_Positions.size(), 0);
+
+            auto iBone = mesh->mBones;
+            for (auto endBones = iBone + mesh->mNumBones; iBone != endBones; ++iBone)
+            {
+                auto bone = *iBone;
+                if (bone->mNumWeights > 0)
+                {
+                    auto boneNode = scene_data.FindNodeNamed(bone->mName.C_Str());
+                    assert (boneNode != nullptr);
+
+                    auto iWeight = bone->mWeights;
+                    for (auto endWeights = iWeight + bone->mNumWeights; iWeight != endWeights; ++iWeight)
+                    {
+                        int iNextBone = nextBone[iWeight->mVertexId];
+                        assert (iNextBone < 4 && "Exceeded max number of supported bones.");
+
+                        pmesh->m_BoneIds[iWeight->mVertexId].data[iNextBone] = boneNode->m_Index;
+                        pmesh->m_BoneWeights[iWeight->mVertexId].data[iNextBone] = iWeight->mWeight;
+                        ++nextBone[iWeight->mVertexId];
+                    }
+                }
+            }
+        }
+
         scene_data.AddMesh(pmesh);
     }
 }
