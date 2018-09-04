@@ -160,6 +160,49 @@ void GetSceneMeshes(Scene3D& scene_data, const MeshIds& meshIds, const aiScene* 
             pmesh->m_Tangents.assign((Vector3*)mesh->mTangents, (Vector3*)(mesh->mTangents + mesh->mNumVertices));
         }
 
+        if (0 != mesh->mNumBones)   // Get skinning data
+        {
+            pmesh->m_BoneIds.resize(pmesh->m_Positions.size(), Vector4 { .0, .0, .0, .0 });
+            pmesh->m_BoneWeights.resize(pmesh->m_Positions.size(), Vector4 { .0, .0, .0, .0 });
+
+            std::vector<int> nextBone;
+            nextBone.resize(pmesh->m_Positions.size(), 0);
+
+            auto iBone = mesh->mBones;
+            for (auto endBones = iBone + mesh->mNumBones; iBone != endBones; ++iBone)
+            {
+                auto bone = *iBone;
+                if (bone->mNumWeights > 0)
+                {
+                    auto boneNode = scene_data.FindNodeNamed(bone->mName.C_Str());
+                    if (!boneNode)
+                    {
+                        cout << "ERROR: Bone '" << bone->mName.C_Str() << "' of mesh '" << mesh->mName.C_Str() <<
+                            "' references invalid joint '" << bone->mName.C_Str() << "'." << endl;
+                        return;
+                    }
+                    assert (boneNode != nullptr);
+
+                    auto iWeight = bone->mWeights;
+                    for (auto endWeights = iWeight + bone->mNumWeights; iWeight != endWeights; ++iWeight)
+                    {
+                        int iNextBone = nextBone[iWeight->mVertexId];
+                        if (iNextBone < 4)
+                        {
+                            pmesh->m_BoneIds[iWeight->mVertexId].data[iNextBone] = boneNode->m_Index;
+                            pmesh->m_BoneWeights[iWeight->mVertexId].data[iNextBone] = iWeight->mWeight;
+                            ++nextBone[iWeight->mVertexId];
+                        }
+                        else
+                        {
+                            cout << "WARNING: Vertex " << iWeight->mVertexId << " of mesh '" << mesh->mName.C_Str() <<
+                                "' exceeds the number of supported weights." << endl;
+                        }
+                    }
+                }
+            }
+        }
+
         scene_data.AddMesh(pmesh);
     }
 }

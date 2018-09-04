@@ -52,6 +52,14 @@ Node3D *Scene3D::GetNode(unsigned int idx)
     return m_nodes[idx];
 }
 
+Node3D* Scene3D::FindNodeNamed(const std::string& name) const
+{
+  auto iFind = std::find_if(m_nodes.begin(), m_nodes.end(), [&name](const Node3D* n){
+    return n->m_Name == name;
+  });
+  return iFind != m_nodes.end() ? *iFind : nullptr;
+}
+
 void Scene3D::AddMesh(Mesh* emesh)
 {
     m_meshes.push_back(emesh);

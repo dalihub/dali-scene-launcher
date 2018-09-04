@@ -3,6 +3,7 @@
 
 #include "Vector2.h"
 #include "Vector3.h"
+#include "Vector4.h"
 #include <vector>
 
 class Mesh
@@ -13,6 +14,14 @@ public:
     std::vector<Vector3> m_Tangents;
     std::vector<Vector2> m_Textures;
     std::vector<unsigned short> m_Indices;
+
+    std::vector<Vector4> m_BoneIds; // indices into the nodes array of the scene; -1s are invalid and should be accompanied by a weight of .0.
+    std::vector<Vector4> m_BoneWeights;
+
+    bool  IsSkinned() const
+    {
+      return !m_BoneIds.empty();
+    }
 };
 
 #endif //MESH_H
