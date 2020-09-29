@@ -1,7 +1,11 @@
 cmake_minimum_required(VERSION 2.6)
-project("org.tizen.scene-launcher" CXX)
+project("dali-scene-launcher" CXX)
 
-set(scene_launcher_prj_name "scene-launcher")
+set(scene_launcher_prj_name "dali-scene-launcher")
+
+if(CMAKE_BUILD_TYPE MATCHES Debug)
+  add_definitions("-DDEBUG_ENABLED")
+endif()
 
 foreach(flag ${PKGS_CFLAGS})
 	set(extra_flags "${extra_flags} ${flag}")
@@ -28,7 +32,6 @@ file(GLOB scene_launcher_src_files "${scene_launcher_src_dir}*.cpp")
 set(scene_launcher_include_dir "${scene_launcher_dir}include/")
 set(prefix_include_dir "${prefix}include/")
 include_directories(${scene_launcher_include_dir}
-	"${scene_launcher_dir}../libdli/include/"
 	"${prefix_include_dir}"
 )
 
@@ -53,10 +56,26 @@ target_link_libraries(${scene_launcher_prj_name}
 	${dali2-core}
 	${dali2-adaptor}
 	${dali2-toolkit}
+	-pie
 )
 
-install(TARGETS ${scene_launcher_prj_name} DESTINATION "${prefix}bin")
 
-install(DIRECTORY "${scene_launcher_dir}res"
-        DESTINATION "${prefix}share/com.samsung.dali-demo/"
+if(DEFINED DALI_APP_DIR)
+	set(bin_dir ${DALI_APP_DIR})
+else()
+	set(bin_dir "${prefix}bin/")
+endif()
+
+if(DEFINED DALI_APP_RES_DIR)
+	set(res_dir ${DALI_APP_RES_DIR})
+else()
+	set(res_dir "${prefix}share/com.samsung.dali-scene-launcher/")
+endif()
+
+install(TARGETS ${scene_launcher_prj_name}
+	DESTINATION ${bin_dir}
+)
+
+install(DIRECTORY "${scene_launcher_dir}res/"
+        DESTINATION ${res_dir}
 )
