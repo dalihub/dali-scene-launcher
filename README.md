@@ -24,7 +24,7 @@ Demonstrates scene loading and displaying functionality based on libdli and the 
 
 ## Miscellany
 
-- scene-launcher expects its models in dali-env/opt/com.samsung.dali-demo/models;
+- scene-launcher expects its models in ${prefix}/com.samsung.scene-launcher/models;
 - you may start scene-launcher with the name of the model you want to display (i.e. file name without ".dli"):
 
   $ scene-launcher bottle

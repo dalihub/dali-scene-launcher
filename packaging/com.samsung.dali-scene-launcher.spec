@@ -18,20 +18,17 @@ BuildRequires:  pkgconfig(capi-appfw-application)
 BuildRequires:  pkgconfig(capi-media-player)
 BuildRequires:  pkgconfig(dlog)
 BuildRequires:  gettext-tools
-BuildRequires:  pkgconfig(dali-core)
-BuildRequires:  pkgconfig(dali-toolkit)
-BuildRequires:  pkgconfig(lua)
+BuildRequires:  pkgconfig(dali2-core)
+BuildRequires:  pkgconfig(dali2-toolkit)
+BuildRequires:  pkgconfig(dali2-adaptor)
 
-#need libtzplatform-config for directory if tizen version is >= 3.x
-%if 0%{?tizen_version_major} >= 3
+BuildRequires:  libdli
+BuildRequires:  libdli-devel
+
 BuildRequires:  pkgconfig(libtzplatform-config)
-%endif
-
-# DALi C++ applications always run on dali-adaptor.
-BuildRequires:  pkgconfig(dali-adaptor)
 
 %description
-Loads 3D scenes. See README.md for more details.
+Example implementation of DLI scene loading. See README.md for more details.
 
 ##############################
 # Preparation
@@ -39,15 +36,14 @@ Loads 3D scenes. See README.md for more details.
 %prep
 %setup -q
 
-#Use TZ_PATH when tizen version is >= 3.x
-
 %define dali_app_ro_dir       %TZ_SYS_RO_APP/com.samsung.dali-scene-launcher/
 %define dali_xml_file_dir     %TZ_SYS_RO_PACKAGES
 %define dali_icon_dir         %TZ_SYS_RO_ICONS
 %define smack_rule_dir        %TZ_SYS_SMACK/accesses2.d/
 
-%define dali_app_exe_dir      %{dali_app_ro_dir}/bin/
-%define dali_app_icon_dir     %{dali_app_ro_dir}/share/icons/
+%define dali_app_icon_dir     %{dali_app_ro_dir}share/icons/
+%define dali_app_exe_dir      %{dali_app_ro_dir}bin/
+%define dali_app_res_dir      %{dali_app_ro_dir}res/
 
 ##############################
 # Build
@@ -63,12 +59,14 @@ CXXFLAGS+=" -D_ARCH_ARM_"
 
 cd %{_builddir}/%{name}-%{version}/build/tizen
 
-cmake -DDALI_APP_DIR=%{dali_app_ro_dir} \
-      -DTIZEN_RESOURCES_DIR=1 \
+cmake \
 %if 0%{?enable_debug}
-      -DCMAKE_BUILD_TYPE=Debug \
+	-DCMAKE_BUILD_TYPE=Debug \
 %endif
-      .
+	-DCMAKE_INSTALL_PREFIX=%{_prefix} \
+	-DDALI_APP_DIR=%{dali_app_exe_dir} \
+	-DDALI_APP_RES_DIR=%{dali_app_res_dir} \
+	.
 
 make %{?jobs:-j%jobs}
 
@@ -78,7 +76,7 @@ make %{?jobs:-j%jobs}
 %install
 rm -rf %{buildroot}
 cd build/tizen
-%make_install DALI_APP_DIR=%{dali_app_ro_dir}
+%make_install
 
 mkdir -p %{buildroot}%{dali_xml_file_dir}
 cp -f %{_builddir}/%{name}-%{version}/%{name}.xml %{buildroot}%{dali_xml_file_dir}
@@ -90,7 +88,6 @@ mv %{_builddir}/%{name}-%{version}/share/icons/%{name}.png %{buildroot}%{dali_ic
 mkdir -p %{buildroot}%{smack_rule_dir}
 cp -f %{_builddir}/%{name}-%{version}/%{name}.rule %{buildroot}%{smack_rule_dir}
 %endif
-
 
 ##############################
 # Post Install
@@ -112,12 +109,13 @@ exit 0
 
 %files
 %if 0%{?enable_dali_smack_rules}
-%manifest com.samsung.dali-scene-launcher.manifest-smack
+%manifest %{name}.manifest-smack
 %else
-%manifest com.samsung.dali-scene-launcher.manifest
+%manifest %{name}.manifest
 %endif
 %defattr(-,root,root,-)
 %{dali_app_exe_dir}/dali-scene-launcher
+%{dali_app_res_dir}/*
 %{dali_xml_file_dir}/%{name}.xml
 %{dali_icon_dir}/*
 %if 0%{?enable_dali_smack_rules} && !%{with wayland}

@@ -18,6 +18,7 @@
 #include "libdli/light-parameters.h"
 #include "libdli/dli-loader.h"
 #include "libdli/load-result.h"
+#include "dali/public-api/adaptor-framework/key.h"
 #include "dali/public-api/events/key-event.h"
 #include "dali/public-api/actors/layer.h"
 #include "dali/public-api/render-tasks/render-task-list.h"
@@ -106,12 +107,12 @@ void SceneLauncher::OnKey(const KeyEvent& e)
 {
   if (e.GetState() == KeyEvent::UP)
   {
-    switch (e.GetKeyCode())
+    if (IsKey(e, DALI_KEY_ESCAPE) || IsKey(e, DALI_KEY_BACK))
     {
-    case 27:  // ESC
       mApp.Quit();
-      break;
-
+    }
+    else switch (e.GetKeyCode())
+    {
     case 116: // F5
     {
       TryLoadScene(mSceneName);
