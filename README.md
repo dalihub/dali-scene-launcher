@@ -1,64 +1,33 @@
-<img src="https://dalihub.github.io/images/DaliLogo320x200.png">
+# dali-scene-launcher
 
-# Table of Contents
+Demonstrates scene loading and displaying functionality based on libdli and the DALi libraries.
 
-   * [Build Instructions](#build-instructions)
-      * [1. Building for Ubuntu desktop](#1-building-for-ubuntu-desktop)
-         * [Minimum Requirements](#minimum-requirements)
-         * [Building the Repository](#building-the-repository)
-         * [DEBUG Builds](#debug-builds)
-      * [2. GBS Builds](#2-gbs-builds)
-         * [NON-SMACK Targets](#non-smack-targets)
-         * [SMACK enabled Targets](#smack-enabled-targets)
-         * [DEBUG Builds](#debug-builds-1)
-   * [Install a scene](#install-scene)
+## Prequisites
 
-# Build Instructions
+- [libdli](https://github.com/dalihub/libdli) and its dependencies (please refer to its README.md;
 
-## 1. Building for Ubuntu desktop
+## Build instructions
 
-### Minimum Requirements
+1, build libdli;
+2,
 
- - Ubuntu 14.04 or later
- - Environment created using dali_env script in dali-core repository
- - Lua development package installed:
-         $ sudo apt-get install lua5.2-dev
+  - Windows: refer to the VS2017 solution in build/windows;
+  - Linux: run build/tizen/build.sh;
+  - Tizen:
 
-### Building the Repository
+    $ gbs build -A ${target_arch}
 
-To build the repository enter the 'build/tizen' folder:
+    - for debug, add: --define "%enable_debug 1"
+    - for SMACK-enabled targets, add: --define "%enable_dali_smack_rules 1"
 
-         $ cd dali-scene-launcher/build/tizen
+3, **NOTE** (Windows): copy the _release_ pthreadVC3.dll from windows-dependencies, to your build directory (build/windows/$(Configuration)). The one built by VCPKG causes scene-launcher to fail to start correctly (0xc000007b). This needs to be investigated.
 
-Then run the following commands:
+## Miscellany
 
-         $ cmake -DCMAKE_INSTALL_PREFIX=$DESKTOP_PREFIX .
-         $ make install -j8
+- scene-launcher expects its models in dali-env/opt/com.samsung.dali-demo/models;
+- you may start scene-launcher with the name of the model you want to display (i.e. file name without ".dli"):
 
-### DEBUG Builds
+  $ scene-launcher bottle
 
-Specify a debug build when building for desktop by passing the following parameter to cmake:
-
-         $ cmake -DCMAKE_INSTALL_PREFIX=$DESKTOP_PREFIX -DCMAKE_BUILD_TYPE=Debug .
-
-Before running make install as normal:
-
-         $ make install -j8
-
-## 2. GBS Builds
-
-### NON-SMACK Targets
-
-         $ gbs build -A [TARGET_ARCH]
-
-### SMACK enabled Targets
-
-         $ gbs build -A [TARGET_ARCH] --define "%enable_dali_smack_rules 1"
-
-### DEBUG Builds
-
-         $ gbs build -A [TARGET_ARCH] --define "%enable_debug 1"
-
-# Install a scene
-
-* See the README file at https://github.com/dalihub/dali-scene-template.git for instruction on how to add a scene.
+- F5 reloads the scene;
+- Esc quits scene launcher;
