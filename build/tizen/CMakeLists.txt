@@ -1,86 +1,62 @@
-CMAKE_MINIMUM_REQUIRED(VERSION 2.6)
-PROJECT(dali-scene-launcher C CXX)
+cmake_minimum_required(VERSION 2.6)
+project("org.tizen.scene-launcher" CXX)
 
-SET(dali-scene-launcher_VERSION_MAJOR 1)
-SET(dali-scene-launcher_VERSION_MINOR 0)
+set(scene_launcher_prj_name "scene-launcher")
 
-SET(ROOT_SRC_DIR ${CMAKE_SOURCE_DIR}/../..)
+foreach(flag ${PKGS_CFLAGS})
+	set(extra_flags "${extra_flags} ${flag}")
+endforeach(flag)
 
-SET(PREFIX ${CMAKE_INSTALL_PREFIX})
+set(prj_cxx_std c++17)
+if(CMAKE_CXX_COMPILER_ID MATCHES "GNU")
+	set(extra_flags "${extra_flags} -fPIE -std=${prj_cxx_std}")
+elseif(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+	set(extra_flags "${extra_flags} -fPIE -std=${prj_cxx_std}")
+elseif(CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
+	set(extra_flags "${extra_flags} /std:${prj_cxx_std} /vmg /D_USE_MATH_DEFINES /D_CRT_SECURE_NO_WARNINGS /MP /GS /Oi /GL /EHsc")
+endif()
 
-IF(DEFINED DALI_APP_DIR)
-  SET(BINDIR ${DALI_APP_DIR}/bin)
-ELSE()
-  SET(BINDIR ${PREFIX}/bin)
-ENDIF()
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${extra_flags}")
 
-SET(DESKTOP_BUILD 0)
-IF(NOT DEFINED TIZEN_RESOURCES_DIR)
-  # Define a resource folder for Desktop build.
-  SET(APP_DATA_RES_DIR ${PREFIX}/share/com.samsung.dali-scene-launcher/resources)
-  SET(DESKTOP_BUILD 1)
-ENDIF()
+set(prefix "${CMAKE_INSTALL_PREFIX}/")
 
-MESSAGE( STATUS "CMAKE_BUILD_TYPE: " ${CMAKE_BUILD_TYPE} )
-IF(CMAKE_BUILD_TYPE MATCHES Debug)
-  MESSAGE("Setting variable: DEBUG_ENABLED")
-  SET(DEBUG_ENABLED "1")
-ENDIF()
+set(scene_launcher_dir "${CMAKE_CURRENT_SOURCE_DIR}/../../")
 
-SET(IMAGES_DIR ${APP_DATA_RES_DIR}/images/)
-SET(MODELS_DIR ${APP_DATA_RES_DIR}/models/)
-SET(SHADERS_DIR ${APP_DATA_RES_DIR}/shaders/)
-SET(LUA_SCRIPTS_DIR ${APP_DATA_RES_DIR}/lua-scripts/)
+set(scene_launcher_src_dir "${scene_launcher_dir}src/")
+file(GLOB scene_launcher_src_files "${scene_launcher_src_dir}*.cpp")
 
-SET(SCENE_LAUNCHER_RESOURCE_DIR \\"${APP_DATA_RES_DIR}/\\")
-SET(SCENE_LAUNCHER_IMAGE_DIR \\"${IMAGES_DIR}\\")
-SET(SCENE_LAUNCHER_MODEL_DIR \\"${MODELS_DIR}\\")
-SET(SCENE_LAUNCHER_SHADER_DIR \\"${SHADERS_DIR}\\")
-SET(SCENE_LAUNCHER_LUA_SCRIPTS_DIR \\"${LUA_SCRIPTS_DIR}\\")
+set(scene_launcher_include_dir "${scene_launcher_dir}include/")
+set(prefix_include_dir "${prefix}include/")
+include_directories(${scene_launcher_include_dir}
+	"${scene_launcher_dir}../libdli/include/"
+	"${prefix_include_dir}"
+)
 
-# Set required libraries specific for the tizen platform
-IF( NOT ${DESKTOP_BUILD} )
-  SET( TIZEN_PKG_LIST
-         capi-appfw-application # Required to include app_common.h, used to retrieve the resources folder on the Tizen platform.
-     )
-ENDIF()
+add_executable(${scene_launcher_prj_name} ${scene_launcher_src_files})
 
-SET(PKG_LIST dali-core
-             dali-adaptor
-             dali-toolkit )
+set(prefix_lib_dir "${prefix}lib/")
+find_library(dli dli
+	PATHS ${prefix_lib_dir}
+)
+find_library(dali2-core dali2-core
+	PATHS ${prefix_lib_dir}
+)
+find_library(dali2-adaptor dali2-adaptor
+	PATHS ${prefix_lib_dir}
+)
+find_library(dali2-toolkit dali2-toolkit
+	PATHS ${prefix_lib_dir}
+)
 
-IF( ${DESKTOP_BUILD} )
-SET(PKG_LIST ${PKG_LIST}
-             lua5.2 )
-ELSE()
-SET(PKG_LIST ${PKG_LIST}
-             lua )
-ENDIF()
+target_link_libraries(${scene_launcher_prj_name}
+	${dli}
+	${dali2-core}
+	${dali2-adaptor}
+	${dali2-toolkit}
+)
 
-INCLUDE(FindPkgConfig)
-pkg_check_modules(REQUIRED_PKGS REQUIRED ${TIZEN_PKG_LIST} ${PKG_LIST})
+install(TARGETS ${scene_launcher_prj_name} DESTINATION "${prefix}bin")
 
-FOREACH(flag ${REQUIRED_PKGS_CFLAGS})
-        SET(REQUIRED_CFLAGS "${REQUIRED_CFLAGS} ${flag}")
-ENDFOREACH(flag)
-
-IF( ${DESKTOP_BUILD} )
-  SET( DEFAULT_UNIX_CFLAGS
-         "-DSCENE_LAUNCHER_RESOURCE_DIR=${SCENE_LAUNCHER_RESOURCE_DIR} \
-          -DSCENE_LAUNCHER_IMAGE_DIR=${SCENE_LAUNCHER_IMAGE_DIR} \
-          -DSCENE_LAUNCHER_MODEL_DIR=${SCENE_LAUNCHER_MODEL_DIR} \
-          -DSCENE_LAUNCHER_SHADER_DIR=${SCENE_LAUNCHER_SHADER_DIR} \
-          -DSCENE_LAUNCHER_LUA_SCRIPTS_DIR=${SCENE_LAUNCHER_LUA_SCRIPTS_DIR}"
-     ) # Used to retrieve the resources folder on a Default unix platform.
-ENDIF()
-
-SET(DALI_SCENE_LAUNCHER_CFLAGS "${DEFAULT_UNIX_CFLAGS} -fvisibility=hidden -DHIDE_DALI_INTERNALS")
-
-###########################################################################
-
-SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${REQUIRED_CFLAGS} ${DALI_SCENE_LAUNCHER_CFLAGS} -Werror -Wall -fPIE -std=c++11")
-SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${CMAKE_C_FLAGS}")
-
-INCLUDE_DIRECTORIES(${ROOT_SRC_DIR})
-
-ADD_SUBDIRECTORY(scene-launcher)
+install(DIRECTORY "${scene_launcher_dir}res"
+        DESTINATION "${prefix}share/com.samsung.dali-demo/"
+)
