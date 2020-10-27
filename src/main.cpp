@@ -23,12 +23,10 @@ using namespace Dali;
 using namespace Dali::Toolkit;
 using namespace dli;
 
-const char* const SCENE_NAME = "robot";
-
 int main(int argc, char** argv)
 {
   auto app = Application::New(&argc, &argv);
-  SceneLauncher launcher(app, argc > 1 ? argv[1] : SCENE_NAME);
+  SceneLauncher launcher(app);
   app.MainLoop();
   return 0;
 }
