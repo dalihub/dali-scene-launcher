@@ -26,52 +26,42 @@
 #include "dali/public-api/render-tasks/render-task.h"
 #include "dali/public-api/signals/connection-tracker.h"
 #include "dali/public-api/adaptor-framework/application.h"
-#include "dali-toolkit/public-api/controls/text-controls/text-label.h"
+#include "dali-toolkit/public-api/controls/scrollable/item-view/item-view.h"
+#include "dali-toolkit/devel-api/controls/navigation-view/navigation-view.h"
 
 class SceneLauncher : public Dali::ConnectionTracker
 {
 public:
-  SceneLauncher(Dali::Application& app, const char* sceneName);
+  SceneLauncher(Dali::Application& app);
   ~SceneLauncher() = default;
 
 private:  // data
   Dali::Application& mApp;
-  const char* mSceneName;
 
-  std::vector<dli::AnimationDefinition> mAnimations;
+  std::vector<std::string> mSceneNames;
 
-  Dali::CameraActor mCamera;
-  Dali::Actor mRoot;
+  Dali::Toolkit::NavigationView mNavigationView;
+
+  std::unique_ptr<Dali::Toolkit::ItemFactory> mItemFactory;
+  Dali::Toolkit::ItemLayoutPtr mItemLayout;
+  Dali::Toolkit::ItemView mItemView;
+
+  Dali::CameraActor mSceneCamera;
   Dali::RenderTask mSceneRender;
-
-  Dali::Toolkit::TextLabel mErrorMessage;
+  Dali::Actor mScene;
 
   Dali::Quaternion mCameraOrientationInv;
 
+  Dali::TapGestureDetector mTapDetector;
   Dali::PanGestureDetector  mPanDetector;
 
 private:  // methods
   void OnInit(Dali::Application& app);
-
   void OnTerminate(Dali::Application& app);
 
   void OnKey(const Dali::KeyEvent& e);
-
   void OnPan(Dali::Actor actor, const Dali::PanGesture& pan);
-
-  void TryLoadScene(std::string sceneName);
-
-  void CleanScene();
-
-  void CreateErrorMessage(std::string msg);
-
-  void LoadScene(std::string sceneName);
-
-  void ConfigureCamera(const dli::CameraParameters& params);
-
-  void ConfigureBlendShapeShaders(dli::ResourceBundle& resources,
-    const dli::SceneDefinition& scene, Dali::Actor root,
-    std::vector<dli::BlendshapeShaderConfigurationRequest>&& requests);
+  void OnTap(Dali::Actor actor, const Dali::TapGesture& tap);
 };
 
 #endif  //SCENE_LAUNCHER_H_
