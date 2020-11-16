@@ -21,11 +21,10 @@
 
 using namespace Dali;
 using namespace Dali::Toolkit;
-using namespace dli;
 
 int main(int argc, char** argv)
 {
-  auto app = Application::New(&argc, &argv);
+  auto app = Application::New(&argc, &argv, DEMO_THEME_PATH);
   SceneLauncher launcher(app);
   app.MainLoop();
   return 0;

@@ -35,10 +35,12 @@ include_directories(${scene_launcher_include_dir}
 	"${prefix_include_dir}"
 )
 
+add_definitions(-DDEMO_THEME_PATH=\"${prefix}/share/styles/demo-theme.json\")
+
 add_executable(${scene_launcher_prj_name} ${scene_launcher_src_files})
 
 set(prefix_lib_dir "${prefix}lib/")
-find_library(dli dli
+find_library(dali2-scene-loader dali2-scene-loader
 	PATHS ${prefix_lib_dir}
 )
 find_library(dali2-core dali2-core
@@ -52,7 +54,7 @@ find_library(dali2-toolkit dali2-toolkit
 )
 
 target_link_libraries(${scene_launcher_prj_name}
-	${dli}
+	${dali2-scene-loader}
 	${dali2-core}
 	${dali2-adaptor}
 	${dali2-toolkit}

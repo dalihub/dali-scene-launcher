@@ -16,10 +16,10 @@
  * limitations under the License.
  *
  */
-#include "libdli/animation-definition.h"
-#include "libdli/scene-definition.h"
-#include "libdli/node-definition.h"
-#include "libdli/camera-parameters.h"
+#include "dali-scene-loader/public-api/animation-definition.h"
+#include "dali-scene-loader/public-api/scene-definition.h"
+#include "dali-scene-loader/public-api/node-definition.h"
+#include "dali-scene-loader/public-api/camera-parameters.h"
 #include "dali/public-api/common/vector-wrapper.h"
 #include "dali/public-api/events/pan-gesture-detector.h"
 #include "dali/public-api/actors/camera-actor.h"

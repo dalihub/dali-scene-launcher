@@ -22,8 +22,8 @@ BuildRequires:  pkgconfig(dali2-core)
 BuildRequires:  pkgconfig(dali2-toolkit)
 BuildRequires:  pkgconfig(dali2-adaptor)
 
-BuildRequires:  libdli
-BuildRequires:  libdli-devel
+BuildRequires:  pkgconfig(dali2-scene-loader)
+BuildRequires:  dali2-scene-loader-devel
 
 BuildRequires:  pkgconfig(libtzplatform-config)
 
