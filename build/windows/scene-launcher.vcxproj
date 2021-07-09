@@ -167,9 +167,9 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>%25DALI_ENV%\opt\include;../../../../windows-dependencies/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)..\..\..\dali-sene-loader;$(SolutionDir)..\..\..\dali-toolkit;$(SolutionDir)..\..\..\dali-adaptor;$(SolutionDir)..\..\..\dali-core;$(SolutionDir)..\..\..\windows-dependencies/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <CallingConvention>Cdecl</CallingConvention>
-      <PreprocessorDefinitions>WIN32;_CRT_SECURE_NO_WARNINGS;_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>DALI_ENV="../../../dali-env";DEMO_THEME_PATH=DALI_ENV"/opt/share/com.samsung.dali-demo/res/style/demo-theme.json";WIN32;_CRT_SECURE_NO_WARNINGS;_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalOptions>/vmg  /wd4251 %(AdditionalOptions)</AdditionalOptions>
       <TreatWChar_tAsBuiltInType>true</TreatWChar_tAsBuiltInType>
       <IntrinsicFunctions>true</IntrinsicFunctions>
@@ -185,7 +185,7 @@
     </ClCompile>
     <Link>
       <AdditionalLibraryDirectories>%25DALI_ENV%\opt\lib\;../../dependency/dali/Lib/ExLib</AdditionalLibraryDirectories>
-      <AdditionalDependencies>kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;libdli.lib;dali-core-msvc.lib;dali-adaptor-msvc.lib;dali-toolkit-msvc.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;dali-core-msvc.lib;dali-adaptor-msvc.lib;dali-toolkit-msvc.lib;dali-scene-loader-msvc.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <IgnoreSpecificDefaultLibraries>
       </IgnoreSpecificDefaultLibraries>
       <IgnoreAllDefaultLibraries>
@@ -198,10 +198,12 @@
       </Command>
     </PreBuildEvent>
     <PostBuildEvent>
-      <Command>xcopy /Y $(SolutionDir)$(Platform)\$(Configuration)\*.dll  $(OutDir)</Command>
+      <Command>
+      </Command>
     </PostBuildEvent>
     <PostBuildEvent>
-      <Message>Copy dlls</Message>
+      <Message>
+      </Message>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug-VCPKG|Win32'">
@@ -211,7 +213,7 @@
       <SDLCheck>true</SDLCheck>
       <AdditionalIncludeDirectories>%25DALI_ENV%\opt\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <CallingConvention>Cdecl</CallingConvention>
-      <PreprocessorDefinitions>WIN32;_CRT_SECURE_NO_WARNINGS;_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>DALI_ENV="../../../../../dali-env";DEMO_THEME_PATH=STYLE_DIR"/opt/share/com.samsung.dali-demo/res/style/demo-theme.json";WIN32;_CRT_SECURE_NO_WARNINGS;_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalOptions>/vmg  /wd4251 %(AdditionalOptions)</AdditionalOptions>
       <TreatWChar_tAsBuiltInType>true</TreatWChar_tAsBuiltInType>
       <IntrinsicFunctions>true</IntrinsicFunctions>
@@ -298,9 +300,9 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>%25DALI_ENV%\opt\include;../../../../windows-dependencies/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)..\..\..\dali-sene-loader;$(SolutionDir)..\..\..\dali-toolkit;$(SolutionDir)..\..\..\dali-adaptor;$(SolutionDir)..\..\..\dali-core;$(SolutionDir)..\..\..\windows-dependencies/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalOptions>/vmg  /wd4251 %(AdditionalOptions)</AdditionalOptions>
-      <PreprocessorDefinitions>WIN32;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>DALI_ENV="../../../../../dali-env";DEMO_THEME_PATH=STYLE_DIR"/opt/share/com.samsung.dali-demo/res/style/demo-theme.json";WIN32;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <FloatingPointModel>Precise</FloatingPointModel>
@@ -311,11 +313,13 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <AdditionalLibraryDirectories>%25DALI_ENV%\opt\lib\;../../dependency/dali/Lib/ExLib</AdditionalLibraryDirectories>
-      <AdditionalDependencies>kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;libdli.lib;dali-core-msvc.lib;dali-adaptor-msvc.lib;dali-toolkit-msvc.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;dali-core-msvc.lib;dali-adaptor-msvc.lib;dali-toolkit-msvc.lib;dali-scene-loader-msvc.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
-      <Command>xcopy /Y $(SolutionDir)$(Platform)\$(Configuration)\*.dll  $(OutDir)</Command>
-      <Message>Copy dlls</Message>
+      <Command>
+      </Command>
+      <Message>
+      </Message>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release-VCPKG|Win32'">
@@ -327,7 +331,7 @@
       <SDLCheck>true</SDLCheck>
       <AdditionalIncludeDirectories>%25DALI_ENV%\opt\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalOptions>/vmg  /wd4251 %(AdditionalOptions)</AdditionalOptions>
-      <PreprocessorDefinitions>WIN32;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>DALI_ENV="../../../../../dali-env";DEMO_THEME_PATH=STYLE_DIR"/opt/share/com.samsung.dali-demo/res/style/demo-theme.json";WIN32;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <FloatingPointModel>Precise</FloatingPointModel>

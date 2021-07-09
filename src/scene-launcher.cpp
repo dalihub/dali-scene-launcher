@@ -15,13 +15,16 @@
  *
  */
 #include "scene-launcher.h"
-#include "libdli/light-parameters.h"
-#include "libdli/dli-loader.h"
-#include "libdli/load-result.h"
+#include "dali-scene-loader/public-api/gltf2-loader.h"
+#include "dali-scene-loader/public-api/shader-definition-factory.h"
+#include "dali-scene-loader/public-api/light-parameters.h"
+#include "dali-scene-loader/public-api/dli-loader.h"
+#include "dali-scene-loader/public-api/load-result.h"
 #include "dali/public-api/adaptor-framework/key.h"
 #include "dali/public-api/events/key-event.h"
 #include "dali/public-api/actors/layer.h"
 #include "dali/public-api/render-tasks/render-task-list.h"
+#include "dali/public-api/object/property-array.h"
 #include "dali-toolkit/public-api/controls/scrollable/item-view/item-factory.h"
 #include "dali-toolkit/public-api/controls/scrollable/item-view/default-item-layout.h"
 #include "dali-toolkit/public-api/controls/text-controls/text-label.h"
@@ -32,7 +35,7 @@
 
 using namespace Dali;
 using namespace Dali::Toolkit;
-using namespace dli;
+using namespace Dali::SceneLoader;
 
 namespace
 {
@@ -44,6 +47,7 @@ const float ITEM_HEIGHT = 50.f;
 const Vector3 CAMERA_DEFAULT_POSITION(0.0f, 0.0f, 3.5f);
 
 const std::string_view DLI_EXTENSION = ".dli";
+const std::string_view GLTF_EXTENSION = ".gltf";
 
 const std::string RESOURCE_TYPE_DIRS[]{
   "environments/",
@@ -79,7 +83,7 @@ TextLabel MakeLabel(std::string msg)
   TextLabel label = TextLabel::New(msg);
   label.SetResizePolicy(ResizePolicy::FILL_TO_PARENT, Dimension::ALL_DIMENSIONS);
   label.SetProperty(TextLabel::Property::TEXT_COLOR, Color::WHITE);
-  label.SetProperty(TextLabel::Property::PIXEL_SIZE, ITEM_HEIGHT * 3 / 4);
+  label.SetProperty(TextLabel::Property::PIXEL_SIZE, ITEM_HEIGHT * 4 / 7);
   SetActorCentered(label);
   return label;
 }
@@ -151,7 +155,7 @@ void ConfigureCamera(const CameraParameters& params, CameraActor camera)
   camOrientation.Conjugate();
 }
 
-void ConfigureBlendShapeShaders(ResourceBundle& resources, const dli::SceneDefinition& scene, Actor root,
+void ConfigureBlendShapeShaders(ResourceBundle& resources, const SceneDefinition& scene, Actor root,
   std::vector<BlendshapeShaderConfigurationRequest>&& requests)
 {
   std::vector<std::string> errors;
@@ -175,28 +179,14 @@ Actor LoadScene(std::string sceneName, CameraActor camera)
   };
 
   auto path = pathProvider(ResourceType::Mesh) + sceneName;
-  if (path.rfind(DLI_EXTENSION) != path.size() - DLI_EXTENSION.size())
-  {
-    path += DLI_EXTENSION;
-  }
 
   ResourceBundle resources;
   SceneDefinition scene;
   std::vector<AnimationGroupDefinition> animGroups;
   std::vector<CameraParameters> cameraParameters;
   std::vector<LightParameters> lights;
-  std::vector<dli::AnimationDefinition> animations;
+  std::vector<AnimationDefinition> animations;
 
-  DliLoader loader;
-  DliLoader::InputParams input{
-    pathProvider(ResourceType::Mesh),
-    nullptr,
-    nullptr,
-    nullptr,
-    {},
-    {},
-    nullptr,
-  };
   LoadResult output{
     resources,
     scene,
@@ -205,10 +195,30 @@ Actor LoadScene(std::string sceneName, CameraActor camera)
     cameraParameters,
     lights
   };
-  DliLoader::LoadParams loadParams{ input, output };
-  if (!loader.LoadScene(path, loadParams))
+
+  if (sceneName.rfind(DLI_EXTENSION) == sceneName.size() - DLI_EXTENSION.size())
   {
-    ExceptionFlinger(ASSERT_LOCATION) << "Failed to load scene from '" << path << "': " << loader.GetParseError();
+    DliLoader loader;
+    DliLoader::InputParams input{
+      pathProvider(ResourceType::Mesh),
+      nullptr,
+      {},
+      {},
+      nullptr,
+    };
+    DliLoader::LoadParams loadParams{ input, output };
+    if (!loader.LoadScene(path, loadParams))
+    {
+      ExceptionFlinger(ASSERT_LOCATION) << "Failed to load scene from '" << path << "': " << loader.GetParseError();
+    }
+  }
+  else
+  {
+    ShaderDefinitionFactory sdf;
+    sdf.SetResources(resources);
+    LoadGltfScene(path, sdf, output);
+
+    resources.mEnvironmentMaps.push_back({});
   }
 
   if (cameraParameters.empty())
@@ -225,7 +235,7 @@ Actor LoadScene(std::string sceneName, CameraActor camera)
   };
   NodeDefinition::CreateParams nodeParams{
     resources,
-    xforms,
+    xforms
   };
   Customization::Choices choices;
 
@@ -292,7 +302,8 @@ void SceneLauncher::OnInit(Application& app)
   auto scenePath = resPath + RESOURCE_TYPE_DIRS[ResourceType::Mesh];
   auto sceneNames = ListFiles(scenePath, [](const char* name) {
     auto len = strlen(name);
-    return len > DLI_EXTENSION.size() && DLI_EXTENSION.compare(name + (len - DLI_EXTENSION.size())) == 0;
+    return (len > DLI_EXTENSION.size() && DLI_EXTENSION.compare(name + (len - DLI_EXTENSION.size())) == 0) ||
+      (len > GLTF_EXTENSION.size() && GLTF_EXTENSION.compare(name + (len - GLTF_EXTENSION.size())) == 0);
   });
   mSceneNames = sceneNames;
 
